@@ -1,0 +1,5 @@
+# latexmk generated files
+docs/*/*.log
+docs/*/*.fls
+docs/*/*.fdb_latexmk
+docs/*/*.aux
