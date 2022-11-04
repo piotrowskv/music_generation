@@ -139,3 +139,11 @@ docs/*/*.run.xml
 docs/*/*.synctex.gz
 docs/*/*.toc
 docs/*/*.pdf
+
+# IntelliJ garbage
+.idea/discord.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/music_generation.iml
+.idea/vcs.xml
