@@ -1,0 +1,11 @@
+# latexmk generated files
+*.log
+*.fls
+*.fdb_latexmk
+*.aux
+*.bcf
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.pdf
