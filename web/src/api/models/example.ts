@@ -1,1 +1,1 @@
-export type Example = {}
+export type Example = { _: never }
