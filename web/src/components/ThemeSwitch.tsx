@@ -25,7 +25,7 @@ const ThemeSwitch: React.FC<Props> = ({}) => {
                 )
             }
         >
-            <Icon className="h-9 w-9 dark:fill-white" />
+            <Icon className="h-9 w-9 hover:fill-gray-500 dark:fill-white hover:dark:fill-gray-500" />
         </button>
     )
 }
