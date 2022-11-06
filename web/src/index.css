@@ -10,3 +10,7 @@
     font-synthesis: none;
     text-rendering: optimizeLegibility;
 }
+
+* {
+    @apply transition-colors duration-500;
+}
