@@ -1,4 +1,4 @@
-import React from 'react'
+import { FC } from 'react'
 import Moon from '../assets/Moon'
 import Sun from '../assets/Sun'
 import {
@@ -7,12 +7,10 @@ import {
     useThemeContext,
 } from '../stores/ThemeContext'
 
-interface Props {}
-
-const ThemeSwitch: React.FC<Props> = ({}) => {
+const ThemeSwitch: FC = () => {
     const { mode, changeMode } = useThemeContext()
 
-    let Icon = mode === ResolvedTheme.dark ? Moon : Sun
+    const Icon = mode === ResolvedTheme.dark ? Moon : Sun
 
     return (
         <button
