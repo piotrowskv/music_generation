@@ -3,22 +3,20 @@ import { ModelVariant } from '../../api/models/models'
 
 interface Props {
     models: ModelVariant[]
-    selectedModelId: string | undefined
+    selectedModel: ModelVariant | undefined
     onChangePickedModel: (id: string | undefined) => void
 }
 
 const PickModel: FC<Props> = ({
     models,
     onChangePickedModel,
-    selectedModelId,
+    selectedModel,
 }) => {
     const onChange = ({ target }: ChangeEvent<HTMLSelectElement>) => {
         const value = target.value
 
         onChangePickedModel(value || undefined)
     }
-
-    const selectedModel = models.find(e => e.id === selectedModelId)
 
     return (
         <div className="flex items-center justify-between">
@@ -38,7 +36,7 @@ const PickModel: FC<Props> = ({
                 id="model-select"
                 className="cursor-pointer appearance-none rounded-md bg-black px-3 py-2 text-center text-white dark:bg-white dark:text-black"
                 onChange={onChange}
-                defaultValue={selectedModelId}
+                defaultValue={selectedModel?.id}
             >
                 <option value="">...</option>
                 {models.map(e => (

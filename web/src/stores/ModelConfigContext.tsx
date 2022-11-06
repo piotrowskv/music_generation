@@ -1,21 +1,44 @@
 import { createContext, FC, ReactNode, useContext, useState } from 'react'
+import { apiClient } from '../api'
+import { ModelVariant, ModelVariants } from '../api/models/models'
+import { useAsync } from '../utils/useAsync'
 
 const ModelConfigContext = createContext<{
-    chosenModelId: string | undefined
+    selectedModel: ModelVariant | undefined
     // setting undefined removes selection
     pickModel: (id: string | undefined) => void
+    init: () => void
+    models: ModelVariants | undefined
+    loading: boolean
+    error: {} | undefined
 }>(null!)
 
 export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const [chosenModel, setChosenModel] = useState<string | undefined>(
+    const {
+        loading,
+        call: init,
+        result: models,
+        error,
+    } = useAsync(apiClient.getModelVariants)
+
+    const [chosenModelId, setChosenModelId] = useState<string | undefined>(
         undefined
     )
 
     return (
         <ModelConfigContext.Provider
-            value={{ chosenModelId: chosenModel, pickModel: setChosenModel }}
+            value={{
+                selectedModel: models?.variants.find(
+                    e => e.id === chosenModelId
+                ),
+                pickModel: setChosenModelId,
+                loading,
+                error,
+                models,
+                init,
+            }}
         >
             {children}
         </ModelConfigContext.Provider>

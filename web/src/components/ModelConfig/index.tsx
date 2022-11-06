@@ -1,40 +1,32 @@
 import { FC, useEffect } from 'react'
-import { apiClient } from '../../api'
 import { useModelConfigContext } from '../../stores/ModelConfigContext'
-import { useAsync } from '../../utils/useAsync'
 import ErrorMessage from '../ErrorMessage'
 import LoadingIndicator from '../LoadingIndicator'
 import StepCard from '../StepCard'
 import PickModel from './PickModel'
 
 const ModelConfig: FC = () => {
-    const { pickModel, chosenModelId } = useModelConfigContext()
-
-    const {
-        loading,
-        call: fetchModelConfig,
-        result: config,
-        error,
-    } = useAsync(apiClient.getModelVariants)
+    const { pickModel, selectedModel, init, loading, error, models } =
+        useModelConfigContext()
 
     useEffect(() => {
-        fetchModelConfig()
+        init()
     }, [])
 
     return (
         <div className="flex flex-1 items-center justify-center px-2 py-4 sm:px-24 md:px-36">
             {loading && <LoadingIndicator />}
-            {config && (
+            {models && (
                 <StepCard completed={false}>
                     <PickModel
-                        models={config.variants}
+                        models={models.variants}
                         onChangePickedModel={pickModel}
-                        selectedModelId={chosenModelId}
+                        selectedModel={selectedModel}
                     />
                 </StepCard>
             )}
             {error && (
-                <ErrorMessage error={error} onRetry={fetchModelConfig}>
+                <ErrorMessage error={error} onRetry={init}>
                     Failed to fetch model configurations. Is the backend
                     running?
                 </ErrorMessage>

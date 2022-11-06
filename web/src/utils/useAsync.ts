@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+export type UseAsyncResult<T extends any[], U extends {}> = {
+    call: (...args: T) => Promise<U | undefined>
+    result: U | undefined
+    loading: boolean
+    error: {} | undefined
+}
+
 export function useAsync<T extends any[], U extends {}>(
     func: (...args: T) => Promise<U>
-) {
+): UseAsyncResult<T, U> {
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<Error | undefined>(undefined)
+    const [error, setError] = useState<{} | undefined>(undefined)
     const [result, setResult] = useState<U | undefined>(undefined)
     const cancelled = useRef(false)
 
@@ -30,7 +37,7 @@ export function useAsync<T extends any[], U extends {}>(
                 return res
             } catch (err) {
                 if (!cancelled.current) {
-                    setError(err as Error)
+                    setError(err as {})
                     setLoading(false)
                 }
             }
