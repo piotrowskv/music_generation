@@ -1,3 +1,5 @@
+import { ModelVariants } from './models/models'
+
 export class ApiClient {
     get isMocked() {
         return this.baseUrl === undefined
@@ -42,6 +44,31 @@ export class ApiClient {
                 return null as unknown as T
             }
         }
+    }
+
+    async getModelVariants(): Promise<ModelVariants> {
+        const res = await this.baseRequest<ModelVariants>(
+            `models`,
+            {
+                method: 'GET',
+            },
+            {
+                variants: [
+                    {
+                        name: 'LSTM',
+                        description:
+                            'Sequential model generating each timestep one by one.',
+                    },
+                    {
+                        name: 'GAN',
+                        description:
+                            'Generative model generating the whole song at once.',
+                    },
+                ],
+            }
+        )
+
+        return res
     }
 }
 
