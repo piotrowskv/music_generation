@@ -46,7 +46,7 @@ export class ApiClient {
         }
     }
 
-    async getModelVariants(): Promise<ModelVariants> {
+    getModelVariants = async (): Promise<ModelVariants> => {
         const res = await this.baseRequest<ModelVariants>(
             `models`,
             {
