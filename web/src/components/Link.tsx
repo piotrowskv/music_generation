@@ -6,7 +6,10 @@ interface Props {
 }
 
 const Link: React.FC<Props> = ({ href, children }) => (
-    <a href={href} className="duration-250 text-sky-600 hover:text-sky-400">
+    <a
+        href={href}
+        className="text-sky-600 transition-colors hover:text-sky-400"
+    >
         {children}
     </a>
 )

@@ -1,10 +1,27 @@
 export class ApiClient {
-    constructor(private baseUrl: string) {
-        console.log(`Initialized ApiClient for ${baseUrl}`)
+    get isMocked() {
+        return this.baseUrl === undefined
     }
 
-    private async baseRequest<T>(path: string, options: RequestInit = {}) {
+    constructor(private baseUrl: string | undefined) {
+        if (this.isMocked) {
+            console.log(`Initialized ApiClient with mocked responses`)
+        } else {
+            console.log(`Initialized ApiClient for ${baseUrl}`)
+        }
+    }
+
+    private async baseRequest<T>(
+        path: string,
+        options: RequestInit,
+        mockResponse: T
+    ) {
         const { headers, ...otherOptions } = options
+
+        if (this.isMocked) {
+            await new Promise(res => setTimeout(res, 3000))
+            return mockResponse
+        }
 
         const res = await fetch(`${this.baseUrl}/${path}`, {
             headers: {
