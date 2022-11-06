@@ -1,4 +1,11 @@
-import { createContext, FC, ReactNode, useContext, useState } from 'react'
+import {
+    createContext,
+    FC,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState,
+} from 'react'
 
 export enum ThemeMode {
     system,
@@ -16,8 +23,21 @@ const ThemeContext = createContext<{
     changeMode: (mode: ThemeMode) => void
 }>(null!)
 
+const localStorageKey = 'theme-mode'
+
 export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
-    const [mode, setMode] = useState(ThemeMode.system)
+    const [mode, setMode] = useState(() => {
+        const saved = localStorage.getItem(localStorageKey)
+        if (saved) {
+            return ThemeMode[saved as keyof typeof ThemeMode]
+        } else {
+            return ThemeMode.system
+        }
+    })
+
+    useEffect(() => {
+        localStorage.setItem(localStorageKey, ThemeMode[mode])
+    }, [mode])
 
     const resolved = (() => {
         switch (mode) {
