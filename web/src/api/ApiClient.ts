@@ -55,11 +55,13 @@ export class ApiClient {
             {
                 variants: [
                     {
+                        id: '0f5e5af5-9ede-4cc8-814d-f7a0dfb8a6d6',
                         name: 'LSTM',
                         description:
                             'Sequential model generating each timestep one by one.',
                     },
                     {
+                        id: 'eafdabd3-fe56-474d-91be-7a9eeeed2124',
                         name: 'GAN',
                         description:
                             'Generative model generating the whole song at once.',

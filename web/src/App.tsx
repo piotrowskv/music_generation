@@ -5,6 +5,7 @@ import Credits from './components/Credits'
 import ModelConfig from './components/ModelConfig'
 import ThemeSwitch from './components/ThemeSwitch'
 import { routes } from './routes'
+import { ModelConfigProvider } from './stores/ModelConfigContext'
 import { ResolvedTheme, useThemeContext } from './stores/ThemeContext'
 
 function App() {
@@ -24,7 +25,11 @@ function App() {
                     <Routes>
                         <Route
                             path={routes.root.pattern}
-                            element={<ModelConfig />}
+                            element={
+                                <ModelConfigProvider>
+                                    <ModelConfig />
+                                </ModelConfigProvider>
+                            }
                         />
                         <Route
                             path="*"

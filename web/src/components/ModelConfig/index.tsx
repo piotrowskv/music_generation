@@ -1,5 +1,6 @@
 import { FC, useEffect } from 'react'
 import { apiClient } from '../../api'
+import { useModelConfigContext } from '../../stores/ModelConfigContext'
 import { useAsync } from '../../utils/useAsync'
 import ErrorMessage from '../ErrorMessage'
 import LoadingIndicator from '../LoadingIndicator'
@@ -7,6 +8,8 @@ import StepCard from '../StepCard'
 import PickModel from './PickModel'
 
 const ModelConfig: FC = () => {
+    const { pickModel, chosenModelId } = useModelConfigContext()
+
     const {
         loading,
         call: fetchModelConfig,
@@ -23,7 +26,11 @@ const ModelConfig: FC = () => {
             {loading && <LoadingIndicator />}
             {config && (
                 <StepCard completed={false}>
-                    <PickModel models={config.variants} />
+                    <PickModel
+                        models={config.variants}
+                        onChangePickedModel={pickModel}
+                        selectedModelId={chosenModelId}
+                    />
                 </StepCard>
             )}
             {error && (
