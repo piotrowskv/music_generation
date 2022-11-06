@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type UseAsyncResult<T extends any[], U extends {}> = {
+export type UseAsyncResult<T extends unknown[], U extends {}> = {
     call: (...args: T) => Promise<U | undefined>
     result: U | undefined
     loading: boolean
     error: {} | undefined
 }
 
-export function useAsync<T extends any[], U extends {}>(
+export function useAsync<T extends unknown[], U extends {}>(
     func: (...args: T) => Promise<U>
 ): UseAsyncResult<T, U> {
     const [loading, setLoading] = useState(false)

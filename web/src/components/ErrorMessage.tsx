@@ -3,7 +3,7 @@ import Refresh from '../assets/Refresh'
 
 interface Props {
     children: ReactNode
-    error?: any
+    error?: {}
     onRetry: () => void
 }
 

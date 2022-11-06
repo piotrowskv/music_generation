@@ -17,7 +17,7 @@ const ModelConfig: FC = () => {
         <div className="flex flex-1 items-center justify-center px-2 py-4 sm:px-24 md:px-36">
             {loading && <LoadingIndicator />}
             {models && (
-                <StepCard completed={false}>
+                <StepCard completed={selectedModel !== undefined}>
                     <PickModel
                         models={models.variants}
                         onChangePickedModel={pickModel}
