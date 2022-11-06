@@ -3,6 +3,7 @@ export type ModelVariants = {
 }
 
 export type ModelVariant = {
+    id: string
     name: string
     description: string
 }

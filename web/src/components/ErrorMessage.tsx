@@ -15,7 +15,7 @@ const ErrorMessage: React.FC<Props> = ({
     <div className="flex-row text-center">
         <span className="text-red-400">{message}</span>
         {error && <div className="text-red-400">{error.toString()}</div>}
-        <button onClick={onRetry} className="group">
+        <button onClick={onRetry} className="group mt-2">
             Retry{' '}
             <Refresh className="inline h-5 w-5 fill-black group-hover:animate-spin-once dark:fill-white" />
         </button>
