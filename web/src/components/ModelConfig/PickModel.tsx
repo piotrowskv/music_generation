@@ -4,18 +4,14 @@ import { ModelVariant } from '../../api/models/models'
 interface Props {
     models: ModelVariant[]
     selectedModel: ModelVariant | undefined
-    onChangePickedModel: (id: string | undefined) => void
+    onChange: (id: string | undefined) => void
 }
 
-const PickModel: FC<Props> = ({
-    models,
-    onChangePickedModel,
-    selectedModel,
-}) => {
-    const onChange = ({ target }: ChangeEvent<HTMLSelectElement>) => {
+const PickModel: FC<Props> = ({ models, onChange, selectedModel }) => {
+    const onChangeModel = ({ target }: ChangeEvent<HTMLSelectElement>) => {
         const value = target.value
 
-        onChangePickedModel(value || undefined)
+        onChange(value || undefined)
     }
 
     return (
@@ -35,7 +31,7 @@ const PickModel: FC<Props> = ({
                 name="model"
                 id="model-select"
                 className="cursor-pointer appearance-none rounded-md bg-black px-3 py-2 text-center text-white dark:bg-white dark:text-black"
-                onChange={onChange}
+                onChange={onChangeModel}
                 defaultValue={selectedModel?.id}
             >
                 <option value="">...</option>
