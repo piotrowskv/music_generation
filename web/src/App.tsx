@@ -1,7 +1,11 @@
 import clsx from 'clsx'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import MusicNote from './assets/MusicNote'
 import Credits from './components/Credits'
+import ModelConfig from './components/ModelConfig'
 import ThemeSwitch from './components/ThemeSwitch'
+import { routes } from './routes'
+import { ModelConfigProvider } from './stores/ModelConfigContext'
 import { ResolvedTheme, useThemeContext } from './stores/ThemeContext'
 
 function App() {
@@ -17,7 +21,22 @@ function App() {
 
                     <ThemeSwitch />
                 </div>
-                <div className="flex-1"></div>
+                <HashRouter>
+                    <Routes>
+                        <Route
+                            path={routes.root.pattern}
+                            element={
+                                <ModelConfigProvider>
+                                    <ModelConfig />
+                                </ModelConfigProvider>
+                            }
+                        />
+                        <Route
+                            path="*"
+                            element={<Navigate to={routes.root()} replace />}
+                        />
+                    </Routes>
+                </HashRouter>
                 <div className="flex justify-end">
                     <Credits />
                 </div>
