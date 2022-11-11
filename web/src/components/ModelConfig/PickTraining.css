@@ -1,0 +1,20 @@
+.toggle-overlay {
+    transition: clip-path 250ms;
+    visibility: hidden;
+    --p: theme('padding.1');
+    --r: theme('borderRadius.md');
+}
+
+.toggle-overlay-left {
+    clip-path: inset(
+        var(--p) calc(50% + var(--p)) var(--p) var(--p) round var(--r)
+    );
+    visibility: visible;
+}
+
+.toggle-overlay-right {
+    clip-path: inset(
+        var(--p) var(--p) var(--p) calc(50% + var(--p)) round var(--r)
+    );
+    visibility: visible;
+}

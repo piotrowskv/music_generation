@@ -3,11 +3,17 @@ import { apiClient } from '../api'
 import { ModelVariant, ModelVariants } from '../api/models/models'
 import { useAsync } from '../utils/useAsync'
 
+export enum ModelTraining {
+    pretrained,
+    trainMyself,
+}
+
 const ModelConfigContext = createContext<{
-    selectedModel: ModelVariant | undefined
-    // setting undefined removes selection
-    pickModel: (id: string | undefined) => void
     init: () => void
+    selectedModel: ModelVariant | undefined
+    pickModel: (id: string | undefined) => void
+    modelTraining: ModelTraining | undefined
+    setModelTraining: (id: ModelTraining | undefined) => void
     models: ModelVariants | undefined
     loading: boolean
     error: {} | undefined
@@ -26,6 +32,9 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     const [chosenModelId, setChosenModelId] = useState<string | undefined>(
         undefined
     )
+    const [modelTraining, setModelTraining] = useState<
+        ModelTraining | undefined
+    >(undefined)
 
     return (
         <ModelConfigContext.Provider
@@ -34,6 +43,8 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                     e => e.id === chosenModelId
                 ),
                 pickModel: setChosenModelId,
+                modelTraining,
+                setModelTraining,
                 loading,
                 error,
                 models,

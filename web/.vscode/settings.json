@@ -9,5 +9,8 @@
         "source.organizeImports": true
     },
     "files.insertFinalNewline": true,
-    "workbench.tree.indent": 4
+    "workbench.tree.indent": 4,
+    "files.associations": {
+        "*.css": "tailwindcss"
+    }
 }
