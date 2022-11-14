@@ -1,5 +1,5 @@
 import { ChangeEvent, FC } from 'react'
-import { ModelVariant } from '../../api/models/models'
+import { ModelVariant } from '../../api/dto/models'
 
 interface Props {
     models: ModelVariant[]

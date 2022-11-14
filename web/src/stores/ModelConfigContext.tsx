@@ -1,6 +1,6 @@
 import { createContext, FC, ReactNode, useContext, useState } from 'react'
 import { apiClient } from '../api'
-import { ModelVariant, ModelVariants } from '../api/models/models'
+import { ModelVariant, ModelVariants } from '../api/dto/models'
 import { useAsync } from '../utils/useAsync'
 
 export enum ModelTraining {
