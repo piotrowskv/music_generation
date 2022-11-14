@@ -1,4 +1,4 @@
-import { ModelVariants } from './models/models'
+import { ModelVariants } from './dto/models'
 
 export class ApiClient {
     get isMocked() {
