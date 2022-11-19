@@ -1,41 +1,10 @@
 import os
-import mido
 import numpy as np
 
 from enum import Enum
 from abc import ABC, abstractmethod
-
-"""
-DOCUMENTATION:
-
-get_sequence_of_notes(<string> 'filepath', <Mode> 'mode', <bool> 'join_tracks', default: False, <bool> 'only_active_notes', default: True):
-
-    get_sequence_of_notes(string, Mode.BOOLEANS, False, True)    -> <list> 'tracks' (<list> 'events' (<tuple> (<int> 'time offset', <list> 'active notes')))
-    get_sequence_of_notes(string, Mode.BOOLEANS, False, False)   -> <list> 'tracks' (<list> 'events' (<tuple> (<int> 'time offset', <list> (<list [bool], size: 128>))))
-    get_sequence_of_notes(string, Mode.BOOLEANS, True, True)     ->                  <list> 'events' (<tuple> (<int> 'time offset', <list> 'active notes'))
-    get_sequence_of_notes(string, Mode.BOOLEANS, True, False)    ->                  <list> 'events' (<tuple> (<int> 'time offset', <list> (<list [bool], size: 128>)))
-    
-    get_sequence_of_notes(string, Mode.VELOCITIES, False, True)  -> <list> 'tracks' (<list> 'events' (<tuple> (<int> 'time offset', <list> (<tuple> (<int> 'note height', <float> 'note velocity')))))
-    get_sequence_of_notes(string, Mode.VELOCITIES, False, False) -> <list> 'tracks' (<list> 'events' (<tuple> (<int> 'time offset', <list> (<list [float], size: 128>))))
-    get_sequence_of_notes(string, Mode.VELOCITIES, True, True)   ->                  <list> 'events' (<tuple> (<int> 'time offset', <list> (<tuple> (<int> 'note height', <float> 'note velocity'))))
-    get_sequence_of_notes(string, Mode.VELOCITIES, True, False)  ->                  <list> 'events' (<tuple> (<int> 'time offset', <list> (<list [float], size: 128>)))
-    
-    get_sequence_of_notes(string, Mode.NOTES, False, True)       -> <list> 'tracks' (<list> 'events' (<tuple> (<int> 'time offset', <list> (<tuple> (<int> 'note height', <EventNote>)))))
-    get_sequence_of_notes(string, Mode.NOTES, False, False)      -> <list> 'tracks' (<list> 'events' (<tuple> (<int> 'time offset', <list> (<list [None | SeparateNote], size: 128>))))
-    get_sequence_of_notes(string, Mode.NOTES, True, True)        ->                  <list> 'events' (<tuple> (<int> 'time offset', <list> (<tuple> (<int> 'note height', <EventNote>))))
-    get_sequence_of_notes(string, Mode.NOTES, True, False)       ->                  <list> 'events' (<tuple> (<int> 'time offset', <list> (<list [None | SeparateNote], size: 128>)))
-
-get_array_of_notes(string ('filepath'), Mode ('mode'), bool ('join_tracks', default: False)):
-
-    get_array_of_notes(string, Mode.BOOLEANS, False)             -> <np.ndarray [bool],                size: 'tracks' x 'grid length' x 128>
-    get_array_of_notes(string, Mode.BOOLEANS, True)              -> <np.ndarray [bool],                size: 'grid length' x 128>
-    
-    get_array_of_notes(string, Mode.VELOCITIES, False)           -> <np.ndarray [float],               size: 'tracks' x 'grid length' x 128>
-    get_array_of_notes(string, Mode.VELOCITIES, True)            -> <np.ndarray [float],               size: 'grid length' x 128>
-    
-    get_array_of_notes(string, Mode.NOTES, False)                -> <np.ndarray [None | SeparateNote], size: 'tracks' x 'grid length' x 128>
-    get_array_of_notes(string, Mode.NOTES, True)                 -> <np.ndarray [None | SeparateNote], size: 'grid length' x 128>
-"""
+from mido import MidiTrack, MidiFile
+from mido.messages import Message
 
 GRID_ACCURACY = 64  # sets accuracy to 1 / GRID_ACCURACY of a measure, best if it's a power of 2
 
@@ -57,31 +26,9 @@ class Note(ABC):
     def __init__(self):
         raise NotImplementedError
 
-    def normalise(self, max_velocity: int | float):
+    def normalise(self,
+                  max_velocity: int | float):
         self.velocity /= float(max_velocity)
-
-
-# used to store values in sequential processing
-class ActiveElement:
-    height: int
-    value: bool | float | Note
-    mode: Mode
-
-    def __init__(
-            self,
-            height: int,
-            value: bool | int | float | Note,
-            mode: Mode
-    ):
-        self.height = height
-        self.mode = mode
-
-        if isinstance(value, bool):  # as isinstance(BOOLEAN, int) == True
-            self.value = value
-        elif isinstance(value, int):
-            self.value = float(value)
-        else:
-            self.value = value
 
 
 # stored in arrays
@@ -114,16 +61,6 @@ class SeparateNote(Note):
         self.octave = height // 12 - 1
 
 
-# returns a list of SeparateNotes
-def translate_event_to_separate_note(event):
-    notes = []
-    for note in event.active_notes:
-        notes.append(SeparateNote(note.value.velocity, event.length, event.offset,
-                                  event.track, event.tempo, note.value.height))
-
-    return notes
-
-
 # stored in sequences
 class EventNote(Note):
     velocity: float  # normalised to [0, 1] from [0, 127]
@@ -142,15 +79,38 @@ class EventNote(Note):
         self.octave = height // 12 - 1
 
 
+# used to store values in sequential processing
+class ActiveElement:
+    height: int
+    value: bool | float | EventNote
+    mode: Mode
+
+    def __init__(
+            self,
+            height: int,
+            value: bool | int | float | EventNote,
+            mode: Mode
+    ):
+        self.height = height
+        self.mode = mode
+
+        if isinstance(value, bool):  # as isinstance(BOOLEAN, int) == True
+            self.value = value
+        elif isinstance(value, int):
+            self.value = float(value)
+        else:
+            self.value = value
+
+
 # used to store states in sequential processing
 class Event:
-    time: int        # time from previous event, in grid accuracy
-    length: int      # event length, in grid accuracy
-    offset: int      # from the beginning, in grid accuracy
-    track: int       # not counting track 0 (Metadata)
-    tempo: int       # from track 0 (MetaMessages)
+    time: int                                            # time from previous event, in grid accuracy
+    length: int                                          # event length, in grid accuracy
+    offset: int                                          # from the beginning, in grid accuracy
+    track: int                                           # omits 'Track 0'
+    tempo: int                                           # from 'Track 0' (MetaMessages)
     active_notes: list[ActiveElement]
-    all_notes: list  # of size 128, values depend on the mode
+    all_notes: list[None | bool | float | SeparateNote]  # of size 128
     mode: Mode
 
     def __init__(
@@ -187,6 +147,14 @@ class Event:
             case _:
                 raise ValueError
 
+    # returns a list of SeparateNotes
+    def translate_event_to_separate_notes(self):
+        notes = list[SeparateNote]()
+        for note in self.active_notes:
+            notes.append(SeparateNote(note.value.velocity, self.length, self.offset,
+                                      self.track, self.tempo, note.value.height))
+        return notes
+
     def __set_booleans_dictionary(self, notes):
         for height in notes.keys():
             self.active_notes.append(ActiveElement(height, True, Mode.BOOLEANS))
@@ -214,7 +182,7 @@ class Event:
 
     def set_notes_array(self):
         self.all_notes = [None] * 128
-        notes = translate_event_to_separate_note(self)
+        notes = self.translate_event_to_separate_notes()
         for note in notes:
             self.all_notes[note.height] = note
 
@@ -240,7 +208,9 @@ class Event:
 
 
 # translates MIDI ticks to the closest grid accuracy time units
-def get_offset(time, ticks, accuracy):
+def get_offset(time: int,
+               ticks: int,
+               accuracy: float):
     begin = int(round(float(ticks) / accuracy))
     finish = int(round(float(ticks + time) / accuracy))
 
@@ -248,31 +218,32 @@ def get_offset(time, ticks, accuracy):
 
 
 # gets the length of the longest track
-def get_midi_length(file, accuracy):
-    vals = []
+def get_midi_length(file: MidiFile,
+                    accuracy: float):
+    lengths = list[int]()
     for i, track in enumerate(file.tracks):
         ticks = 0
         value = 0
         for msg in track:
             value += get_offset(msg.time, ticks, accuracy)
             ticks += msg.time
-        vals.append(value)
+        lengths.append(value)
 
-    return max(vals)
+    return max(lengths)
 
 
-def check_file_type(file):
+def check_file_type(file: MidiFile):
     if file.type == 2:
         raise ValueError('impossible to perform calculations for type 2 (asynchronous) file')
 
 
-def open_file(filepath):
+def open_file(filepath: str):
     filename = os.path.basename(filepath)
     if filename[-4:] != '.mid':
         raise TypeError('file must be of ".mid" format')
 
     filename = filename[:-4]
-    file = mido.MidiFile(filepath)
+    file = MidiFile(filepath)
     check_file_type(file)
 
     # translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
@@ -283,11 +254,13 @@ def open_file(filepath):
 
     # calculates amount of PPQ in grid units
     accuracy = (file.ticks_per_beat * 32) / (GRID_ACCURACY * beat_amount)
-    return file, filename, accuracy
+    return file, filename, float(accuracy)
 
 
 # translates 'Track 0' MetaMessages to an array of tempos for each grid unit
-def get_tempo_array(file, length, accuracy):
+def get_tempo_array(file: MidiFile,
+                    length: int,
+                    accuracy: float):
     tempos = [0] * (length + 1)
     ticks = 0
     offset = 0
@@ -309,58 +282,80 @@ def get_tempo_array(file, length, accuracy):
     return tempos
 
 
-def export_output(filepath, filename, output):
+def export_output(filepath: str,
+                  filename: str,
+                  output):  # output as defined in DOCUMENTATION.md
     os.makedirs(filepath, exist_ok=True)
     np.save('{}/{}'.format(filepath, filename), output)
 
 
-# translates all Messages to a single track
-def combine_tracks(file):
-    note_grid = [0] * 128       # list[int] - amount_of_active_notes, one for each height
-    all_messages = list()       # list[(int, Message)], all messages with their starting times
-    filtered_messages = list()  # list[(int, Message)], but without repetitions
-    final_messages = list()     # list[Message], with corrected timestamps
+# translates all Messages to a single list, then removes vacuous Messages
+def combine_and_clean_tracks(tracks: list[MidiTrack]):
+    note_grid = [0] * 128                            # list with numbers of active notes, one for each height
+    raw_messages = list[tuple[int, Message]]()       # all messages with their starting times
+    filtered_messages = list[tuple[int, Message]]()  # as raw_messages, but without repetitions
+    messages = list[Message]()                       # all messages with corrected timestamps
 
-    for track in file.tracks[1:]:
+    for track in tracks:
         offset = 0
         for msg in track:
             offset += msg.time
             if msg.type in ['note_on', 'note_off']:
-                all_messages.append((offset, msg))
-    all_messages.sort(key=lambda x: x[0])
+                raw_messages.append((offset, msg))
 
-    for time, msg in all_messages:
+    last_message_time = 0
+    delta_error = 0  # saves 'time' argument from omitted messages
+    for time, msg in raw_messages:
         if msg.type == 'note_on':
             if note_grid[msg.note] == 0:
-                filtered_messages.append((time, msg))
+                filtered_messages.append((time + delta_error, msg))
+                delta_error = 0
+                last_message_time = time
                 note_grid[msg.note] = 1
 
             elif note_grid[msg.note] > 0:  # in case of overlapping tracks, loss of following notes' metadata
                 note_grid[msg.note] += 1
+                delta_error += (time - last_message_time)
+                last_message_time = time
+
+            else:
+                delta_error += (time - last_message_time)
+                last_message_time = time
 
         elif msg.type == 'note_off':
             if note_grid[msg.note] == 1:
-                filtered_messages.append((time, msg))
+                filtered_messages.append((time + delta_error, msg))
+                delta_error = 0
+                last_message_time = time
                 note_grid[msg.note] = 0
 
             elif note_grid[msg.note] > 1:
                 note_grid[msg.note] -= 1
+                delta_error += (time - last_message_time)
+                last_message_time = time
+
+            else:
+                delta_error += (time - last_message_time)
+                last_message_time = time
+
+        else:
+            delta_error += (time - last_message_time)
+            last_message_time = time
+    filtered_messages.sort(key=lambda x: x[0])
 
     offset = 0
-    final_messages.append(file.tracks[1][0])  # opening MetaMessage
     for time, msg in filtered_messages:
         if time - offset != msg.time:
             msg.time = time - offset
         offset += msg.time
-        final_messages.append(msg)
-    final_messages.append(file.tracks[1][-1])  # closing MetaMessage
+        messages.append(msg)
 
-    return final_messages
+    return MidiTrack(messages)
 
 
 # gets the highest velocity across all Messages
-def get_max_velocity(tracks):
-    max_velocities = []
+def get_max_velocity(tracks: list[MidiTrack]):
+    max_velocities = list[int]()
 
     for track_index, track in enumerate(tracks):
         max_velocity = 0
@@ -373,25 +368,31 @@ def get_max_velocity(tracks):
     return max(max_velocities)
 
 
-def prepare_file(filepath, join_tracks):
+def prepare_file(filepath: str,
+                 join_tracks: bool):
     file, filename, accuracy = open_file(filepath)
     length = get_midi_length(file, accuracy)
     tempos = get_tempo_array(file, length, accuracy)
 
-    # saves combined tracks as 'Track 1'
     if join_tracks:
-        track = combine_tracks(file)
+        track = combine_and_clean_tracks(file.tracks[1:])
         file.tracks = [file.tracks[0], track]
+    else:
+        for i in range(1, len(file.tracks)):
+            file.tracks[i] = combine_and_clean_tracks([file.tracks[i]])
 
     return file, filename, accuracy, length, tempos
 
 
 # returns raw sequences of events
-def get_lists_of_events(file, accuracy, tempos, mode):
-    initial_sequences = []
+def get_lists_of_events(file: MidiFile,
+                        accuracy: float,
+                        tempos: list[int],
+                        mode: Mode):
+    initial_sequences = list[list[Event]]()
 
     for track_index, track in enumerate(file.tracks[1:]):
-        initial_sequence = []
+        initial_sequence = list[Event]()
         ticks = 0
         offset = 0
         event_notes = dict[int, EventNote]()
@@ -401,23 +402,29 @@ def get_lists_of_events(file, accuracy, tempos, mode):
             increment = get_offset(msg.time, ticks, accuracy)
 
             if msg.type == 'note_on':
-                event_notes[msg.note] = (EventNote(msg.velocity, msg.note))
+                event_notes[msg.note] = EventNote(msg.velocity, msg.note)
             elif msg.type == 'note_off':
-                event_notes.pop(msg.note)
+                try:
+                    event_notes.pop(msg.note)
+                except:
+                    ticks += msg.time
+                    offset += increment
+                    continue
 
             ticks += msg.time
             offset += increment
             if msg.type in ['note_on', 'note_off']:
                 initial_sequence.append(Event(increment, 0, offset, track_index, tempos[offset], event_notes, mode))
-
-        nonzero_sequence = []
+        
+        # creates another list without zero-length events
+        nonzero_sequence = list[Event]()
         for i in range(len(initial_sequence) - 1):
             if initial_sequence[i + 1].time > 0:
                 initial_sequence[i].length = initial_sequence[i + 1].time
                 nonzero_sequence.append(initial_sequence[i])
         nonzero_sequence.append(initial_sequence[-1])
 
-        # this notes_array must be set after event lengths setup, as they're stored in SeparateNotes
+        # arrays of notes must be set after event lengths setup, as they're stored in SeparateNotes
         if mode == Mode.NOTES:
             for i in range(len(nonzero_sequence)):
                 nonzero_sequence[i].set_notes_array()
@@ -427,7 +434,9 @@ def get_lists_of_events(file, accuracy, tempos, mode):
 
 
 # gets normalised sequences of events from a file
-def initialise_sequences(filepath, mode, join_tracks=False):
+def initialise_sequences(filepath: str,
+                         mode: Mode,
+                         join_tracks: bool = False):
     file, filename, accuracy, length, tempos = prepare_file(filepath, join_tracks)
     initial_sequences = get_lists_of_events(file, accuracy, tempos, mode)
 
@@ -440,17 +449,22 @@ def initialise_sequences(filepath, mode, join_tracks=False):
     return file, filename, length, initial_sequences
 
 
-# CHECK THE DOCUMENTATION ABOVE
-def get_sequence_of_notes(filepath, mode, join_tracks=False, only_active_notes=True):
+# check the DOCUMENTATION.md file
+def get_sequence_of_notes(filepath: str,
+                          mode: Mode,
+                          join_tracks: bool = False,
+                          only_active_notes: bool = True):
     file, filename, length, initial_sequences = initialise_sequences(filepath, mode, join_tracks)
 
-    output_list = []
+    output_list = list[list[tuple[int, list[int | tuple[int, bool | float | EventNote]]] |
+                            tuple[int, list[None | bool | float | SeparateNote]]]]()
     for sequence in initial_sequences:
-        track_list = []
+        track_list = list[tuple[int, list[int | tuple[int, bool | float | EventNote]]] |
+                          tuple[int, list[None | bool | float | SeparateNote]]]()
 
         if only_active_notes:
             for event in sequence:
-                event_list = []
+                event_list = list[int | tuple[int, bool | float | EventNote]]()
                 for element in event.active_notes:
                     match mode:
                         case Mode.BOOLEANS:
@@ -466,15 +480,17 @@ def get_sequence_of_notes(filepath, mode, join_tracks=False, only_active_notes=T
         output_list.append(track_list)
 
     if join_tracks:
-        export_output('./sequences', filename, output_list[0])
+        export_output('../sequences', filename, output_list[0])
         return output_list[0]
     else:
-        export_output('./sequences', filename, output_list)
+        export_output('../sequences', filename, output_list)
         return output_list
 
 
-# CHECK THE DOCUMENTATION ABOVE
-def get_array_of_notes(filepath, mode, join_tracks=False):
+# check the DOCUMENTATION.md file
+def get_array_of_notes(filepath: str,
+                       mode: Mode,
+                       join_tracks: bool = False):
     file, filename, length, initial_sequences = initialise_sequences(filepath, mode, join_tracks)
 
     if join_tracks:
@@ -507,18 +523,34 @@ def get_array_of_notes(filepath, mode, join_tracks=False):
                                   initial_sequences[seq_index][ev_index].length):
                     output_array[seq_index][time] = initial_sequences[seq_index][ev_index].all_notes
 
-    export_output('./sequences', filename, output_array)
+    export_output('../sequences', filename, output_array)
     return output_array
 
 
 if __name__ == '__main__':
-    for name in os.listdir('./data'):
-        path = os.path.join('./data', name)
+    for name in os.listdir('../data'):
+        path = os.path.join('../data', name)
         print(name)
 
         try:
+            _ = get_sequence_of_notes(path, Mode.BOOLEANS, False, True)
+            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, False, False)
+            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, True, True)
+            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, True, False)
+            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, False, True)
+            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, False, False)
+            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, True, True)
+            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, True, False)
+            # _ = get_sequence_of_notes(path, Mode.NOTES, False, True)
+            # _ = get_sequence_of_notes(path, Mode.NOTES, False, False)
             # _ = get_sequence_of_notes(path, Mode.NOTES, True, True)
-            _ = get_array_of_notes(path, Mode.NOTES, False)
+            # _ = get_sequence_of_notes(path, Mode.NOTES, True, False)
+            # _ = get_array_of_notes(path, Mode.BOOLEANS, False)
+            # _ = get_array_of_notes(path, Mode.BOOLEANS, True)
+            # _ = get_array_of_notes(path, Mode.VELOCITIES, False)
+            # _ = get_array_of_notes(path, Mode.VELOCITIES, True)
+            # _ = get_array_of_notes(path, Mode.NOTES, False)
+            # _ = get_array_of_notes(path, Mode.NOTES, True)
             print("    success")
 
         except Exception as ex:
