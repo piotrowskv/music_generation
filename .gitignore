@@ -126,3 +126,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# IntelliJ files
+.idea/discord.xml
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/music_generation.iml
+.idea/vcs.xml
