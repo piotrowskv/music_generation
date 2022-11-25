@@ -4,7 +4,7 @@
 \usepackage{csquotes}
 \usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
 
-\newcommand{\currentversion}{1.11}
+\newcommand{\currentversion}{2.8}
 
 \usepackage{amsmath}
 \usepackage{graphicx}
@@ -12,8 +12,11 @@
 \usepackage{float}
 \usepackage{multirow}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\graphicspath{{./assets}}
 \addbibresource{references.bib}
-\title{\includegraphics[width=0.8\textwidth]{MINI.png} \\ Project of Application for Piano Music Generation \\ by Artificial Intelligence Algorithms \\ [0.35em]\large Laboratory No. 1, \\ Version \currentversion }
+
+\title{\includegraphics[width=0.8\textwidth]{MINI.png} \\ Project of Application for Piano Music Generation \\ by Artificial Intelligence Algorithms \\ [0.35em]\large Laboratory No. 2, \\ Version \currentversion }
 \author{}
 \date{}
 
@@ -42,6 +45,11 @@
 \newpage
 \begin{abstract}
     This document outlines the bachelor thesis project for the last semester of Computer Science and Information Systems at the Faculty of Mathematics and Information Science Warsaw University of Technology. Project assumptions and requirements are presented regarding the concept of generation music with Machine Learning techniques. Users can interact with the models through a user interface.
+
+    \hfill
+
+
+    \textbf{Sections 1-5 are a part of \textit{Deliverable 1}.}
 \end{abstract}
 
 \vskip50pt
@@ -49,31 +57,55 @@
 \begin{center}
     \begin{tabular}{ |p{0.07\textwidth} | p{0.1\textwidth} | p{0.5\textwidth} | p{0.21\textwidth}| }
         \hline
-        Version         & Date       & Description                                                         & Author              \\
+        Version         & Date       & Description                                                          & Author              \\
         \hline
-        1               & 15.10.2022 & Initial creation of the document.                                   & Weronika Piotrowska \\
+        1               & 15.10.2022 & Initial creation of the document.                                    & Weronika Piotrowska \\
         \hline
-        1.1             & 15.10.2022 & Added vocabulary, executive summary and non-functional requirements & Weronika Piotrowska \\
+        1.1             & 15.10.2022 & Added vocabulary, executive summary and non-functional requirements  & Weronika Piotrowska \\
         \hline
-        1.2             & 15.10.2022 & Added non-functional requirements.                                  & Weronika Piotrowska \\
+        1.2             & 15.10.2022 & Added non-functional requirements.                                   & Weronika Piotrowska \\
         \hline
-        1.3             & 16.10.2022 & Added user stories and functional requirements.                     & Marcin Wojnarowski  \\
+        1.3             & 16.10.2022 & Added user stories and functional requirements.                      & Marcin Wojnarowski  \\
         \hline
-        1.4             & 16.10.2022 & Added document abstract.                                            & Marcin Wojnarowski  \\
+        1.4             & 16.10.2022 & Added document abstract.                                             & Marcin Wojnarowski  \\
         \hline
-        1.5             & 16.10.2022 & Added SWOT analysis.                                                & Szymon Górski       \\
+        1.5             & 16.10.2022 & Added SWOT analysis.                                                 & Szymon Górski       \\
         \hline
-        1.6             & 17.10.2022 & Added project schedule.                                             & Szymon Górski       \\
+        1.6             & 17.10.2022 & Added project schedule.                                              & Szymon Górski       \\
         \hline
-        1.7             & 18.10.2022 & Added use-case descriptions.                                        & Marcin Wojnarowski  \\
+        1.7             & 18.10.2022 & Added use-case descriptions.                                         & Marcin Wojnarowski  \\
         \hline
-        1.8             & 18.10.2022 & Added motivation and goal description                               & Weronika Piotrowska \\
+        1.8             & 18.10.2022 & Added motivation and goal description                                & Weronika Piotrowska \\
         \hline
-        1.9             & 18.10.2022 & Added Gantt diagram.                                                & Szymon Górski       \\
+        1.9             & 18.10.2022 & Added Gantt diagram.                                                 & Szymon Górski       \\
         \hline
-        1.10            & 18.10.2022 & Added work division.                                                & Szymon Górski       \\
+        1.10            & 18.10.2022 & Added work division.                                                 & Szymon Górski       \\
         \hline
-        \currentversion & 19.10.2022 & Added use case diagram.                                             & Marcin Wojnarowski  \\
+        1.11            & 19.10.2022 & Added use case diagram.                                              & Marcin Wojnarowski  \\
+        \hline
+
+        2.0             & 09.11.2022 & Initial creation of the document, basing on Laboratory 1 Deliverable & Weronika Piotrowska \\
+        \hline
+
+        2.1             & 10.11.2022 & Added dataset description                                            & Weronika Piotrowska \\
+        \hline
+
+        2.2             & 12.11.2022 & Added System architecture and models design                          & Szymon Górski       \\
+        \hline
+
+        2.3             & 12.11.2022 & Added Main Components diagrams                                       & Weronika Piotrowska \\
+        \hline
+        2.4             & 12.11.2022 & Added Technology Selection section                                   & Marcin Wojnarowski  \\
+        \hline
+
+        2.5             & 13.11.2022 & Added External Interfaces section                                    & Marcin Wojnarowski  \\
+        \hline
+        2.6             & 13.11.2022 & Added Communication                                                  & Szymon Górski       \\
+        \hline
+
+        2.7             & 14.11.2022 & Added Model Selection description                                    & Weronika Piotrowska \\
+        \hline
+        \currentversion & 14.11.2022 & Added GUI vision section and OpenAPI attachment                      & Marcin Wojnarowski  \\
         \hline
     \end{tabular}
 \end{center}
@@ -95,7 +127,7 @@ The aim of work is implementation and comparison of algorithms that can be used 
 \noindent
 Optional goal is to generate a piece which is non-distinguishable from the original dataset. This issue, however, is mostly based on a subjective impression of an individual and is too complicated to be evaluated by a computer and will not be focused on in this project.
 
-\section{Vocabulary}
+\section{Vocabulary} \label{vocab}
 \textbf{Artificial Intelligence} - The capacity of computers or other machines to exhibit or simulate intelligent behavior; the field of study concerned with this. Abbreviated AI. \cite{AI_OED}
 
 \vskip5pt \noindent
@@ -172,7 +204,7 @@ Below are stories related to the \textit{model} component.
           \AC Model generates MIDI files based on a given seed.
 \end{enumerate}
 
-
+\newpage
 \textbf{\large Client \& Server:}
 
 Below are stories related to the \textit{client} and \textit{server} component. User stories here describe the user perspective of interaction with the system however, these also entail some backend work as well.
@@ -214,6 +246,7 @@ Below are stories related to the \textit{client} and \textit{server} component. 
           \AC Generated music is saved to MIDI on the computer.
 \end{enumerate}
 
+\newpage
 \subsubsection{Use-case descriptions}
 
 To be more specific, a list of core functional requirements as use cases is presented below.
@@ -359,7 +392,9 @@ The following table presents division of the project into parts and tasks with t
     \end{tabular}
 \end{center}
 
+\newpage
 \subsection{Gantt diagram}
+
 The following pictures represent a Gantt diagram locating assignments in a timetable. It also represents dependencies between particular tasks presented above.
 
 \begin{center}
@@ -457,7 +492,254 @@ A risk analysis of the project was done using the 'SWOT' methodology. The result
     \end{tabular}
 \end{center}
 
+
+
+\section{Initial dataset description}
+\subsection{Overview}
+The initial dataset consists of nearly 200 piano pieces written by Johann Sebastian Bach. The files are in MIDI format, obtained from an open-source page \hyperlink{https://www.bachcentral.com/midiindexcomplete.html}{Bach Central}. MIDI format is known for various advantages when it comes to audio processing; not only is it easily converted to numerical values, but also it does not initially define the instrument the music should be played on. It is very beneficial for the project, since Bach did not only write piano pieces, but using MIDI all files can be interpreted as such.
+
+Johann Sebastian Bach is known for devoting attention to structure of his compositions. His compositions often contain the same, transformed structures and mathematical concepts. For example, the piece \textit{Crab Canon} from \textit{The Musical Offering} can be written and read from a Möbius strip.\cite{Mobius} Therefore, we believe that the compositions tied to mathematics could be replicable by artificial intelligence.
+
+\subsection{Encoding} \label{encoding}
+
+The following image illustrates a sample MIDI file in \hyperlink{http://www.midieditor.org/}{MidiEditor} program.
+
+\begin{center}
+    \includegraphics[width=1\textwidth]{midi_sample.png} \\
+    Cantata \textit{Jesu, meine Freunde} by Johann Sebastian Bach showed in MidiEditor.
+    \vskip10pt \noindent
+\end{center}
+
+The simplest case of interpreting a MIDI file is to look at it as a matrix of notes and time units. When entry of the matrix is 1 in i-th row and j-th column, this means that the i-th note is played in j-th time unit. Alongside of that, the file contains different tracks that are played. Since tracks are not usually consistent with each other, we have decided to split the data such that it would represent tracks. We achieved it by adding a third dimension to the matrix, turning it into a tensor.
+
+This encoding was chosen because it resembles an image encoding in machine learning, where the tensor contains information about the place of a pixel (width and height of an image) and the color channel (R, G, B). Adjusting this approach to music files, we treat each track as a different color channel. In this way, channels are independent, but are processed together with other channels, giving us a consistent result.
+
+\section{Model selection} \label{models}
+% we can edit it if we change our mids ig
+
+The client will see three different models and their performance on the initial dataset. The client can modify this dataset, train the chosen model again and see example of generated files. This section is devoted to short description of chosen Machine Learning models and reasons why they are suitable for our problem.
+
+\subsection{Hidden Markov Model}
+
+Similarly to Markov Chains (mentioned in Section \ref{vocab}), Hidden Markov Model bases on measuring probability of next state in a sequence. By implementing HMM, we will train the probability matrix using only linear transformations. To implement the model, we can use \href{https://hmmlearn.readthedocs.io/en/latest/tutorial.html#available-models}{hmmlearn} library in Python.
+
+It is worth to notice that HMM is not a Neural Network. However, it is widely used in pattern and speech recognition. There were attempts to use it for music generation \cite{Li_2019} which yielded satisfactory results. Thus, we believe implementing this model can be a good starting point for the task.
+
+\subsection{LSTM}
+
+LSTM Networks, as mentioned in Section \ref{vocab}, are recurrent Neural Networks, which means the model will use outputs that it has produced to compute next element in a sequence. LSTMs use \textit{gating mechanisms} to control the memorizing process and as a result avoid the problem of forgetting long-term dependences in a sequence.
+
+LSTMs have been widely used in all Machine Learning problems and has outpreformed Recurrent Neural Networks in classyfing and predicting time series. There are approaches to music generation using LSTMs \cite{lstm_arxiv}, but it is not a common practice to use these models.
+
+\subsection{GAN}
+
+GANs (mentioned is Section \ref{vocab}) are generative models widely used in image processing. A GAN consists of a Generator - a model that generates new data samples and a Discriminator - a model that discriminates against fake and real data. While training a GAN, we train generator and discriminator simultaneously, making them "compete" against each other. This architecture is a baseline of today's image generating models.
+
+In section \ref{encoding} we have compared our encoding to an image encoding. Therefore, we believe that using GAN in music generation could bring results as good as it brings with image generation.
+% \subsection{Stable Diffusion}
+
+\section{System architecture}
+The application consists of three following modules. The modules are designed so that replacing one module will not affect other modules.
+
+\subsection{Models}
+This module consists of pre-trained models (Section \ref{models}), which can be also trained on datasets provided by the client. The main responsibilities of this module are:
+\begin{itemize}
+    \item Train and evaluate chosen model according to user's input
+    \item Generate samples of music
+    \item Change the training dataset to one provided by the user
+    \item Adjust user's data to match model's input (Section \ref{encoding})
+\end{itemize}
+
+\subsection{Backend server}
+The role of a backend server is to integrate between user and model. The main responsibilities of this module are:
+\begin{itemize}
+    \item Query models for training, evaluation and generation
+    \item Answer client's queries
+    \item Stream files from and to a client
+    \item Save system logs
+    \item Assert correct format of streamed files
+\end{itemize}
+
+\subsection{Frontend}
+Frontend module will provide a GUI, which will allow the user to use the application. Its main responsibilities are:
+\begin{itemize}
+    \item Allow user to select, configure and train a model
+    \item Allow user to upload own training dataset
+    \item Allow user to download generated files
+    \item Inform about model's training progress
+    \item Allow user to interrupt the training
+    \item Display error messages
+\end{itemize}
+
+\section{Modules design}
+\subsection{Layers}
+We divide the application into two layers
+\begin{itemize}
+    \item Backend
+    \item Frontend
+\end{itemize}
+The backend layer is responsible for implementing Model and API components. The frontend layer contains web application that will interact with the user.
+
+\subsection{Dependencies, class diagram}
+Since the point of our application is to build and test Machine Learning models, there is no complicated dependencies between the classes. The relationship between the classes can be described using the following conceptual class diagram:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{classdiagram.png}
+    \caption{Backend class diagram}
+\end{figure}
+
+We define an abstract class \textit{Model}, which then will be implemented by non-abstract classes. These classes will define certain model architecture. They will inherit methods and properties from the \textit{Model} class, so that we can assure that they all are compatible with API (Backend) component. New architectures can be added in an easy way.
+
+Backend component will consist of mainly API endpoint code, that is communication between chosen model and the client, thus it contains only sending and getting information methods. Described in more details in section \ref{sec:communication} and the attached OpenAPI specification (Attach. \ref{att:openapi}).
+
+
+
+\section{Communication} \label{sec:communication} % protocols, libraries, network configuration
+
+Our three components have a bidirectional linear communication flow, that is, each component talks with a single other component. Thus we differentiate the following communication schemes:
+
+\subsection{Models \texorpdfstring{$\leftrightarrow$}{<->} Backend}
+
+Since backend and models are just two different Python packages, the communication between them will happen through direct function calls. No special protocol is required here.
+
+\subsection{Backend \texorpdfstring{$\leftrightarrow$}{<->} Frontend}
+
+Here we distinguish two types of communication: request-response and real-time. In both cases the communication can be performed in a unsecure and a secure context. Respectively HTTP/HTTPS and WS/WSS.
+
+\subsubsection{Request-Response}
+
+For single request single response communication we will use the HTTP\footnote{HTTP -- Hypertext transfer protocol} protocol since it is the widely accepted protocol for the web. Our backend will support both HTTP/1.1 and HTTP/2 with the possibility to introduce HTTP/3 support (but not directly implemented by this project). For a meta-protocol REST\footnote{REST -- Representational state transfer} is a popular choice, and thus we will use it but with a small adjustment to adhere to the core CQRS\cite{CQRS}\footnote{CQRS -- Command-Query Responsibility Segregation} principle: queries should be idempotent and fetch some data (represented as HTTP's \texttt{GET} method), commands should modify some data but not return any (represented as HTTP's \texttt{POST} method). This simple modification allows for easier testing and maintainability.
+
+In the attachments (Attach. \ref{att:openapi}) one can find the OpenAPI description of the API.
+
+\subsubsection{Real-Time}
+
+Some aspects will require real-time communication; that is, data can flow both ways without a need for instantiation through requests. For instance, when a model is being trained, backend will have to continuously push data to the frontend client about the current training status. In that case it is unreasonable to expect the client to ask for the newest training status all of the time. WebSockets fit this task perfectly. They allow for creating connections where both ends are able to push messages without any specific trigger.
+
+
+These can be summarized in a single figure (Fig. \ref{fig:communication-diagram}).
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\textwidth]{communication_diagram.png}
+    \caption{Communication diagram for all three components. Arrow heads represent the direction of communication.}
+    \label{fig:communication-diagram}
+\end{figure}
+
+\section{Main components}
+% class, states, activity, events diagrams
+
+This section presents state, activity and event diagrams between classes described above.
+
+\subsection{State diagrams}
+The only component that will change its state during the runtime is Model class. The model class is initialized at the beginning of the application or when the user decides to train a new model. When the parameters and dataset are selected and the architecture is chosen, the model is ready to be trained. When the user starts to begin the training, the model changes it state to \textit{in training}. Then, the model can be interrupted. An interrupted model can be resumed or deleted. If the model has finished training, it is ready to report evaluation results and generate samples. Then, it can be killed.
+
+This can be summarized by a state diagram as follows:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{statediagram.png}
+    \caption{State diagram of a model}
+\end{figure}
+
+\subsection{Activity diagrams}
+
+As stated before, the application itself has a simple purpose; to enable the user to modify and test an Artificial Intelligence model. Therefore, the activities inside the project are a simple flow of information between the components.
+
+When the user decides to train the model, they select the architecture and parameters. Then, they upload a dataset. The dataset is verified in terms of file format, file size etc. (mentioned in Section \ref{ex_interfaces}). Then, the model begins training. The training can be interrupted by the user and then the user has to decide whether to delete the model or resume training. After the training is finished, the model is evaluated and optionally sample files are generated. According to the user's decision, the model can be saved. Then it is deleted.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{activitydiagram.png}
+    \caption{Activity diagram of custom model training}
+\end{figure}
+
+\subsection{Sequence diagrams}
+
+The following diagram illustrates sequential information processing between the user and model. As one can observe, API component is only to forward information between other components.
+
+First, the user configures model and uploads dataset. If the dataset is invalid, model sends a synchronous call that new dataset is required. User must upload a new dataset. This procedure is optional, but can also happen more than once.
+Then, the user starts a model. The model repeatedly reports its training progress. Finally, the model reports evaluation metrics. After that, the user can request the model to generate music samples and save the model. These two operations are optional and independent of each other.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{sequencediagram.png}
+    \caption{Sequence diagram of custom model creation}
+\end{figure}
+
+\section{GUI vision} % schedules, plots, drawings
+
+The UI will focus on simplicity and ease of use. None of the existing UI frameworks nor design systems suit our needs so we will implement one from scratch in a two-tone design language. The navigation will be linear to have a clear direction of actions to be taken by a user.
+
+The product will follow accessibility principles such as semantic elements, descriptive alt labels, or keyboard navigation. On Fig. \ref{fig:gui_home} we can see two themes supported by the GUI, dark and light. Both have a high contrast which also helps accessibility.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{gui_dark.png}
+    \includegraphics[width=\linewidth]{gui_light.png}
+    \caption{Home page of the user interface, in dark and light theme respectively.}
+    \label{fig:gui_home}
+\end{figure}
+
+
+To guide the user through the configuration options elements which require an action from the user will be marked with a dashed border (Fig. \ref{fig:gui_action}) but once completed will turn into a solid border.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{gui_action_todo.png}
+    \includegraphics[width=0.6\linewidth]{gui_action_done.png}
+    \caption{An element requiring user attention before and after being completed.}
+    \label{fig:gui_action}
+\end{figure}
+
+
+During training the UI updates in real-time with training results. These will be represented on a chart and some additional relevant information (Fig. \ref{fig:gui_chart}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{gui_training_chart.png}
+    \caption{Mockup of a live-updating chart with training results. Dotted line represent the currently calculated segment.}
+    \label{fig:gui_chart}
+\end{figure}
+
+Finally, once training is done user is presented with a possibility of providing a generation seed to generate a larger sample of music. To do this input will be accepted both from user's keyboard and an on-screen piano keyboard. After a seed is recorded it can be played back by the user to be verified for correctness (Fig. \ref{fig:gui_record_seed}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{gui_record_seed.png}
+    \caption{Mockup of a on-screen piano keyboard for recording a seed.}
+    \label{fig:gui_record_seed}
+\end{figure}
+
+\section{External interfaces} \label{ex_interfaces} % standards, file formats, norms
+
+The only external interface we will be using is when uploading and downloading files. User's own dataset must be uploaded as a set of \texttt{.midi} or \texttt{.mid} files and cannot weigh more than 10MB. Each uploaded file must not weigh more than 500KB. For comparison, the entire initial training dataset weighs 3MB. Additionally, we do not allow files to be in folders and they must not be password protected. The maximum length of filename is 64 characters.
+
+All files will be asserted to be correct in above conditions before running the model. Filename changes may be applied before further processing.
+
+
+\section{Technology selection} % languages, libraries, platforms, OS
+
+Our goal is to be as cross-platform as possible. That is why our selection of technologies focuses on solutions which give us the possibility to abstract over the underlying platform. Arguably nowadays the most ubiquitous platform is web. That is why our frontend will be built for the web platform using standard cross-browser features.
+
+The frontend will consist of a client-side-rendered web page distributed as a set of static JS, CSS, and HTML files. To build these files the \href{https://www.typescriptlang.org/}{Typescript} language will be used, as it provides static types to the inherently dynamic Javascript which will be useful for development. To build the HTML DOM a UI library named \href{https://reactjs.org/}{React} will be used because it gives an unopinionated and simple approach to building user interfaces. For CSS \href{https://tailwindcss.com/}{Tailwind} will be used, but the styling will be custom. All variants of testing (unit, integration) will be performed with the use of \href{https://vitest.dev/}{Vitest} which is a more modern alternative to (but compatible with) \href{https://jestjs.io/}{Jest}. Finally, for building the final output \href{https://vitejs.dev/}{Vite} is used as it provides the best developer experience and fast development cycle. We plan to use modern and ECMAScript\footnote{ECMAScript -- Standard defining what is commonly known as Javascript}-compliant web APIs to be able to target any platform which has a web browser.
+
+The backend will be written in \href{https://www.python.org/}{Python} for a single, simple reason: our models are written in Python. Shortcomings of Python as a web server are well understood by us, but we made an executive decision to use the same language for both the models and backend to greatly simplify their communication (it will result in a direct function call, instead of an additional communication layer). Given that, we chose \href{https://fastapi.tiangolo.com/}{FastAPI} for creating HTTP and WebSocket APIs. For testing the built-in \texttt{unittest} package and FastAPI's functions will be used. For a better static verifiability Python type hints will be used. Any platform with a Python interpreter will be able to run this web server, given that the dependencies of the models can be resolved.
+
+Which brings us to the final component; the models themselves. These will be written in Python due to it being the go-to language for machine learning. Most machine learning libraries target Python, out of a crowd of candidates we are going with \href{https://www.tensorflow.org/}{Tensorflow} due to its large community support and seamless GPU/CPU interchangeability. There exist CUDA, Metal, JS, WebGL, and NumPy backends for Tensorflow, so our code should work on any platform these backends can run on.
+
+Finally, to ease deployment \href{https://www.docker.com/}{Docker} will be used to be able to spin up the whole project in a sandboxed environment with a single command.
+
 \newpage
+\section{Attachments}
+
+\begin{enumerate}
+    \item \label{att:openapi} The OpenAPI description of the HTTP API
+\end{enumerate}
+
+
 \printbibliography
+
 
 \end{document}
