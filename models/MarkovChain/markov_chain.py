@@ -79,6 +79,11 @@ class Markov_Chain():
         print("Counting probabilities done!")
 
     def predict(self, initial_notes, length, deterministic, rand, save_path, save_name): 
+
+        # deterministic - if True, next note will be always note with maximum probability
+        #               - if False, next note will be sampled according to all notes probability
+        # rand - chance of selecting compeletly ranodm token next
+
         prediction = []
         previous_n_gram = initial_notes
         for i in range(len(initial_notes)):
