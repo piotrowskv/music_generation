@@ -36,7 +36,8 @@ def get_network(input_size):
     model.add(LSTM(
         512,
         input_shape=(input_size[1], input_size[2]),
-        return_sequences=True
+        return_sequences=True,
+        recurrent_activation="sigmoid"
         # recurrent_dropout=0.3  - will not run on GPU if not separated
     ))
     model.add(BatchNormalization())
@@ -59,12 +60,12 @@ def get_network(input_size):
     model.add(Dropout(0.02))
 
     model.add(Dense(128))
-    model.add(Activation('relu'))    # model.add(Activation('relu' | 'tanh'))
+    model.add(Activation('relu'))     # model.add(Activation('relu' | 'tanh'))
     model.add(BatchNormalization())
     model.add(Dropout(0.02))
 
     model.add(Dense(64))
-    model.add(Activation('softmax'))
+    model.add(Activation('sigmoid'))  # softmax
     model.compile(
         loss='categorical_crossentropy',
         optimizer='rmsprop'
@@ -87,7 +88,7 @@ def train_network(lstm_model, lstm_input, lstm_output):
         lstm_input,
         lstm_output,
         epochs=200,         # TODO: 200
-        batch_size=512,     # TODO: 128
+        batch_size=32,     # TODO: 128
         callbacks=callbacks_list
     )
 
@@ -103,7 +104,7 @@ if __name__ == '__main__':
 
         try:
             # midi_input = np.load(path, allow_pickle=True)  # if .npy files loadeds
-            midi_input = get_sequence_of_notes(path, Mode.BOOLEANS, True, False)
+            midi_input = get_sequence_of_notes(path, Mode.VELOCITIES, True, False)
             notes_sequences, lengths_sequences, notes_predictions, lengths_predictions = get_sequences(midi_input)
             notes_input.extend(notes_sequences)
             lengths_input.extend(lengths_sequences)
