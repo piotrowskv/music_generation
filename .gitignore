@@ -134,3 +134,6 @@ dmypy.json
 .idea/modules.xml
 .idea/music_generation.iml
 .idea/vcs.xml
+
+# macos garbage
+.DS_Store
