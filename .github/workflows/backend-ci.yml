@@ -46,4 +46,4 @@ jobs:
 
       - name: Type check
         run: |
-          pipenv run mypy main.py
+          pipenv run mypy main.py --disallow-untyped-defs
