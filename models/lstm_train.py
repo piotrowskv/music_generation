@@ -88,7 +88,7 @@ def train_network(lstm_model, lstm_input, lstm_output):
         lstm_input,
         lstm_output,
         epochs=200,         # TODO: 200
-        batch_size=32,     # TODO: 128
+        batch_size=32,      # TODO: 128
         callbacks=callbacks_list
     )
 
@@ -104,7 +104,8 @@ if __name__ == '__main__':
 
         try:
             # midi_input = np.load(path, allow_pickle=True)  # if .npy files loadeds
-            midi_input = get_sequence_of_notes(path, Mode.VELOCITIES, True, False)
+            midi_input = get_sequence_of_notes(path, Mode.VELOCITIES, False, False)
+            midi_input = midi_input[0]
             notes_sequences, lengths_sequences, notes_predictions, lengths_predictions = get_sequences(midi_input)
             notes_input.extend(notes_sequences)
             lengths_input.extend(lengths_sequences)
