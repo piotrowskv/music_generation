@@ -533,7 +533,7 @@ if __name__ == '__main__':
         print(name)
 
         try:
-            _ = get_sequence_of_notes(path, Mode.BOOLEANS, False, True)
+            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, False, True)
             # _ = get_sequence_of_notes(path, Mode.BOOLEANS, False, False)
             # _ = get_sequence_of_notes(path, Mode.BOOLEANS, True, True)
             # _ = get_sequence_of_notes(path, Mode.BOOLEANS, True, False)
@@ -546,7 +546,7 @@ if __name__ == '__main__':
             # _ = get_sequence_of_notes(path, Mode.NOTES, True, True)
             # _ = get_sequence_of_notes(path, Mode.NOTES, True, False)
             # _ = get_array_of_notes(path, Mode.BOOLEANS, False)
-            # _ = get_array_of_notes(path, Mode.BOOLEANS, True)
+            _ = get_array_of_notes(path, Mode.BOOLEANS, True)
             # _ = get_array_of_notes(path, Mode.VELOCITIES, False)
             # _ = get_array_of_notes(path, Mode.VELOCITIES, True)
             # _ = get_array_of_notes(path, Mode.NOTES, False)
