@@ -23,7 +23,7 @@ def train_network(lstm_model, lstm_input, lstm_output):
         lstm_input,
         lstm_output,
         epochs=200,         # TODO: 200
-        batch_size=32,      # TODO: 128
+        batch_size=64,      # TODO: 128
         callbacks=callbacks_list
     )
 
@@ -146,7 +146,7 @@ def train_network(lstm_model, lstm_input, lstm_output):
 def get_music21_network(input_size):
     model = Sequential()
     model.add(LSTM(
-        512,
+        160,
         input_shape=(input_size[1], input_size[2]),
         return_sequences=True,
         recurrent_activation="sigmoid"
@@ -163,19 +163,24 @@ def get_music21_network(input_size):
     # model.add(BatchNormalization())
     # model.add(Dropout(0.3))
 
-    model.add(LSTM(512))
+    model.add(LSTM(160))
     model.add(BatchNormalization())
     model.add(Dropout(0.02))
 
-    model.add(Dense(128))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.02))
+    # model.add(Dense(80))
+    # model.add(BatchNormalization())
+    # model.add(Dropout(0.02))
+    #
+    # model.add(Dense(40))
+    # model.add(BatchNormalization())
+    # model.add(Dropout(0.02))
 
-    model.add(Dense(32))
+    model.add(Dense(40))
     model.add(Activation('relu'))     # model.add(Activation('relu' | 'tanh'))
     model.add(BatchNormalization())
 
-    model.add(Dense(10))
+    # model.add(Dense(10))
+    model.add(Dense(5))
     model.add(Activation('sigmoid'))  # softmax
     model.compile(
         loss='categorical_crossentropy',
@@ -183,6 +188,7 @@ def get_music21_network(input_size):
     )
 
     return model
+
 
 def get_music21_sequences(raw_input):
     sequences = []
@@ -205,7 +211,8 @@ def run_music21_features():
     sequences, predictions = get_music21_sequences(midi_input)
     ni = np.asarray(sequences)
     no = np.asarray(predictions)
-    input_size = (len(ni), SEQUENCE_LENGTH, 10)
+    # input_size = (len(ni), SEQUENCE_LENGTH, 10)
+    input_size = (len(ni), SEQUENCE_LENGTH, 5)
     model = get_music21_network(input_size)
     train_network(model, ni, no)
 

@@ -50,27 +50,50 @@ while len(active_tracks) > 0:
         removed_tracks.append(track)
     to_remove.clear()
 
-features = [[] for _ in range((2 * len(f) + 2))]
+
+''' VERSION WITH OCTAVE/TONE '''
+# features = [[] for _ in range((2 * len(f) + 2))]
+# for track in range(len(events) - 1):
+#     while len(events[track]) > 0:
+#         state = events[track].pop(0)
+#
+#         if len(state) == 0:
+#             features[2 * track + 0].append(0.0)
+#             features[2 * track + 1].append(0.0)
+#         elif len(state) == 1:
+#             features[2 * track + 0].append((state[0] // 12 - 1) / 8)    # octaves mapping x/8
+#             features[2 * track + 1].append((state[0] % 12 + 1) / 12)    # tones mapping x/12
+#         else:
+#             ch = chord.Chord(state)
+#             ch = ch.root().midi
+#             features[2 * track + 0].append((ch // 12 - 1) / 8)
+#             features[2 * track + 1].append((ch % 12 + 1) / 12)
+#
+# while len(events[-1]) > 0:
+#     state = events[-1].pop(0)
+#     features[-2].append(1 / state) # lengths mapping 1/x
+#     features[-1].append(0.0) # TODO: tempos + mapping 1000/x
+
+
+''' VERSION WITH MIDI NOTE '''
+features = [[] for _ in range((len(f) + 1))]
 for track in range(len(events) - 1):
     while len(events[track]) > 0:
         state = events[track].pop(0)
 
         if len(state) == 0:
-            features[2 * track + 0].append(0.0)
-            features[2 * track + 1].append(0.0)
+            features[track].append(0.0)
         elif len(state) == 1:
-            features[2 * track + 0].append((state[0] // 12 - 1) / 8)    # octaves mapping x/8
-            features[2 * track + 1].append((state[0] % 12 + 1) / 12)    # tones mapping x/12
+            features[track].append(state[0] / 128)    # notes mapping x/128
         else:
             ch = chord.Chord(state)
             ch = ch.root().midi
-            features[2 * track + 0].append((ch // 12 - 1) / 8)
-            features[2 * track + 1].append((ch % 12 + 1) / 12)
+            features[track].append(ch / 128)
 
 while len(events[-1]) > 0:
     state = events[-1].pop(0)
-    features[-2].append(1 / state) # lengths mapping 1/x
-    features[-1].append(0.0) # TODO: tempos + mapping 1000/x
+    features[-1].append(1 / state) # lengths mapping 1/x
+
 
 # for each note list determine the main note, if 0-1-N, calc features and put to the array
 # collect tempo array and iterate through last list += offset to get tempo array positions
@@ -78,3 +101,4 @@ while len(events[-1]) > 0:
 # output = np.asarray(features)
 os.makedirs('../sequences', exist_ok=True)
 np.save('../sequences/chords21', features)
+print(features.__sizeof__())
