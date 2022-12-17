@@ -237,12 +237,17 @@ def check_file_type(file: MidiFile):
         raise ValueError('impossible to perform calculations for type 2 (asynchronous) file')
 
 
-def open_file(filepath: str):
+def get_filename(filepath: str):
     filename = os.path.basename(filepath)
     if filename[-4:] != '.mid':
         raise TypeError('file must be of ".mid" format')
 
     filename = filename[:-4]
+    return filename
+
+
+def open_file(filepath: str):
+    filename = get_filename(filepath)
     file = MidiFile(filepath)
     check_file_type(file)
 
@@ -278,6 +283,14 @@ def get_tempo_array(file: MidiFile,
 
     for time in range(offset, length + 1):  # additional position for an ending event
         tempos[time] = tempo
+
+    return tempos
+
+
+def export_tempo_array(filepath: str):
+    file, filename, accuracy = open_file(filepath)
+    length = get_midi_length(file, accuracy)
+    tempos = get_tempo_array(file, length, accuracy)
 
     return tempos
 
@@ -480,11 +493,9 @@ def get_sequence_of_notes(filepath: str,
         output_list.append(track_list)
 
     if join_tracks:
-        export_output('../sequences', filename, output_list[0])
-        return output_list[0]
-    else:
-        export_output('../sequences', filename, output_list)
-        return output_list
+        output_list = output_list[0]
+
+    return output_list
 
 
 # check the DOCUMENTATION.md file
@@ -523,7 +534,6 @@ def get_array_of_notes(filepath: str,
                                   initial_sequences[seq_index][ev_index].length):
                     output_array[seq_index][time] = initial_sequences[seq_index][ev_index].all_notes
 
-    export_output('../sequences', filename, output_array)
     return output_array
 
 
@@ -533,24 +543,25 @@ if __name__ == '__main__':
         print(name)
 
         try:
-            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, False, True)
-            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, False, False)
-            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, True, True)
-            # _ = get_sequence_of_notes(path, Mode.BOOLEANS, True, False)
-            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, False, True)
-            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, False, False)
-            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, True, True)
-            # _ = get_sequence_of_notes(path, Mode.VELOCITIES, True, False)
-            # _ = get_sequence_of_notes(path, Mode.NOTES, False, True)
-            # _ = get_sequence_of_notes(path, Mode.NOTES, False, False)
-            # _ = get_sequence_of_notes(path, Mode.NOTES, True, True)
-            # _ = get_sequence_of_notes(path, Mode.NOTES, True, False)
-            # _ = get_array_of_notes(path, Mode.BOOLEANS, False)
-            _ = get_array_of_notes(path, Mode.BOOLEANS, True)
-            # _ = get_array_of_notes(path, Mode.VELOCITIES, False)
-            # _ = get_array_of_notes(path, Mode.VELOCITIES, True)
-            # _ = get_array_of_notes(path, Mode.NOTES, False)
-            # _ = get_array_of_notes(path, Mode.NOTES, True)
+            output_file = get_sequence_of_notes(path, Mode.BOOLEANS, False, True)
+            # output_file = get_sequence_of_notes(path, Mode.BOOLEANS, False, False)
+            # output_file = get_sequence_of_notes(path, Mode.BOOLEANS, True, True)
+            # output_file = get_sequence_of_notes(path, Mode.BOOLEANS, True, False)
+            # output_file = get_sequence_of_notes(path, Mode.VELOCITIES, False, True)
+            # output_file = get_sequence_of_notes(path, Mode.VELOCITIES, False, False)
+            # output_file = get_sequence_of_notes(path, Mode.VELOCITIES, True, True)
+            # output_file = get_sequence_of_notes(path, Mode.VELOCITIES, True, False)
+            # output_file = get_sequence_of_notes(path, Mode.NOTES, False, True)
+            # output_file = get_sequence_of_notes(path, Mode.NOTES, False, False)
+            # output_file = get_sequence_of_notes(path, Mode.NOTES, True, True)
+            # output_file = get_sequence_of_notes(path, Mode.NOTES, True, False)
+            # output_file = get_array_of_notes(path, Mode.BOOLEANS, False)
+            # output_file = get_array_of_notes(path, Mode.BOOLEANS, True)
+            # output_file = get_array_of_notes(path, Mode.VELOCITIES, False)
+            # output_file = get_array_of_notes(path, Mode.VELOCITIES, True)
+            # output_file = get_array_of_notes(path, Mode.NOTES, False)
+            # output_file = get_array_of_notes(path, Mode.NOTES, True)
+            export_output('../sequences', get_filename(path), output_file)
             print("    success")
 
         except Exception as ex:
