@@ -8,7 +8,7 @@ music21 = "*"
 mido = "*"
 requests = "*"
 tqdm = "*"
-numpy = "*"
+numpy = "==1.23.5"
 
 [dev-packages]
 autopep8 = "*"
