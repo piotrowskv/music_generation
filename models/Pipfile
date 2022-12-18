@@ -4,9 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-numpy = "*"
-keras = ">=2.10.0"
-tensorflow = ">=2.10.0"
+numpy = "==1.23.5"
+keras = "==2.10.0"
+tensorflow = {version = "==2.10.0", markers = "sys_platform == 'linux' or sys_platform == 'win32'"}
+tensorflow-macos = {version = "==2.10.0", sys_platform = "== 'darwin'"}
+tensorflow-metal = {version = "==0.6.0", sys_platform = "== 'darwin'"}
 midi = {editable = true, path = "./../midi"}
 
 [dev-packages]
