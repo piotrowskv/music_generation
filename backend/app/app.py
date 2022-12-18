@@ -14,6 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class SupportedModels(Enum):
     LSTM = m.ModelVariant(
         id='0f5e5af5-9ede-4cc8-814d-f7a0dfb8a6d6',
