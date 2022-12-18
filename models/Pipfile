@@ -13,6 +13,7 @@ keras = ">=2.10.0"
 scikit-image = "*"
 tensorflow = ">=2.10.0"
 mido = ">=1.2.10"
+music21 = ">=8.1.0"
 
 [dev-packages]
 
