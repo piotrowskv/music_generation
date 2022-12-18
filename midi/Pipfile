@@ -12,6 +12,7 @@ tqdm = "*"
 [dev-packages]
 autopep8 = "*"
 mypy = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.10"
