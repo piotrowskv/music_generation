@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from .bach import download_bach_dataset
+from midi.bach import download_bach_dataset
 
 
 def test_fails_if_path_is_file(tmpdir):
