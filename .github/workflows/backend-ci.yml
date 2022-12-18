@@ -44,6 +44,10 @@ jobs:
         run: |
           pipenv run python -m py_compile main.py
 
+      - name: Check formatting
+        run: |
+          pipenv run autopep8 --diff -aaa --recursive --exit-code .
+
       - name: Type check
         run: |
           pipenv run mypy main.py --disallow-untyped-defs
