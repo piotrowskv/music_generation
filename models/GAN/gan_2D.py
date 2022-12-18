@@ -18,7 +18,7 @@ from tensorflow.keras import activations
 
 DATA_PATH = 'data/sequences'
 #AVG = 11647
-AVG = 560
+AVG = 512
 class GAN(Sequential):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -34,22 +34,17 @@ class GAN(Sequential):
 
         for i in range(len(data_lines)):
             for j in range(data_lines[i].shape[0]):
-                sum_x += data_lines[i].shape[1]
-                if(data_lines[i].shape[1] < min_ ):
-                    min_ = data_lines[i].shape[1]
                 data.append(data_lines[i][j].tolist())
-        avg = sum_x//len(data_lines)
-        print("Minimum length of track: " + str(min_))
 
 
         dataset = data
-        notes = np.zeros((len(data), 128, min_))
+        notes = np.zeros((len(data), 128, AVG))
         zeros = np.zeros((1, 128))
 
         for i in range(len(dataset)):
             dataset[i]=np.array(dataset[i])
-            if dataset[i].shape[0] > min_:
-                dataset[i] = np.delete(dataset[i], slice(min_, dataset[i].shape[0]),0)
+            if dataset[i].shape[0] > AVG:
+                dataset[i] = np.delete(dataset[i], slice(AVG, dataset[i].shape[0]),0)
 
 
         for i in range(len(dataset)):
@@ -71,22 +66,25 @@ class GAN(Sequential):
     
     def define_discriminator(self):
         model = Sequential()
+        start_height = 128 // 8
+        start_width = AVG // 8
+        filters = 128*AVG //4
 
-        model.add(Conv1D(64, 3, padding='same', input_shape=(128,AVG)))
+        model.add(Conv1D(filters, 3, padding='same', input_shape=(128,AVG)))
         model.add(LeakyReLU(alpha=0.2))
 
         model.add(Conv1D(128, 3, strides=2, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
 
-        model.add(Conv1D(128, 3, strides=2, padding='same'))
-        model.add(LeakyReLU(alpha=0.2))
+        #model.add(Conv1D(128, 3, strides=2, padding='same'))
+        #model.add(LeakyReLU(alpha=0.2))
 
-        model.add(Conv1D(256, 3, strides=2, padding='same'))   
-        model.add(LeakyReLU(alpha=0.2))
+        #model.add(Conv1D(256, 3, strides=2, padding='same'))   
+        #model.add(LeakyReLU(alpha=0.2))
 
         model.add(Flatten())
         model.add(Dropout(0.4))
-        model.add(Activation(activations.sigmoid))
+        model.add(Activation(activations.gelu))
         opt = Adam(lr=0.04, beta_1=0.5)
         model.compile(loss='mae', optimizer=opt, metrics=['Accuracy'])
         print(model.summary())
@@ -95,26 +93,26 @@ class GAN(Sequential):
     def define_generator(self, latent_dim):
         start_height = 128 // 8
         start_width = AVG // 8
-        
+        filters = AVG*2
         model = Sequential()
 
-        n_nodes = 64* start_width * start_height
+        n_nodes = start_width * start_height
         model.add(Dense(n_nodes, input_dim=latent_dim))
         model.add(LeakyReLU(alpha=0.2))
-        model.add(Reshape((8*start_height, 8*start_width)))
+        model.add(Reshape((32, 32)))
 
-        model.add(Conv1DTranspose(128, 4, strides=2, padding='same'))
+        model.add(Conv1DTranspose(64, 3, strides=2, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
-        model.add(Reshape((8*start_height, 256)))
+        #model.add(Reshape((8*start_height, 256)))
         
-        model.add(Conv1DTranspose(128, 4, strides=2, padding='same'))
+        model.add(Conv1DTranspose(filters, 3, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
         
-        model.add(Conv1DTranspose(128, 4, strides=3, padding='same'))
-        model.add(LeakyReLU(alpha=0.2))
+        #model.add(Conv1DTranspose(128, 4, strides=3, padding='same'))
+        #model.add(LeakyReLU(alpha=0.2))
 
         model.add(Dropout(0.2))
-        model.add(Conv1D(81, 3, activation='tanh', padding='same'))
+        #model.add(Conv1D(81, 3, activation='tanh', padding='same'))
         model.add(Reshape((128,AVG)))
         print(model.summary())
         return model
@@ -146,7 +144,7 @@ class GAN(Sequential):
         return x_input
 
     def generate_fake_samples(self, generator, latent_dim, n_samples):
-        x_input = PianorollGAN.generate_latent_points(latent_dim, n_samples)
+        x_input = self.generate_latent_points(latent_dim, n_samples)
         X = generator.predict(x_input)
         y = np.ones((n_samples, 1)) 
         return X, y
@@ -165,13 +163,13 @@ class GAN(Sequential):
         discriminator.save(save_discriminator_path + f'/discriminator_model' + str(step)+'.h5')
         gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
 
-    def train(self, generator, discriminator, gan_model, dataset, latent_dim, pianoroll,
+    def train(self, generator, discriminator, gan_model, dataset, latent_dim, data,
           real_samples_multiplier=0.8, fake_samples_multiplier=0.0, discriminator_batches=2,
-          n_epochs=500, n_batch=128, save_step=1000, save_path="pianoroll_samples"):
+          n_epochs=500, n_batch=128, save_step=1000, save_path="samples"):
 
         batch_per_epoch = len(dataset)// n_batch
         half_batch = n_batch // 2
-        seed = self.generate_latent_points(latent_dim, 87)
+        seed = self.generate_latent_points(latent_dim, 128)
         n_steps = batch_per_epoch * n_epochs
         history = {'discriminator_real_loss': [],
                 'discriminator_fake_loss': [],
@@ -182,16 +180,16 @@ class GAN(Sequential):
             disc_loss_fake = 0.0
             disc_accuracy = 0.0
             for disc_batch in range(discriminator_batches):
-                X_real, y_real = PianorollGAN.generate_real_samples(dataset, half_batch)
+                X_real, y_real = self.generate_real_samples(dataset, half_batch)
                 disc_data_real =  discriminator.train_on_batch(X_real, y_real)
                 disc_loss_real += disc_data_real[0]
-                X_fake, y_fake = PianorollGAN.generate_fake_samples(generator, latent_dim, half_batch)
+                X_fake, y_fake = self.generate_fake_samples(generator, latent_dim, half_batch)
                 disc_data_fake = discriminator.train_on_batch(X_fake, y_fake)
                 disc_loss_fake += disc_data_fake[0]
             disc_loss_real /= discriminator_batches
             disc_loss_fake /= discriminator_batches
             disc_accuracy = (disc_data_real[1] + disc_data_fake[1])/2
-            X_gan = PianorollGAN.generate_latent_points(latent_dim, n_batch)
+            X_gan = self.generate_latent_points(latent_dim, n_batch)
             y_gan = np.ones((n_batch, 1)) * real_samples_multiplier
             g_data = gan_model.train_on_batch(X_gan, y_gan)
             g_loss= g_data[0]
@@ -208,7 +206,7 @@ class GAN(Sequential):
                 
         return history, gan_model, generator, discriminator
     
-    def run(self, data_path, output_length=560,   loss='binary_crossentropy', optimizer=None,latent_dim=16, real_samples_multiplier=1.0, fake_samples_multiplier=0.0, discriminator_batches=32, n_epochs=100, n_batch=128, save_step=100, save_path='saved_ganiochy'):
+    def run(self, data_path, output_length=AVG,   loss='binary_crossentropy', optimizer=None,latent_dim=16, real_samples_multiplier=1.0, fake_samples_multiplier=0.0, discriminator_batches=16, n_epochs=100, n_batch=32, save_step=25, save_path='saved_v6'):
         dataset, notes = self.data_preprocessing(data_path)
         dis = self.define_discriminator()
         gen = self.define_generator(latent_dim)
