@@ -5,7 +5,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM, Activation, BatchNormalization
 from keras.callbacks import ModelCheckpoint
 
-from midi.midi_decode import get_sequence_of_notes, Mode
+from midi.decode import get_sequence_of_notes, Mode
 
 SEQUENCE_LENGTH = 100
 
