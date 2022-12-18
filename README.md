@@ -1,6 +1,8 @@
 # music_generation
 
-Piano music generation using machine learning
+Piano music generation using machine learning.
+
+You can build and run the whole project having only docker installed with `docker compose up`.
 
 ## frontend
 
@@ -20,14 +22,43 @@ Deployed at [https://piotrowskv.github.io/music_generation](https://piotrowskv.g
 
 ```sh
 cd web
-docker build -t music-front . # build image
-docker run --rm -p 3001:80 music-front # create container
+docker build -t music_generation-front . # build image
+docker run --rm -p 3001:80 music_generation-front # create container
 ```
 
 #### development
 
-You will only need [node.js 18](https://nodejs.org/en/download/current/). Then cd into `web/` and run the project with `npm run dev`.
+You will only need [node.js 19](https://nodejs.org/en/download/current/). Then cd into `web/`, install dependencies with `npm install`, and run the project with `npm run dev`.
 
 - run tests with `npm run test`
   - run integration tests with `TEST_URL=http://localhost:1234 npm run test` by pointing to the backend server
 - fix code with `npm run lint:fix`
+
+## backend
+
+[![](https://github.com/piotrowskv/music_generation/workflows/backend-ci/badge.svg)](https://github.com/piotrowskv/music_generation/actions)
+
+Stack:
+
+- [Python](https://www.python.org/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+
+Deployed at [https://vps.shilangyu.dev](https://vps.shilangyu.dev/models)
+
+### run locally
+
+#### docker
+
+```sh
+cd backed
+docker build -t music_generation-back . # build image
+docker run --rm -p 3000:80 music_generation-back # create container
+```
+
+#### development
+
+You will need [Python 3.10](https://nodejs.org/en/download/current/) and [Pipenv](https://pipenv.pypa.io). Then cd into `backend/`, install dependencies with `pipenv install`, and run the project with `pipenv run python main.py`.
+
+- run tests with `pipenv run pytest`
+- check types with `pipenv run mypy main.py --disallow-untyped-defs`
+- check code style with `pipenv run autopep8 --diff --recursive -aaa .` (or apply changes with `pipenv run autopep8 --in-place --recursive -aaa .`)
