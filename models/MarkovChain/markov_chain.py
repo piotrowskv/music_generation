@@ -1,6 +1,7 @@
 import random
 import os
 import numpy as np
+from midi.midi_decode import get_sequence_of_notes, Mode
 
 DATA_PATH = 'data/sequences'
 class Markov_Chain():
@@ -19,13 +20,15 @@ class Markov_Chain():
         print("Data loading...")
         data_lines = []
         for filename in os.listdir(DATA_PATH):
-            data_lines.append(np.load(os.path.join(DATA_PATH, filename)))
+            midi_path = os.path.join(DATA_PATH, filename)
+            data_lines.append(get_sequence_of_notes(midi_path, Mode.BOOLEANS, False, True))
 
-
+        print(len(data_lines))
         for i in range(len(data_lines)):
             for j in range(data_lines[i].shape[0]):
                 self.data.append(data_lines[i][j].tolist())
 
+        
         for i in range(len(self.data)):
             for j in range(len(self.data[i])):
                 notes = []
@@ -47,6 +50,7 @@ class Markov_Chain():
 
         self.tokens_list = list(self.tokens)
         self.n_grams_list = list(self.n_grams)
+        print(len(self.n_grams_list))
         print(str(n) + "-grams generated!")
 
     def count_probabilities(self):
@@ -123,59 +127,8 @@ class Markov_Chain():
 
 
 # 21379, 21133, 21095, 20987, 20750
-
-def driver():
-    print("--------------------------------MODEL 1--------------------------------------")
-    # 2-grams
+if __name__ == '__main__':
     m = Markov_Chain()
     m.load_data()
-    m.generate_n_grams(2)
+    m.generate_n_grams(4)
     m.count_probabilities()
-
-    m.predict(m.n_grams_list[20750], 160, True, 0, 'results', 'Test1')
-    m.predict(m.n_grams_list[random.randrange(2892)], 120, True, 0.1, 'results', 'Test2')
-    m.predict(m.n_grams_list[405], 200, True, 0.25, 'results', 'Test3')
-    m.predict(m.n_grams_list[2000], 2000, False, 0, 'results', 'Test4')
-    m.predict(m.n_grams_list[94], 2000, False, 0.1, 'results', 'Test5')
-    m.predict(m.n_grams_list[2929], 2000, False, 0.15, 'results', 'Test6')
-    m.predict(m.n_grams_list[21133], 2000, False, 0.20, 'results', 'Test7')
-    m.predict(m.n_grams_list[20987], 2000, False, 0.20, 'results', 'Test8')
-    m.predict(m.n_grams_list[4], 2000, False, 0.20, 'results', 'Test9')
-    m.predict(m.n_grams_list[1121], 2000, False, 0.25, 'results', 'Test10')
-
-    print("--------------------------------MODEL 2--------------------------------------")
-
-
-    m3 = Markov_Chain()
-    m3.load_data()
-    m3.generate_n_grams(3)
-    m3.count_probabilities()
-
-    m3.predict(m.n_grams_list[20750], 160, True, 0, 'results', 'Test11')
-    m3.predict(m.n_grams_list[random.randrange(500)], 200, True, 0.1, 'results', 'Test12')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, True, 0.25, 'results', 'Test13')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0, 'results', 'Test14')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.05, 'results', 'Test15')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.1, 'results', 'Test16')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.2, 'results', 'Test17')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.2, 'results', 'Test18')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.2, 'results', 'Test19')
-    m3.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.25, 'results', 'Test20')
-
-    print("--------------------------------MODEL 3--------------------------------------")
-
-    m4 = Markov_Chain()
-    m4.load_data()
-    m4.generate_n_grams(4)
-    m4.count_probabilities()
-
-    m4.predict(m.n_grams_list[20750], 160, True, 0, 'results', 'Test21')
-    m4.predict(m.n_grams_list[random.randrange(500)], 200, True, 0.1, 'results', 'Test22')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, True, 0.25, 'results', 'Test23')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0, 'results', 'Test24')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.05, 'results', 'Test25')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.1, 'results', 'Test26')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.2, 'results', 'Test27')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.2, 'results', 'Test28')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.2, 'results', 'Test29')
-    m4.predict(m.n_grams_list[random.randrange(500)], 2000, False, 0.25, 'results', 'Test30')
