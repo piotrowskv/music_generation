@@ -4,16 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-matplotlib = ">=3.6.1"
-pandas = "*"
 numpy = "*"
-sklearn = "*"
-seaborn = "*"
 keras = ">=2.10.0"
-scikit-image = "*"
 tensorflow = ">=2.10.0"
-mido = ">=1.2.10"
-music21 = ">=8.1.0"
+midi = {editable = true, path = "./../midi"}
 
 [dev-packages]
 
