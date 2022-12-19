@@ -1,7 +1,9 @@
 import os
 
 from music21 import *
-from midi.midi_decode import Mode, get_sequence_of_notes, export_tempo_array, get_filename, export_output
+
+from midi.decode import (Mode, export_output, export_tempo_array, get_filename,
+                         get_sequence_of_notes)
 
 NO_TRACKS = 3
 

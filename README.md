@@ -50,8 +50,7 @@ Deployed at [https://vps.shilangyu.dev](https://vps.shilangyu.dev/models)
 #### docker
 
 ```sh
-cd backed
-docker build -t music_generation-back . # build image
+docker build -t music_generation-back -f backend.Dockerfile . # build image
 docker run --rm -p 3000:80 music_generation-back # create container
 ```
 

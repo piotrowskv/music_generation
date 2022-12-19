@@ -1,14 +1,13 @@
 FROM python:3.10
 
-WORKDIR /code
+WORKDIR /code/backend
 
-# install deps
+COPY ./midi /code/midi
+COPY ./models /code/models
+COPY ./backend /code/backend
+
 RUN pip install pipenv
-COPY ./Pipfile /code/Pipfile
-COPY ./Pipfile.lock /code/Pipfile.lock
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
-
-COPY ./app /code/app
 
 EXPOSE 80
 
