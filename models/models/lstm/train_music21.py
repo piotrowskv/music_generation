@@ -92,12 +92,11 @@ def run_music21_features():
     features_input = []
     features_output = []
 
-    for name in os.listdir('../sequences'):  # or '../data'
-        path = os.path.join('../sequences', name)
+    for name in os.listdir('../../../sequences'):  # or '../../../data'
+        path = os.path.join('../../../sequences', name)
 
         try:
             midi_input = np.load(path, allow_pickle=True)
-            midi_input = np.transpose(midi_input)
             sequences, predictions = get_music21_sequences(midi_input)
             features_input.extend(sequences)
             features_output.extend(predictions)
