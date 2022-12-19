@@ -253,7 +253,7 @@ def open_file(filepath: str):
 
     # translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
     try:
-        beat_amount = file.tracks[0][0].notated_32nd_notes_per_beat
+        beat_amount = file.tracks[0][0].notated_32nd_notes_per_beat  # TODO: search for 'time_signature'
     except (AttributeError, IndexError, NameError) as _:
         beat_amount = 8
 
@@ -288,7 +288,7 @@ def get_tempo_array(file: MidiFile,
 
 
 def export_tempo_array(filepath: str):
-    file, filename, accuracy = open_file(filepath)
+    file, _, accuracy = open_file(filepath)
     length = get_midi_length(file, accuracy)
     tempos = get_tempo_array(file, length, accuracy)
 
@@ -308,6 +308,23 @@ def combine_and_clean_tracks(tracks: list[MidiTrack]):
     raw_messages = list[tuple[int, Message]]()       # all messages with their starting times
     filtered_messages = list[tuple[int, Message]]()  # as raw_messages, but without repetitions
     messages = list[Message]()                       # all messages with corrected timestamps
+
+    # in case of 'note_on' messages only, 'note_off' is marked by velocity == 0
+    for i in range(len(tracks)):
+        phantom_track = []
+        off_notes = [x.type for x in tracks[i] if x.type == 'note_off']
+        if len(off_notes) == 0:
+            for msg in tracks[i]:
+                if msg.type == 'note_on':
+                    if msg.velocity != 0:
+                        phantom_track.append(msg)
+                    else:
+                        phantom_msg = Message('note_off', channel=msg.channel, note=msg.note,
+                                              time=msg.time, velocity=msg.velocity)
+                        phantom_track.append(phantom_msg)
+                else:
+                    phantom_track.append(msg)
+            tracks[i] = MidiTrack(phantom_track)
 
     for track in tracks:
         offset = 0
@@ -408,6 +425,7 @@ def get_lists_of_events(file: MidiFile,
         initial_sequence = list[Event]()
         ticks = 0
         offset = 0
+        accumulated_increment = 0
         event_notes = dict[int, EventNote]()
         initial_sequence.append(Event(0, 0, 0, track_index, tempos[0], {}, mode))
 
@@ -422,10 +440,14 @@ def get_lists_of_events(file: MidiFile,
                 except:
                     ticks += msg.time
                     offset += increment
+                    accumulated_increment += increment
                     continue
 
             ticks += msg.time
             offset += increment
+            increment += accumulated_increment
+            accumulated_increment = 0
+
             if msg.type in ['note_on', 'note_off']:
                 initial_sequence.append(Event(increment, 0, offset, track_index, tempos[offset], event_notes, mode))
         
@@ -436,6 +458,9 @@ def get_lists_of_events(file: MidiFile,
                 initial_sequence[i].length = initial_sequence[i + 1].time
                 nonzero_sequence.append(initial_sequence[i])
         nonzero_sequence.append(initial_sequence[-1])
+
+        for i in range(1, len(nonzero_sequence)):
+            nonzero_sequence[i].time = nonzero_sequence[i - 1].length
 
         # arrays of notes must be set after event lengths setup, as they're stored in SeparateNotes
         if mode == Mode.NOTES:
@@ -543,7 +568,7 @@ if __name__ == '__main__':
         print(name)
 
         try:
-            output_file = get_sequence_of_notes(path, Mode.BOOLEANS, False, True)
+            # output_file = get_sequence_of_notes(path, Mode.BOOLEANS, False, True)
             # output_file = get_sequence_of_notes(path, Mode.BOOLEANS, False, False)
             # output_file = get_sequence_of_notes(path, Mode.BOOLEANS, True, True)
             # output_file = get_sequence_of_notes(path, Mode.BOOLEANS, True, False)
@@ -556,7 +581,7 @@ if __name__ == '__main__':
             # output_file = get_sequence_of_notes(path, Mode.NOTES, True, True)
             # output_file = get_sequence_of_notes(path, Mode.NOTES, True, False)
             # output_file = get_array_of_notes(path, Mode.BOOLEANS, False)
-            # output_file = get_array_of_notes(path, Mode.BOOLEANS, True)
+            output_file = get_array_of_notes(path, Mode.BOOLEANS, True)
             # output_file = get_array_of_notes(path, Mode.VELOCITIES, False)
             # output_file = get_array_of_notes(path, Mode.VELOCITIES, True)
             # output_file = get_array_of_notes(path, Mode.NOTES, False)

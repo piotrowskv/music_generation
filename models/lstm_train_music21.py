@@ -97,7 +97,7 @@ def run_music21_features():
 
         try:
             midi_input = np.load(path, allow_pickle=True)
-            midi_input = np.transpose(midi_input)
+            # midi_input = np.transpose(midi_input)
             sequences, predictions = get_music21_sequences(midi_input)
             features_input.extend(sequences)
             features_output.extend(predictions)
