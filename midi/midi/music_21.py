@@ -1,11 +1,8 @@
 import os
+import numpy as np
 
 from music21 import *
-
-from midi.decode import (Mode, export_output, export_tempo_array, get_filename,
-                         get_sequence_of_notes)
-
-NO_TRACKS = 3
+from decode import Mode, get_sequence_of_notes, export_tempo_array, get_filename, export_output
 
 
 def get_event_lists(f):
@@ -110,34 +107,52 @@ def get_raw_midi_features(events, tempos):
     return features
 
 
-def check_number_of_tracks(f, filename):
-    if len(f) != NO_TRACKS:
+def check_number_of_tracks(f, filename, number):
+    if len(f) != number:
         raise ValueError('number of tracks ({}) in {} not matching the expected value ({})'
-                         .format(len(f), filename, NO_TRACKS))
+                         .format(len(f), filename, number))
 
 
-def get_features(filepath, filename):  # TODO: add a mode switcher
-    # file_input = np.load(filepath, allow_pickle=True)
+def preprocess_features(filepath, filename, check_tracks=False, number_of_tracks=0):
+    # file_input = np.load(filepath, allow_pickle=True)  # TODO: choose input method
     # file_input = file_input.tolist()
     file_input = get_sequence_of_notes(filepath, Mode.BOOLEANS, False, True)
 
-    check_number_of_tracks(file_input, filename)
+    if check_tracks:
+        check_number_of_tracks(file_input, filename, number_of_tracks)
     tempo_array = export_tempo_array(filepath)
     event_lists = get_event_lists(file_input)
 
-    # feature_list = get_tonal_midi_features(event_lists, tempo_array)
+    return event_lists, tempo_array
+
+
+def get_midi_features(filepath, filename, check_tracks=False, number_of_tracks=0):
+    event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, number_of_tracks)
     feature_list = get_raw_midi_features(event_lists, tempo_array)
+    feature_list = np.asarray(feature_list)
+    feature_list = np.transpose(feature_list)
+
+    return feature_list
+
+
+def get_tonal_features(filepath, filename, check_tracks=False, number_of_tracks=0):
+    event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, number_of_tracks)
+    feature_list = get_tonal_midi_features(event_lists, tempo_array)
+    feature_list = np.asarray(feature_list)
+    feature_list = np.transpose(feature_list)
 
     return feature_list
 
 
 if __name__ == '__main__':
-    for name in os.listdir('../data'):
-        path = os.path.join('../data', name)
+    for name in os.listdir('../../data'):
+        path = os.path.join('../../data', name)
 
         try:
-            features = get_features(path, name)
-            export_output('../sequences', get_filename(path), features)
+            features = get_midi_features(path, name)
+            # features = get_tonal_features(path, name)
+
+            export_output('../../sequences', get_filename(path), features)
 
         except Exception as ex:
             print(ex)
