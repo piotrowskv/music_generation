@@ -113,21 +113,21 @@ def check_number_of_tracks(f, filename, number):
                          .format(len(f), filename, number))
 
 
-def preprocess_features(filepath, filename, check_tracks=False, numer_of_tracks=0):
+def preprocess_features(filepath, filename, check_tracks=False, number_of_tracks=0):
     # file_input = np.load(filepath, allow_pickle=True)  # TODO: choose input method
     # file_input = file_input.tolist()
     file_input = get_sequence_of_notes(filepath, Mode.BOOLEANS, False, True)
 
     if check_tracks:
-        check_number_of_tracks(file_input, filename, numer_of_tracks)
+        check_number_of_tracks(file_input, filename, number_of_tracks)
     tempo_array = export_tempo_array(filepath)
     event_lists = get_event_lists(file_input)
 
     return event_lists, tempo_array
 
 
-def get_midi_features(filepath, filename, check_tracks=False, numer_of_tracks=0):
-    event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, numer_of_tracks)
+def get_midi_features(filepath, filename, check_tracks=False, number_of_tracks=0):
+    event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, number_of_tracks)
     feature_list = get_raw_midi_features(event_lists, tempo_array)
     feature_list = np.asarray(feature_list)
     feature_list = np.transpose(feature_list)
@@ -135,8 +135,8 @@ def get_midi_features(filepath, filename, check_tracks=False, numer_of_tracks=0)
     return feature_list
 
 
-def get_tonal_features(filepath, filename, check_tracks=False, numer_of_tracks=0):
-    event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, numer_of_tracks)
+def get_tonal_features(filepath, filename, check_tracks=False, number_of_tracks=0):
+    event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, number_of_tracks)
     feature_list = get_tonal_midi_features(event_lists, tempo_array)
     feature_list = np.asarray(feature_list)
     feature_list = np.transpose(feature_list)

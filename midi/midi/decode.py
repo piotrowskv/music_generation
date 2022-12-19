@@ -221,7 +221,7 @@ def get_offset(time: int,
 def get_midi_length(file: MidiFile,
                     accuracy: float):
     lengths = list[int]()
-    for i, track in enumerate(file.tracks):
+    for i, track in enumerate(file.tracks[1:]):
         ticks = 0
         value = 0
         for msg in track:

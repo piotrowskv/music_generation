@@ -70,10 +70,10 @@ def get_note_messages_from_2d_array(track, track_name, track_channel, acc):
 
 def generate_file_from_2d_array(input_array, tempos, output_filename, accuracy):
     if input_array.ndim != 2:
-        raise TypeError
+        raise TypeError('input array must have exactly 2 dimensions')
 
     if input_array.shape[0] + 1 != len(tempos):
-        raise IndexError
+        raise IndexError('length of input array\'s time dimension must be shorter by 1 than tempos array')
 
     midi_file = MidiFile(ticks_per_beat=240)
     acc_factor = float(960 / accuracy)  # acc_factor = ticks_per_beat / (notated_32nd_notes_per_beat * accuracy / 32)
@@ -85,10 +85,10 @@ def generate_file_from_2d_array(input_array, tempos, output_filename, accuracy):
 
 def generate_file_from_3d_array(input_array, tempos, output_filename, accuracy):
     if input_array.ndim != 3:
-        raise TypeError
+        raise TypeError('input array must have exactly 3 dimensions')
 
     if input_array.shape[1] + 1 != len(tempos):
-        raise IndexError
+        raise IndexError('length of input array\'s time dimension must be shorter by 1 than tempos array')
 
     midi_file = MidiFile(ticks_per_beat=240)
     acc_factor = float(960 / accuracy)  # acc_factor = ticks_per_beat / (notated_32nd_notes_per_beat * accuracy / 32)
@@ -102,7 +102,7 @@ def generate_file_from_3d_array(input_array, tempos, output_filename, accuracy):
 
 def generate_file_from_midi_features(input_array, output_filename, accuracy):
     if input_array.ndim != 2:
-        raise TypeError
+        raise TypeError('input array must have exactly 2 dimensions')
 
     tempos = []
     array = []
@@ -132,7 +132,7 @@ def generate_file_from_midi_features(input_array, output_filename, accuracy):
 
 def generate_file_from_tonal_features(input_array, output_filename, accuracy):
     if input_array.ndim != 2:
-        raise TypeError
+        raise TypeError('input array must have exactly 2 dimensions')
 
     tempos = []
     array = []
