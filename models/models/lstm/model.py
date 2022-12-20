@@ -51,8 +51,6 @@ class MusicLstm(MusicModel):
             mode='min'
         )]
 
-        print(self.model.summary())
-
         self.model.fit(
             xtrain,
             ytrain,
@@ -96,6 +94,11 @@ class MusicLstm(MusicModel):
         """
         # data = np.array([x[1] for x in midi_input])
         # return data[:data.shape[0]-1, :], data[1:, :]
+
+    def model_summary(self) -> str:
+        stringlist = []
+        self.model.summary(print_fn=lambda x: stringlist.append(x))
+        return "\n".join(stringlist)
 
     def save(self, path: Path):
         self.model.save(path)

@@ -44,6 +44,13 @@ class MusicModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def model_summary(self) -> str:
+        """
+        A textual representation of the model.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def save(self, path: Path):
         """
         Saves the current model into `path`.
