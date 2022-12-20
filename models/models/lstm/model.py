@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import Callback, ModelCheckpoint
 from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
 from keras.models import Sequential, load_model
 from midi.decode import Mode, get_sequence_of_notes
@@ -42,20 +42,20 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self, epochs: int, xtrain: any, ytrain: any, weights_path: Path | None = None):
-        callbacks = [] if weights_path is None else [ModelCheckpoint(
+    def train(self, epochs: int, xtrain: any, ytrain: any, loss_callback: Callback, weights_path: Path | None = None):
+        callbacks = [loss_callback] if weights_path is None else [ModelCheckpoint(
             weights_path,
             monitor='loss',
             verbose=0,
             save_best_only=True,
             mode='min'
-        )]
+        ), loss_callback]
 
         self.model.fit(
             xtrain,
             ytrain,
             epochs=epochs,
-            batch_size=64,
+            batch_size=256,
             callbacks=callbacks
         )
 
@@ -110,4 +110,5 @@ class MusicLstm(MusicModel):
 if __name__ == '__main__':
     model = MusicLstm(128)
 
-    model.train_on_files(list(Path('./data').glob("*.mid")), 10)
+    model.train_on_files(list(Path('./data').glob("*.mid")),
+                         10, lambda epoch, loss: None)
