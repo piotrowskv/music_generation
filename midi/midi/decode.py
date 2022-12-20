@@ -26,6 +26,12 @@ class EventNote:
         self.tone = height % 12 + 1
         self.octave = height // 12 - 1
 
+    def __eq__(self, other):
+        return self.velocity == other.velocity and \
+               self.height == other.height and \
+               self.tone == other.tone and \
+               self.octave == other.octave
+
     def normalise(self,
                   max_velocity: int | float):  # TODO: check if 128
         """
@@ -61,6 +67,10 @@ class ActiveElement:
         else:                        # isinstance(value, float)
             self.value = value
 
+    def __eq__(self, other):
+        return self.height == other.height and \
+               self.value == other.value and \
+               self.use_velocities == other.use_velocities
 
 class Event:
     """
@@ -101,6 +111,16 @@ class Event:
         else:
             self.__set_booleans_dictionary(notes)
             self.__set_booleans_array(notes)
+
+    def __eq__(self, other):
+        return self.time == other.time and \
+               self.length == other.length and \
+               self.offset == other.offset and \
+               self.track == other.track and \
+               self.tempo == other.tempo and \
+               self.active_notes == other.active_notes and \
+               self.all_notes == other.all_notes and \
+               self.use_velocities == other.use_velocities
 
     def __set_booleans_dictionary(self, notes):
         for height in notes.keys():
@@ -437,6 +457,7 @@ def get_lists_of_events(file: MidiFile,
         ticks = 0
         offset = 0
         accumulated_increment = 0
+
         event_notes = dict[int, EventNote]()
         initial_sequence.append(Event(0, 0, 0, track_index, tempos[0], {}, use_velocities))
 
