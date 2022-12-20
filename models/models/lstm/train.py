@@ -1,147 +1,110 @@
-import os
+from pathlib import Path
+
 import numpy as np
-
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM, Activation, BatchNormalization
 from keras.callbacks import ModelCheckpoint
+from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
+from keras.models import Sequential, load_model
+from midi.decode import Mode, get_sequence_of_notes
 
-from midi.decode import get_sequence_of_notes, Mode
+from ..music_model import MusicModel
 
 SEQUENCE_LENGTH = 100
 
 
-def train_hot_network(lstm_model, lstm_input, lstm_output):
-    filepath = 'weights.hdf5'
-    checkpoint = ModelCheckpoint(
-        filepath,
-        monitor='loss',
-        verbose=0,
-        save_best_only=True,
-        mode='min'
-    )
-    callbacks_list = [checkpoint]
-    lstm_model.fit(
-        lstm_input,
-        lstm_output,
-        epochs=200,
-        batch_size=256,
-        callbacks=callbacks_list
-    )
+class MusicLstm(MusicModel):
+    model: Sequential
 
+    def __init__(self, input_shape: int):
+        self.model = Sequential()
+        self.model.add(LSTM(
+            256,
+            input_shape=(SEQUENCE_LENGTH, input_shape),
+            return_sequences=True,
+            recurrent_activation="sigmoid"
+        ))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.02))
 
-def get_hot_network(input_size):
-    model = Sequential()
-    model.add(LSTM(
-        512,
-        input_shape=(input_size[1], input_size[2]),
-        return_sequences=True,
-        recurrent_activation="sigmoid"
-        # recurrent_dropout=0.3  - will not run on GPU if not separated
-    ))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.02))
+        self.model.add(LSTM(512))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.02))
 
-    # model.add(LSTM(
-    #     512,
-    #     return_sequences=True,
-    #     # recurrent_dropout=0.3
-    # ))
-    # model.add(BatchNormalization())
-    # model.add(Dropout(0.3))
+        self.model.add(Dense(128))
+        self.model.add(Activation('relu'))
+        self.model.add(BatchNormalization())
+        self.model.add(Dropout(0.02))
 
-    model.add(LSTM(512))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.02))
+        self.model.add(Dense(128))
+        self.model.add(Activation('sigmoid'))
 
-    model.add(Dense(256))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.02))
+        self.model.compile(
+            loss='mean_squared_error',
+            optimizer='rmsprop'
+        )
 
-    model.add(Dense(128))
-    model.add(Activation('relu'))     # model.add(Activation('relu' | 'tanh'))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.02))
+    def train(self, epochs: int, xtrain: any, ytrain: any, weights_path: Path | None = None):
+        callbacks = [] if weights_path is None else [ModelCheckpoint(
+            weights_path,
+            monitor='loss',
+            verbose=0,
+            save_best_only=True,
+            mode='min'
+        )]
 
-    model.add(Dense(64))
-    model.add(Activation('sigmoid'))  # softmax
-    model.compile(
-        loss='categorical_crossentropy',
-        optimizer='rmsprop'
-    )
+        print(self.model.summary())
 
-    return model
+        self.model.fit(
+            xtrain,
+            ytrain,
+            epochs=epochs,
+            batch_size=64,
+            callbacks=callbacks
+        )
 
+    def create_dataset(self, dataset: list[tuple[any, any]]) -> tuple[any, any]:
+        notes_input = []
+        notes_output = []
 
-def get_hot_sequences(raw_input):
-    notes_sequences = []
-    lengths_sequences = []
-    notes_predictions = []
-    lengths_predictions = []
+        for (x, y) in dataset:
+            notes_input.extend(x)
+            notes_output.extend(y)
 
-    for i in range(SEQUENCE_LENGTH, len(raw_input)):
-        notes_sequence = []
-        lengths_sequence = []
+        return np.asarray(notes_input), np.asarray(notes_output)
+        # return [x for (x, y) in dataset], [y for (x, y) in dataset]
 
-        for index in range(i - SEQUENCE_LENGTH, i):
-            notes_sequence.append(raw_input[index][1])
-            lengths_sequence.append(raw_input[index][0])
-        notes_sequences.append(notes_sequence)
-        lengths_sequences.append(lengths_sequence)
+    def prepare_data(self, midi_file: Path) -> tuple[any, any]:
+        midi_input = get_sequence_of_notes(
+            str(midi_file), Mode.VELOCITIES, True, False)
 
-        notes_predictions.append(raw_input[i][1])
-        lengths_predictions.append(raw_input[i][0])
+        notes_sequences = []
+        notes_predictions = []
 
-    return notes_sequences, lengths_sequences, notes_predictions, lengths_predictions
+        for i in range(len(midi_input) - SEQUENCE_LENGTH):
+            notes_sequence = [x[1] for x in midi_input[i:i+SEQUENCE_LENGTH]]
 
+            notes_sequences.append(notes_sequence)
+            notes_predictions.append(midi_input[i+SEQUENCE_LENGTH][1])
 
-def run_hot_features():
-    notes_input = []
-    lengths_input = []
-    notes_output = []
-    lengths_output = []
+        return np.array(notes_sequences), np.array(notes_predictions)
 
-    for name in os.listdir('../data'):  # or '../sequences'
-        path = os.path.join('../data', name)
+        """
+        TODO: ideally, data should be as below. LSTM is supposed to predict
+        sequences, where a single sequence is the whole song. SEQUENCE_LENGTH
+        should not exist. This introduces non-uniform data (songs have different
+        lengths). To remedy that songs should be padded and masked for the LSTM to ignore.
+        Additionally, the model itself should be split into two: predicting note and length.
+        """
+        # data = np.array([x[1] for x in midi_input])
+        # return data[:data.shape[0]-1, :], data[1:, :]
 
-        try:
-            # midi_input = np.load(path, allow_pickle=True)
-            midi_input = get_sequence_of_notes(path, Mode.VELOCITIES, True, False)
+    def save(self, path: Path):
+        self.model.save(path)
 
-            notes_sequences, lengths_sequences, notes_predictions, lengths_predictions = get_hot_sequences(midi_input)
-            notes_input.extend(notes_sequences)
-            lengths_input.extend(lengths_sequences)
-            notes_output.extend(notes_predictions)
-            lengths_output.extend(lengths_predictions)
-
-        except Exception as ex:
-            print(f'failed to load {name}')
-
-    ni = np.asarray(notes_input)
-    ni = ni[:, :, 23:87]  # 27 - 86 in use, 22 - 86 to round to 64
-    no = np.asarray(notes_output)
-    no = no[:, 23:87]
-
-    model = get_hot_network(ni.shape)
-    train_hot_network(model, ni, no)  # notes_input, notes_output
+    def load(self, path: Path):
+        self.model = load_model(path)
 
 
 if __name__ == '__main__':
-    run_hot_features()
+    model = MusicLstm(128)
 
-
-''' FIND HIGHEST AND LOWEST NOTES '''
-# k_min = 128
-# k_max = 0
-# for num, s in enumerate(notes_input):
-#     print(num)
-#     for keys in s:
-#         for pos, value in enumerate(keys):
-#             if value:
-#                 if pos < k_min:
-#                     k_min = pos
-#                 if pos > k_max:
-#                     k_max = pos
-#
-# print()
-# print(k_min)
-# print(k_max)
+    model.train_on_files(list(Path('./data').glob("*.mid")), 10)
