@@ -4,7 +4,7 @@ import numpy as np
 from keras.callbacks import Callback, ModelCheckpoint
 from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
 from keras.models import Sequential, load_model
-from midi.decode import Mode, get_sequence_of_notes
+from midi.decode import get_sequence_of_notes
 
 from ..music_model import MusicModel
 
@@ -71,8 +71,7 @@ class MusicLstm(MusicModel):
         # return [x for (x, y) in dataset], [y for (x, y) in dataset]
 
     def prepare_data(self, midi_file: Path) -> tuple[any, any]:
-        midi_input = get_sequence_of_notes(
-            str(midi_file), Mode.VELOCITIES, True, False)
+        midi_input = get_sequence_of_notes(str(midi_file), True, True, False)
 
         notes_sequences = []
         notes_predictions = []
