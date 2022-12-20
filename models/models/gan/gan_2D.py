@@ -1,4 +1,3 @@
-
 import glob
 import os
 import tensorflow as tf
@@ -6,22 +5,58 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Reshape
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.layers import Conv1D
-from tensorflow.keras.layers import Conv1DTranspose
-from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU, Conv1D, Conv1DTranspose, Activation
 from tensorflow.keras import activations
+from models.music_model import MusicModel
+from midi.decode import get_array_of_notes
+
 
 DATA_PATH = 'data/sequences'
-#AVG = 11647
 AVG = 512
-class GAN(Sequential):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+LATENT_DIM = 16
+class GAN(MusicModel):
+    model: Sequential 
+    discriminator: Sequential
+    generator: Sequential
+
+    def __init__(self):
+        self.data = np.zeros((0, AVG, 128))
+        self.discriminator = self.define_discriminator()
+        self.generator = self.define_generator(LATENT_DIM)
+        self.model = self.define_gan(self.generator, self.discriminator)
+
+    def prepare_data(self, midi_file):
+        data_lines = get_array_of_notes(midi_file, False, False)
+        
+        zeros = np.zeros((1, 128))
+        for i in range(len(data_lines)): #serialize tracks
+            data_processed = np.zeros((1, AVG, 128))
+            if((data_lines[i].shape[0])> AVG):
+                data_processed[0] = np.delete(data_lines[i], slice(AVG, data_lines[i].shape[0]),0)
+            else:
+                diff = AVG - data_lines[i].shape[0]
+                for j in range(diff):
+                    data_processed[0] = np.append(data_lines[i], zeros, axis=0)
+        
+            self.data = np.append(self.data, data_processed, axis=0)
+        
+        self.data = np.array(self.data)
+        print(self.data.shape)
+
+        return self.data, data_processed
+
+
+    def create_dataset(self, dataset):
+        return self.data, 0
+
+    def model_summary(self):
+        return self.model.summary() + self.generator.summary() + self.discriminator.summary()
+
+    def save(self, path):
+        self.save_models(self, save_path, self.generator, self.discriminator, self.model, 0)
+
+
+
 
     def data_preprocessing(self, DATA_PATH):
         print("Data loading...")
@@ -56,6 +91,9 @@ class GAN(Sequential):
     def save_npy(self, prediction, save_path, save_name):
         os.makedirs(save_path, exist_ok=True)
         np.save('{}/{}'.format(save_path, save_name), prediction)
+
+    def load(self, path):
+        pass
 
     
     def define_discriminator(self):
@@ -107,7 +145,7 @@ class GAN(Sequential):
 
         model.add(Dropout(0.2))
         #model.add(Conv1D(81, 3, activation='tanh', padding='same'))
-        model.add(Reshape((128,AVG)))
+        model.add(Reshape((128, AVG)))
         print(model.summary())
         return model
 
@@ -157,14 +195,20 @@ class GAN(Sequential):
         discriminator.save(save_discriminator_path + f'/discriminator_model' + str(step)+'.h5')
         gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
 
-    def train(self, generator, discriminator, gan_model, dataset, latent_dim, data,
-          real_samples_multiplier=0.8, fake_samples_multiplier=0.0, discriminator_batches=2,
-          n_epochs=500, n_batch=128, save_step=1000, save_path="samples"):
-
-        batch_per_epoch = len(dataset)// n_batch
+    def train(self, epochs, xtrain, ytrain, loss_callback, checkpoint_path):
+        latent_dim = LATENT_DIM
+        gan_model = self.model
+        generator = self.generator
+        discriminator = self.discriminator
+        real_samples_multiplier=0.8
+        fake_samples_multiplier=0.0
+        n_batch = epochs //4
+        save_step =1000
+        discriminator_batches = n_batch
+        batch_per_epoch = len(self.data)// n_batch
         half_batch = n_batch // 2
         seed = self.generate_latent_points(latent_dim, 128)
-        n_steps = batch_per_epoch * n_epochs
+        n_steps = batch_per_epoch * epochs
         history = {'discriminator_real_loss': [],
                 'discriminator_fake_loss': [],
                 'generator_loss': []}
@@ -174,7 +218,9 @@ class GAN(Sequential):
             disc_loss_fake = 0.0
             disc_accuracy = 0.0
             for disc_batch in range(discriminator_batches):
-                X_real, y_real = self.generate_real_samples(dataset, half_batch)
+                X_real, y_real = self.generate_real_samples(self.data, half_batch)
+                X_real = np.swapaxes(X_real, 1, 2)
+                #y_real = np.swapaxes(y_real, 1, 2)
                 disc_data_real =  discriminator.train_on_batch(X_real, y_real)
                 disc_loss_real += disc_data_real[0]
                 X_fake, y_fake = self.generate_fake_samples(generator, latent_dim, half_batch)
@@ -195,11 +241,9 @@ class GAN(Sequential):
             if step%batch_per_epoch==0:
                 print('epoch: %d, discriminator_real_loss=%.3f, discriminator_fake_loss=%.3f, generator_loss=%.3f \n discriminator_accuracy = %.3f, GAN_accuracy = %.3f' % (epoch, disc_loss_real, disc_loss_fake, g_loss, disc_accuracy, g_data[1]))
             if step%save_step==0:
-                self.save_npy(X_fake[0], save_path, step)
-                self.save_models(save_path, generator, discriminator, gan_model, step)
-                
-        return history, gan_model, generator, discriminator
-    
+                self.save_npy(X_fake[0], checkpoint_path, step)
+                self.save_models(checkpoint_path, generator, discriminator, gan_model, step)
+                    
     def run(self, data_path, output_length=AVG,   loss='binary_crossentropy', optimizer=None,latent_dim=16, real_samples_multiplier=1.0, fake_samples_multiplier=0.0, discriminator_batches=16, n_epochs=100, n_batch=32, save_step=25, save_path='saved_v6'):
         dataset, notes = self.data_preprocessing(data_path)
         dis = self.define_discriminator()
@@ -210,4 +254,8 @@ class GAN(Sequential):
         return hist, final_gan
 
 g = GAN()
-g.run(DATA_PATH)
+path = '..\\data\\chorales'
+midi_paths = []
+for filename in os.listdir(path):
+        midi_paths.append(os.path.join(path, filename))
+g.train_on_files(midi_paths, 10, lambda epoch, loss : None, checkpoint_path='mamdosc')
