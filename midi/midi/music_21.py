@@ -1,7 +1,7 @@
 import numpy as np
 
 from music21 import *
-from decode import get_sequence_of_notes, export_tempo_array
+from .decode import get_sequence_of_notes, export_tempo_array
 
 
 def check_number_of_tracks(array, filename, number):
@@ -115,8 +115,7 @@ def preprocess_features(filepath, filename, check_tracks=False, number_of_tracks
     return event_lists, tempo_array
 
 
-# VERSION WITH OCTAVE/TONE
-def get_tonal_midi_features(events, tempos):
+def get_list_of_tonal_features(events, tempos):
     """
     calculates the most significant note in each track for every event,
     translates a list of events and tempos into an array of normalised tonal features of notes (octave and tone)
@@ -146,8 +145,7 @@ def get_tonal_midi_features(events, tempos):
     return features_list
 
 
-# VERSION WITH MIDI NOTE
-def get_raw_midi_features(events, tempos):
+def get_list_of_midi_features(events, tempos):
     """
     calculates the most significant note in each track for every event,
     translates a list of events and tempos into an array of normalised MIDI notes' features
@@ -185,7 +183,7 @@ def get_midi_features(filepath, filename, check_tracks=False, number_of_tracks=0
     :return:
     """
     event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, number_of_tracks)
-    feature_list = get_raw_midi_features(event_lists, tempo_array)
+    feature_list = get_list_of_midi_features(event_lists, tempo_array)
     feature_list = np.asarray(feature_list)
     feature_list = np.transpose(feature_list)
 
@@ -203,7 +201,7 @@ def get_tonal_features(filepath, filename, check_tracks=False, number_of_tracks=
     :return:
     """
     event_lists, tempo_array = preprocess_features(filepath, filename, check_tracks, number_of_tracks)
-    feature_list = get_tonal_midi_features(event_lists, tempo_array)
+    feature_list = get_list_of_tonal_features(event_lists, tempo_array)
     feature_list = np.asarray(feature_list)
     feature_list = np.transpose(feature_list)
 

@@ -124,7 +124,7 @@ def generate_file_from_3d_array(input_array, tempos, output_filename, accuracy):
     midi_file.save(f'../../outputs/{output_filename}.mid')  # TODO: parametrization
 
 
-def generate_file_from_midi_features(input_array, output_filename, accuracy):
+def generate_file_from_midi_features(input_array, output_filename, accuracy):   # TODO: check if > 0
     """
     translates a music_21.py output matrix of MIDI features into a MIDI file
 
@@ -162,7 +162,7 @@ def generate_file_from_midi_features(input_array, output_filename, accuracy):
     generate_file_from_3d_array(array, tempos, output_filename, accuracy)
 
 
-def generate_file_from_tonal_features(input_array, output_filename, accuracy):
+def generate_file_from_tonal_features(input_array, output_filename, accuracy):   # TODO: check if even and > 0
     """
     translates a music_21.py output matrix of tonal features into a MIDI file
 
