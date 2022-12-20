@@ -1,10 +1,12 @@
 import random
 import os
 import numpy as np
-from midi.midi_decode import get_sequence_of_notes, Mode
+from midi.decode import get_array_of_notes
+from keras.callbacks import Callback, ModelCheckpoint
+from models.music_model import MusicModel
 
-DATA_PATH = 'data/sequences'
-class Markov_Chain():
+N_GRAM = 3
+class MarkovChain(MusicModel):
 
     
     def __init__(self):
@@ -16,46 +18,10 @@ class Markov_Chain():
         self.probabilities = []
         self.n_grams_next_token = []
 
-    def load_data(self):
-        print("Data loading...")
-        data_lines = []
-        for filename in os.listdir(DATA_PATH):
-            midi_path = os.path.join(DATA_PATH, filename)
-            data_lines.append(get_sequence_of_notes(midi_path, Mode.BOOLEANS, False, True))
 
-        print(len(data_lines))
-        for i in range(len(data_lines)):
-            for j in range(data_lines[i].shape[0]):
-                self.data.append(data_lines[i][j].tolist())
+    def train(self, epochs=0, xtrain=None, ytrain=None, loss_callback=None, checkpoint_path=None):
 
-        
-        for i in range(len(self.data)):
-            for j in range(len(self.data[i])):
-                notes = []
-                for k in range(128):
-                    if(self.data[i][j][k]==True):
-                        notes.append(k)
-
-                self.data[i][j]=tuple(notes)
-                self.tokens.add(tuple(notes))
-        
-        print("Data loaded!")
-
-   
-    def generate_n_grams(self, n):
-        print("Generating " + str(n) + "-grams")
-        for i in range(len(self.data)):
-            for j in range(len(self.data[i])-n):
-                self.n_grams.add(tuple(self.data[i][j:j+n]))
-
-        self.tokens_list = list(self.tokens)
-        self.n_grams_list = list(self.n_grams)
-        print(len(self.n_grams_list))
-        print(str(n) + "-grams generated!")
-
-    def count_probabilities(self):
-        print("Counting probabilities")
-
+        # count probabilities
         n = len(self.n_grams_list[0])
         n_gram_next = np.ndarray((len(self.n_grams_list,)), dtype=object)
         for i in range(n_gram_next.shape[0]):
@@ -79,8 +45,54 @@ class Markov_Chain():
                 else: 
                     if(self.probabilities[i].get(n_gram_next[i][j]) is None):
                         self.probabilities[i][n_gram_next[i][j]] = float(n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
-            
-        print("Counting probabilities done!")
+
+    def create_dataset(self, dataset: list[tuple[any, any]]) -> tuple[any, any]:
+
+        self.generate_tokens()
+        self.generate_n_grams(N_GRAM)
+        return (0,0)
+    
+    def generate_tokens(self):
+
+        for i in range(len(self.data)):
+            for j in range(len(self.data[i])):
+                notes = []
+                for k in range(128):
+                    if(self.data[i][j][k]==True):
+                        notes.append(k)
+
+                self.data[i][j] = tuple(notes)
+                self.tokens.add(tuple(notes))
+
+    def prepare_data(self, midi_file) -> tuple[any, any]:
+
+        data_lines = get_array_of_notes(midi_file, False, False)
+        for i in range(len(data_lines)): #serialize tracks
+            self.data.append(data_lines[i].tolist())
+        return data_lines
+
+    def save(self, path):
+        np.save(path, np.asarray(self.probabilities))
+
+    def load(self, path):
+        self.probabilities = np.load(path, allow_pickle=True)
+        
+    def generate_n_grams(self, n):
+        print("Generating " + str(n) + "-grams")
+        for i in range(len(self.data)):
+            for j in range(len(self.data[i])-n):
+                self.n_grams.add(tuple(self.data[i][j:j+n]))
+
+        self.tokens_list = list(self.tokens)
+        self.n_grams_list = list(self.n_grams)
+        print(len(self.n_grams_list))
+        print(str(n) + "-grams generated!")
+
+    def model_summary(self) -> str:
+        return(
+            "Markov chain basing on " + str(N_GRAM) + "-grams:\n" + str(len(self.tokens_list)) + " tokens\n" +
+            str(len(self.n_grams_list)) + " n_grams\n" + str(len(self.data)) + " files"
+                    )
 
     def predict(self, initial_notes, length, deterministic, rand, save_path, save_name): 
 
@@ -125,10 +137,11 @@ class Markov_Chain():
 
                 
 
-
 # 21379, 21133, 21095, 20987, 20750
 if __name__ == '__main__':
-    m = Markov_Chain()
-    m.load_data()
-    m.generate_n_grams(4)
-    m.count_probabilities()
+    path = '..\\data\\chorales'
+    midi_paths =[]
+    for filename in os.listdir(path):
+            midi_paths.append(os.path.join(path, filename))
+    model=MarkovChain()
+    model.train_on_files(midi_paths, 10, lambda epoch, loss : None)
