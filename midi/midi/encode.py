@@ -1,23 +1,22 @@
-import os
 import numpy as np
 
 from mido import MidiTrack, MidiFile
 from mido.messages import Message
 from mido.midifiles.meta import MetaMessage
 
-from decode import export_tempo_array, get_array_of_notes, Mode
-
 VELOCITY = 64
 ACCURACY = 64
 
 
-def get_object(filepath):
-    return np.load(filepath, allow_pickle=True)
-
-
 def get_tempo_meta_messages(array, acc):
-    events = [MetaMessage('track_name', name='Track 0', time=0),
-              MetaMessage('time_signature', numerator=4, denominator=4, clocks_per_click=24,
+    """
+    translates provided tempo array into a MetaMessage track
+
+    :param array:
+    :param acc:
+    :return:
+    """
+    events = [MetaMessage('time_signature', numerator=4, denominator=4, clocks_per_click=24,
                           notated_32nd_notes_per_beat=8, time=0)]
 
     time = 0
@@ -33,8 +32,16 @@ def get_tempo_meta_messages(array, acc):
     return MidiTrack(events)
 
 
-def get_note_messages_from_2d_array(track, track_name, track_channel, acc):
-    events = [MetaMessage('track_name', name=track_name, time=0)]
+def get_note_messages_from_2d_array(track, track_channel, acc):
+    """
+    translates a time distributed event_lengths' matrix into a MidiTrack of Messages
+
+    :param track:
+    :param track_channel:
+    :param acc:
+    :return:
+    """
+    events = []
     notes = []
 
     last_offset = 0
@@ -69,6 +76,15 @@ def get_note_messages_from_2d_array(track, track_name, track_channel, acc):
 
 
 def generate_file_from_2d_array(input_array, tempos, output_filename, accuracy):
+    """
+    translates a time distributed single-track array into a MIDI file
+
+    :param input_array:
+    :param tempos:
+    :param output_filename:
+    :param accuracy:
+    :return:
+    """
     if input_array.ndim != 2:
         raise TypeError('input array must have exactly 2 dimensions')
 
@@ -79,11 +95,20 @@ def generate_file_from_2d_array(input_array, tempos, output_filename, accuracy):
     acc_factor = float(960 / accuracy)  # acc_factor = ticks_per_beat / (notated_32nd_notes_per_beat * accuracy / 32)
     midi_file.tracks.append(get_tempo_meta_messages(tempos, acc_factor))
 
-    midi_file.tracks.append(get_note_messages_from_2d_array(input_array, 'Track 1', 0, acc_factor))
+    midi_file.tracks.append(get_note_messages_from_2d_array(input_array, 0, acc_factor))
     midi_file.save(f'../../outputs/{output_filename}.mid')  # TODO: parametrization
 
 
 def generate_file_from_3d_array(input_array, tempos, output_filename, accuracy):
+    """
+    translates a time distributed multi-track array into a MIDI file
+
+    :param input_array:
+    :param tempos:
+    :param output_filename:
+    :param accuracy:
+    :return:
+    """
     if input_array.ndim != 3:
         raise TypeError('input array must have exactly 3 dimensions')
 
@@ -95,12 +120,19 @@ def generate_file_from_3d_array(input_array, tempos, output_filename, accuracy):
     midi_file.tracks.append(get_tempo_meta_messages(tempos, acc_factor))
 
     for i in range(input_array.shape[0]):
-        midi_file.tracks.append(get_note_messages_from_2d_array(input_array[i], 'Track {}'.format(i + 1),
-                                                                i, acc_factor))
+        midi_file.tracks.append(get_note_messages_from_2d_array(input_array[i], i, acc_factor))
     midi_file.save(f'../../outputs/{output_filename}.mid')  # TODO: parametrization
 
 
 def generate_file_from_midi_features(input_array, output_filename, accuracy):
+    """
+    translates a music_21.py output matrix of MIDI features into a MIDI file
+
+    :param input_array:
+    :param output_filename:
+    :param accuracy:
+    :return:
+    """
     if input_array.ndim != 2:
         raise TypeError('input array must have exactly 2 dimensions')
 
@@ -131,6 +163,14 @@ def generate_file_from_midi_features(input_array, output_filename, accuracy):
 
 
 def generate_file_from_tonal_features(input_array, output_filename, accuracy):
+    """
+    translates a music_21.py output matrix of tonal features into a MIDI file
+
+    :param input_array:
+    :param output_filename:
+    :param accuracy:
+    :return:
+    """
     if input_array.ndim != 2:
         raise TypeError('input array must have exactly 2 dimensions')
 
@@ -162,6 +202,9 @@ def generate_file_from_tonal_features(input_array, output_filename, accuracy):
 
 
 if __name__ == '__main__':
+    # import os
+    # from decode import export_tempo_array, get_array_of_notes
+
     # for name in os.listdir('../../sequences'):
     #     path = os.path.join('../../sequences', name)
     #     name = name.split('.')[0]
@@ -169,19 +212,19 @@ if __name__ == '__main__':
     path = '../../sequences/fugue1.npy'
     name = 'fugue1'
     try:
-        # output_file = get_array_of_notes(path, Mode.BOOLEANS, True)               # ENCODER 1
-        # # output_file = get_object(path)
+        # output_file = get_array_of_notes(path, False, True)               # ENCODER 1
+        # # output_file = np.load(path, allow_pickle=True)
         # tempo_array = export_tempo_array(path)
         # generate_file_from_2d_array(output_file, tempo_array, name, ACCURACY)
 
-        # output_file = get_array_of_notes(path, Mode.BOOLEANS, False)              # ENCODER 2
-        # # output_file = get_object(path)
+        # output_file = get_array_of_notes(path, False, False)              # ENCODER 2
+        # # output_file = np.load(path, allow_pickle=True)
         # tempo_array = export_tempo_array(path)
         # generate_file_from_3d_array(output_file, tempo_array, name, ACCURACY)
 
         output_file = np.load(path, allow_pickle=True)
-        generate_file_from_midi_features(output_file, name, ACCURACY)               # ENCODER 3
-        # generate_file_from_tonal_features(output_file, name, ACCURACY)            # ENCODER 4
+        generate_file_from_midi_features(output_file, name, ACCURACY)       # ENCODER 3
+        # generate_file_from_tonal_features(output_file, name, ACCURACY)    # ENCODER 4
 
     except Exception as ex:
         print("{}: {}".format(name, ex))

@@ -5,7 +5,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM, Activation, BatchNormalization
 from keras.callbacks import ModelCheckpoint
 
-from midi.decode import get_sequence_of_notes, Mode
+from midi.decode import get_sequence_of_notes
 
 SEQUENCE_LENGTH = 100
 
@@ -105,7 +105,7 @@ def run_hot_features():
 
         try:
             # midi_input = np.load(path, allow_pickle=True)
-            midi_input = get_sequence_of_notes(path, Mode.VELOCITIES, True, False)
+            midi_input = get_sequence_of_notes(path, True, True, False)
 
             notes_sequences, lengths_sequences, notes_predictions, lengths_predictions = get_hot_sequences(midi_input)
             notes_input.extend(notes_sequences)
