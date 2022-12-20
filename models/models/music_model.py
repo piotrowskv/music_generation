@@ -24,7 +24,7 @@ class MusicModel(ABC):
         """
         raise NotImplementedError
 
-    def train_on_files(self, midi_files: list[Path], epochs: int, loss_progress: Callable[[int, float], None] | None, checkpoint_path: Path | None = None):
+    def train_on_files(self, midi_files: list[Path], epochs: int, loss_progress: Callable[[int, float], None], checkpoint_path: Path | None = None):
         """
         Trains the model on a given set of files.
         """
