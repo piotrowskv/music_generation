@@ -143,7 +143,7 @@ def generate_file_from_midi_features(input_array, output_filename, accuracy):   
         track = []
         for event_index in range(input_array.shape[0]):
             notes = [False] * 128
-            feature = round(input_array[event_index][feature_index] * 128)
+            feature = round(input_array[event_index][feature_index] * 128 - 1)
             if feature != 0:
                 notes[feature] = True
 
@@ -182,7 +182,7 @@ def generate_file_from_tonal_features(input_array, output_filename, accuracy):  
         for event_index in range(input_array.shape[0]):
             notes = [False] * 128
             if input_array[event_index][2 * feature_index + 1] != 0:
-                feature = round((input_array[event_index][2 * feature_index] * 8 + 1) * 12 +
+                feature = round((input_array[event_index][2 * feature_index] * 11 - 1) * 12 +
                                 input_array[event_index][2 * feature_index + 1] * 12 - 1)
                 notes[feature] = True
 

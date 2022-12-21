@@ -1,7 +1,10 @@
 import numpy as np
 
 from music21 import *
-from .decode import get_sequence_of_notes, export_tempo_array
+try:
+    from decode import get_sequence_of_notes, export_tempo_array
+except ImportError:
+    from .decode import get_sequence_of_notes, export_tempo_array
 
 
 def check_number_of_tracks(array, filename, number):
@@ -85,8 +88,8 @@ def insert_meta_features(partial_features, event_lengths, tempos):
     offset = 0
     while len(event_lengths[-1]) > 0:
         state = event_lengths[-1].pop(0)
-        partial_features[-2].append(1 / state)  # lengths mapping 1/x
-        partial_features[-1].append(min(1.0, 1000 / tempos[offset]))  # tempos mapping 1000/x
+        partial_features[-2].append(1 / state)  # lengths 1/x
+        partial_features[-1].append(min(1.0, 1000 / tempos[offset]))  # tempos 1000/x
         offset += state
 
     return partial_features
@@ -133,13 +136,14 @@ def get_list_of_tonal_features(events, tempos):
                 features_list[2 * track + 0].append(0.0)
                 features_list[2 * track + 1].append(0.0)
             elif len(state) == 1:
-                features_list[2 * track + 0].append(max(0.0, min(1.0, (state[0] // 12 - 1) / 8)))  # octaves mapping x/8
-                features_list[2 * track + 1].append((state[0] % 12 + 1) / 12)  # tones mapping x/12
+                # features' octave numeration does not match EventNote (actual) octaves to avoid non-positive values
+                features_list[2 * track + 0].append((state[0] // 12 + 1) / 11)  # octaves /11
+                features_list[2 * track + 1].append((state[0] % 12 + 1) / 12)  # tones /12
             else:
                 ch = chord.Chord(state)
                 ch = ch.root().midi
-                features_list[2 * track + 0].append(max(0.0, min(1.0, (ch // 12 - 1) / 8)))
-                features_list[2 * track + 1].append((ch % 12 + 1) / 12)
+                features_list[2 * track + 0].append((ch // 12 + 1) / 11)  # octaves /11
+                features_list[2 * track + 1].append((ch % 12 + 1) / 12)  # tones /12
 
     features_list = insert_meta_features(features_list, events, tempos)
     return features_list
@@ -162,11 +166,12 @@ def get_list_of_midi_features(events, tempos):
             if len(state) == 0:
                 features_list[track].append(0.0)
             elif len(state) == 1:
-                features_list[track].append(state[0] / 128)  # notes mapping x/128
+                # features' notes numeration does not match MIDI (actual) notes to avoid non-positive (0) value
+                features_list[track].append((state[0] + 1) / 128)  # notes /128
             else:
                 ch = chord.Chord(state)
                 ch = ch.root().midi
-                features_list[track].append(ch / 128)
+                features_list[track].append((ch + 1) / 128)  # notes /128
 
     features_list = insert_meta_features(features_list, events, tempos)
     return features_list
