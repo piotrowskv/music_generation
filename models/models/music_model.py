@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import keras
 
@@ -13,18 +13,14 @@ class MusicModel(ABC):
     """
 
     @abstractmethod
-    def __init__(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def train(self, epochs: int, xtrain: any, ytrain: any, loss_callback: keras.callbacks.Callback, checkpoint_path: Path | None = None):
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: keras.callbacks.Callback, checkpoint_path: Path | None = None) -> None:
         """
         Trains the model with processed by `prepare_data` x/y train data. When `checkpoint_path` is provided, model
         should save progress to the pointed path. 
         """
         raise NotImplementedError
 
-    def train_on_files(self, midi_files: list[Path], epochs: int, loss_progress: Callable[[int, float], None], checkpoint_path: Path | None = None):
+    def train_on_files(self, midi_files: list[Path], epochs: int, loss_progress: Callable[[int, float], None], checkpoint_path: Path | None = None) -> None:
         """
         Trains the model on a given set of files.
         """
@@ -36,14 +32,14 @@ class MusicModel(ABC):
             loss_progress), checkpoint_path)
 
     @abstractmethod
-    def create_dataset(self, dataset: list[tuple[any, any]]) -> tuple[any, any]:
+    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
         """
         Merges results of multiple `prepare_data` into model's input/output.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def prepare_data(self, midi_file: Path) -> tuple[any, any]:
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
         """
         Given a path to a midi file returns prepared input/output.
         """
@@ -57,14 +53,14 @@ class MusicModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def save(self, path: Path):
+    def save(self, path: Path) -> None:
         """
         Saves the current model into `path`.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def load(self, path: Path):
+    def load(self, path: Path) -> None:
         """
         Loads the model from `path`.
         """
