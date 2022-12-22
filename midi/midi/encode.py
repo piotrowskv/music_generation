@@ -32,7 +32,7 @@ def get_tempo_meta_messages(array, acc):
     return MidiTrack(events)
 
 
-def get_note_messages_from_2d_array(track, track_channel, acc):
+def get_note_messages_from_2d_array(track, track_channel, acc):  # TODO: limit tracks & channels to 16
     """
     translates a time distributed event_lengths' matrix into a MidiTrack of Messages
 
