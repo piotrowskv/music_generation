@@ -85,7 +85,26 @@ def test_get_list_of_tonal_features():
 
 ### Encoder
 
-TODO(@szgorski)
+- Test verifying the correct encoding of metadata information
+
+```python
+def test_get_tempo_meta_messages():
+    meta_track = get_tempo_meta_messages(input_tempos, float(15))
+
+    assert isinstance(meta_track, MidiTrack)
+    assert meta_track == expected_meta
+```
+
+- Test verifying the correct encoding of a midi track
+
+```python
+def test_get_note_messages_from_2d_array():
+    input_array = np.load(input_array_path, allow_pickle=True)
+    track = get_note_messages_from_2d_array(input_array, 0, float(15))
+
+    assert isinstance(track, MidiTrack)
+    assert track == expected_track
+```
 
 ## Models module
 
@@ -96,6 +115,8 @@ This module defines and trains models for music generation. It utilizes the midi
 3. Music quality
 
 Testing those fully requires completed models, so for now we present tests of some side functionality.
+
+\newpage
 
 - Test verifying the loss function tensorflow callback tracker
 
@@ -153,6 +174,8 @@ def test_generate_n_grams():
 
 This module is for a backend server which bridges the frontend interface with the models. Here testing mostly revolves around checking the correctness of endpoints.
 
+\newpage
+
 - Test verifying the `/models` endpoint
 
 ```python
@@ -209,6 +232,8 @@ test("has correct default values", () => {
   );
 });
 ```
+
+\newpage
 
 - Test verifying real connection with a running server
 
