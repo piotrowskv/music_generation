@@ -116,6 +116,8 @@ This module defines and trains models for music generation. It utilizes the midi
 
 Testing those fully requires completed models, so for now we present tests of some side functionality.
 
+\newpage
+
 - Test verifying the loss function tensorflow callback tracker
 
 ```python
@@ -171,6 +173,8 @@ def test_generate_n_grams():
 ## Backend module
 
 This module is for a backend server which bridges the frontend interface with the models. Here testing mostly revolves around checking the correctness of endpoints.
+
+\newpage
 
 - Test verifying the `/models` endpoint
 
@@ -228,6 +232,8 @@ test("has correct default values", () => {
   );
 });
 ```
+
+\newpage
 
 - Test verifying real connection with a running server
 
