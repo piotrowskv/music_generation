@@ -1,5 +1,4 @@
 import copy
-
 import pytest
 
 from midi.music_21 import *
