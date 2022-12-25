@@ -72,6 +72,7 @@ class ActiveElement:
                self.value == other.value and \
                self.use_velocities == other.use_velocities
 
+
 class Event:
     """
     stores all information available about a single piano keyboard state,
@@ -222,13 +223,15 @@ def get_filename(filepath: str):
     return filename
 
 
-def open_file(filepath: str):
+def open_file(filepath: str,
+              grid_accuracy: int = GRID_ACCURACY):
     """
     opens and checks if a given file is a '.mid' file:
     if yes, translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
     and calculates amount of PPQ in grid units; if not, raises a TypeError
 
     :param filepath:
+    :param grid_accuracy:
     :return:
     """
     filename = get_filename(filepath)
@@ -242,7 +245,7 @@ def open_file(filepath: str):
         beat_amount = 8
 
     # calculates amount of PPQ in grid units
-    accuracy = (file.ticks_per_beat * 32) / (GRID_ACCURACY * beat_amount)
+    accuracy = (file.ticks_per_beat * 32) / (grid_accuracy * beat_amount)
     return file, filename, float(accuracy)
 
 
@@ -250,7 +253,8 @@ def get_tempo_array(file: MidiFile,
                     length: int,
                     accuracy: float):
     """
-    translates Track 0 MetaMessages to an array of tempos for each time unit
+    translates Track 0 MetaMessages to an array of tempos for each time unit,
+    with an additional time unit for the last, closing event
 
     :param file:
     :param length:
@@ -280,14 +284,14 @@ def get_tempo_array(file: MidiFile,
 
 def export_tempo_array(filepath: str):
     """
-    returns get_tempo_array() function output for a given MIDI file
+    returns an array of tempos for each time unit in a given MIDI file
 
     :param filepath:
     :return:
     """
     file, _, accuracy = open_file(filepath)
     length = get_midi_length(file, accuracy)
-    tempos = get_tempo_array(file, length, accuracy)
+    tempos = get_tempo_array(file, length, accuracy)[:-1]
 
     return tempos
 
@@ -321,7 +325,7 @@ def combine_and_clean_tracks(tracks: list[MidiTrack]):
 
     # in case of 'note_on' messages only, 'note_off' is marked by velocity == 0
     for i in range(len(tracks)):
-        phantom_track = []
+        phantom_track = list[Message]()
         off_notes = [x.type for x in tracks[i] if x.type == 'note_off']
         if len(off_notes) == 0:
             for msg in tracks[i]:
@@ -440,7 +444,7 @@ def prepare_file(filepath: str,
 def get_lists_of_events(file: MidiFile,
                         accuracy: float,
                         tempos: list[int],
-                        use_velocities: bool = False):
+                        use_velocities: bool):
     """
     translates Messages to raw sequences of Events
 
@@ -500,8 +504,8 @@ def get_lists_of_events(file: MidiFile,
 
 
 def initialise_sequences(filepath: str,
-                         use_velocities: bool = False,
-                         join_tracks: bool = False,
+                         use_velocities: bool,
+                         join_tracks: bool,
                          use_custom_normalization: bool = False):
     """
     gets sequences of event_lengths from a MIDI file and normalises them to either 128 or maximal velocity
@@ -530,9 +534,9 @@ def initialise_sequences(filepath: str,
 
 
 def get_sequence_of_notes(filepath: str,
-                          use_velocities: bool = False,
-                          join_tracks: bool = False,
-                          only_active_notes: bool = True):
+                          use_velocities: bool,
+                          join_tracks: bool,
+                          only_active_notes: bool):
     """
     translates a MIDI file into a sequence representing notes;
     output type depends on parameters:
@@ -590,8 +594,8 @@ def get_sequence_of_notes(filepath: str,
 
 
 def get_array_of_notes(filepath: str,
-                       use_velocities: bool = False,
-                       join_tracks: bool = False):
+                       use_velocities: bool,
+                       join_tracks: bool):
     """
     translates a MIDI file into an array representing notes;
     output type depends on parameters:
@@ -642,27 +646,29 @@ def get_array_of_notes(filepath: str,
 
 
 if __name__ == '__main__':
-    for name in os.listdir('../../data'):
-        path = os.path.join('../../data', name)
-        print(name)
+    # for name in os.listdir('../../data'):
+    #     path = os.path.join('../../data', name)
+    #     print(name)
 
-        try:
-            output_file = get_sequence_of_notes(path, False, False, True)
-            # output_file = get_sequence_of_notes(path, False, False, False)
-            # output_file = get_sequence_of_notes(path, False, True, True)
-            # output_file = get_sequence_of_notes(path, False, True, False)
-            # output_file = get_sequence_of_notes(path, True, False, True)
-            # output_file = get_sequence_of_notes(path, True, False, False)
-            # output_file = get_sequence_of_notes(path, True, True, True)
-            # output_file = get_sequence_of_notes(path, True, True, False)
+    try:
+        path = '../tests/files/test_4_notes.mid'
+        output_file = get_sequence_of_notes(path, False, False, True)
+        # output_file = get_sequence_of_notes(path, False, False, False)
+        output_file = get_sequence_of_notes(path, False, True, True)
+        out_array = export_tempo_array(path)
+        # output_file = get_sequence_of_notes(path, False, True, False)
+        # output_file = get_sequence_of_notes(path, True, False, True)
+        # output_file = get_sequence_of_notes(path, True, False, False)
+        # output_file = get_sequence_of_notes(path, True, True, True)
+        # output_file = get_sequence_of_notes(path, True, True, False)
 
-            # output_file = get_array_of_notes(path, False, False)
-            # output_file = get_array_of_notes(path, False, True)
-            # output_file = get_array_of_notes(path, True, False)
-            # output_file = get_array_of_notes(path, True, True)
+        # output_file = get_array_of_notes(path, False, False)
+        # output_file = get_array_of_notes(path, False, True)
+        # output_file = get_array_of_notes(path, True, False)
+        # output_file = get_array_of_notes(path, True, True)
 
-            # export_output('../../sequences', get_filename(path), output_file)
-            print("    success")
+        # export_output('../../sequences', get_filename(path), output_file)
+        print("    success")
 
-        except Exception as ex:
-            print("    {}".format(ex))
+    except Exception as ex:
+        print("    {}".format(ex))
