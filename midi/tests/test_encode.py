@@ -3,7 +3,7 @@ import pytest
 from midi.encode import *
 
 # one-time setup
-input_array_path = 'test_files/test_other/ABF.npy'
+input_array_path = 'test_files/test_polyphony/ABF.npy'
 
 input_tempos = [500000] * 80
 input_tempos.extend([555555] * 64)

@@ -5,12 +5,12 @@ from midi.music_21 import *
 
 # one-time setup
 file1_path = 'test_files/test_notes/test_all_notes.mid'
-file2_path = 'test_files/test_other/test_tempos_velocities_and_polyphony.mid'
+file2_path = 'test_files/test_polyphony/test_tempos_velocities_and_polyphony.mid'
 
-output_1m_path = 'test_files/test_notes/music21_midi.npy'
-output_1t_path = 'test_files/test_notes/music21_tonal.npy'
-output_2m_path = 'test_files/test_other/music21_midi.npy'
-output_2t_path = 'test_files/test_other/music21_tonal.npy'
+output_1_midi_path = 'test_files/test_notes/music21_midi.npy'
+output_1_tonal_path = 'test_files/test_notes/music21_tonal.npy'
+output_2_midi_path = 'test_files/test_polyphony/music21_midi.npy'
+output_2_tonal_path = 'test_files/test_polyphony/music21_tonal.npy'
 
 input_list = [[(8, [80]), (8, [79]), (8, [77]), (8, [76]), (8, [77]), (8, [76]), (8, [74]), (8, [72]), (8, [74]),
                (8, [72]), (80, []), (8, [72]), (8, [73]), (8, [76]), (8, [78]), (0, [])],
@@ -160,7 +160,7 @@ def test_get_list_of_tonal_features():
 
 def test_get_midi_features_file_1():
     out_array = get_midi_features(file1_path, 'test_notes')
-    midi_array = np.load(output_1m_path, allow_pickle=True)
+    midi_array = np.load(output_1_midi_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
     assert np.array_equal(out_array, midi_array)
@@ -168,7 +168,7 @@ def test_get_midi_features_file_1():
 
 def test_get_midi_features_file_2():
     out_array = get_midi_features(file2_path, 'test_tempos_velocities_and_polyphony')
-    midi_array = np.load(output_2m_path, allow_pickle=True)
+    midi_array = np.load(output_2_midi_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
     assert np.array_equal(out_array, midi_array)
@@ -176,7 +176,7 @@ def test_get_midi_features_file_2():
 
 def test_get_tonal_features_file_1():
     out_array = get_tonal_features(file1_path, 'test_notes')
-    tonal_array = np.load(output_1t_path, allow_pickle=True)
+    tonal_array = np.load(output_1_tonal_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
     assert np.array_equal(out_array, tonal_array)
@@ -184,7 +184,7 @@ def test_get_tonal_features_file_1():
 
 def test_get_tonal_features_file_2():
     out_array = get_tonal_features(file2_path, 'test_tempos_velocities_and_polyphony')
-    tonal_array = np.load(output_2t_path, allow_pickle=True)
+    tonal_array = np.load(output_2_tonal_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
     assert np.array_equal(out_array, tonal_array)

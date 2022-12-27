@@ -165,7 +165,7 @@ def get_messages_from_standard_2d_input(data, track_channel, tempos, accuracy, j
 
 
 def get_file_from_standard_features(data, tempos, output_path, join_notes, use_sequences, use_velocities,
-                                    event_lengths=None, grid_accuracy=GRID_ACCURACY):
+                                    event_lengths=None, grid_accuracy=GRID_ACCURACY):  # TODO: create if doesnt exist
     """
     translates a multi-dimensional array into a MIDI file
     """
@@ -234,8 +234,8 @@ def get_file_from_music21_features(data, output_path, use_tonal_features, join_n
 if __name__ == '__main__':
     from decode import export_tempo_array
 
-    file = '../tests/test_files/test_other/test_tempos_velocities_and_polyphony.mid'
-    path = '../tests/test_files/test_other/AVF.npy'
+    file = '../tests/test_files/test_polyphony/test_tempos_velocities_and_polyphony.mid'
+    path = '../tests/test_files/test_polyphony/AVF.npy'
     out_path = ''
 
     try:
