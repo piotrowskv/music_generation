@@ -1,3 +1,4 @@
+import copy
 import os
 import numpy as np
 
@@ -31,6 +32,13 @@ class EventNote:
                self.height == other.height and \
                self.tone == other.tone and \
                self.octave == other.octave
+
+    def __repr__(self):
+        out_str = 'EventNote('
+        out_str += repr(self.velocity) + ', '
+        out_str += repr(self.height) + ')'
+
+        return out_str
 
     def normalise(self,
                   max_velocity: int | float):  # TODO: check if 128
@@ -72,19 +80,27 @@ class ActiveElement:
                self.value == other.value and \
                self.use_velocities == other.use_velocities
 
+    def __repr__(self):
+        out_str = 'ActiveElement('
+        out_str += repr(self.height) + ', '
+        out_str += repr(self.value) + ', '
+        out_str += repr(self.use_velocities) + ')'
+
+        return out_str
+
 
 class Event:
     """
     stores all information available about a single piano keyboard state,
     used to store states in sequential processing
     """
-    time: int                             # time from previous event, in grid accuracy
-    length: int                           # event length, in grid accuracy
-    offset: int                           # from the beginning, in grid accuracy
-    track: int                            # omits 'Track 0'
-    tempo: int                            # from 'Track 0' (MetaMessages)
+    time: int                           # time from previous event, in grid accuracy
+    length: int                         # event length, in grid accuracy
+    offset: int                         # from the beginning, in grid accuracy
+    track: int                          # omits 'Track 0'
+    tempo: int                          # from 'Track 0' (MetaMessages)
     active_notes: list[ActiveElement]
-    all_notes: list[bool | float]  # of size 128
+    all_notes: list[bool | float]       # of size 128
     use_velocities: bool
 
     def __init__(
@@ -113,6 +129,26 @@ class Event:
             self.__set_booleans_dictionary(notes)
             self.__set_booleans_array(notes)
 
+    # def __init__(
+    #         self,
+    #         time: int,
+    #         length: int,
+    #         offset: int,
+    #         track: int,
+    #         tempo: int,
+    #         active_notes: list[ActiveElement],
+    #         all_notes: list[bool | float],
+    #         use_velocities: bool
+    # ):
+    #     self.time = time
+    #     self.length = length
+    #     self.offset = offset
+    #     self.track = track
+    #     self.tempo = tempo
+    #     self.active_notes = copy.deepcopy(active_notes)
+    #     self.all_notes = copy.deepcopy(all_notes)
+    #     self.use_velocities = use_velocities
+
     def __eq__(self, other):
         return self.time == other.time and \
                self.length == other.length and \
@@ -122,6 +158,23 @@ class Event:
                self.active_notes == other.active_notes and \
                self.all_notes == other.all_notes and \
                self.use_velocities == other.use_velocities
+
+    def __repr__(self):
+        out_str = '\nEvent('  # TODO
+        out_str += repr(self.time) + ', '
+        out_str += repr(self.length) + ', '
+        out_str += repr(self.offset) + ', '
+        out_str += repr(self.track) + ', '
+        out_str += repr(self.tempo) + ', '
+
+        notes = dict[int, EventNote]()
+        for note in self.active_notes:
+            notes[note.height] = EventNote(float(note.value), note.height)
+
+        out_str += repr(notes) + ', '
+        out_str += repr(self.use_velocities) + ')'
+
+        return out_str
 
     def __set_booleans_dictionary(self, notes):
         for height in notes.keys():
@@ -236,6 +289,7 @@ def open_file(filepath: str,
     """
     filename = get_filename(filepath)
     file = MidiFile(filepath)
+    file.filename = None
     check_file_type(file)
 
     # translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
@@ -463,6 +517,8 @@ def get_lists_of_events(file: MidiFile,
         accumulated_increment = 0
 
         event_notes = dict[int, EventNote]()
+        # TODO
+        print('')
         initial_sequence.append(Event(0, 0, 0, track_index, tempos[0], {}, use_velocities))
 
         for msg in track:
@@ -651,7 +707,7 @@ if __name__ == '__main__':
     #     print(name)
 
     try:
-        path = '../tests/files/test_4_notes.mid'
+        path = ''
         output_file = get_sequence_of_notes(path, False, False, True)
         # output_file = get_sequence_of_notes(path, False, False, False)
         output_file = get_sequence_of_notes(path, False, True, True)

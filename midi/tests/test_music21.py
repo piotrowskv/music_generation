@@ -4,13 +4,13 @@ import pytest
 from midi.music_21 import *
 
 # one-time setup
-file1_path = 'files/test_all_notes.mid'
-file2_path = 'files/test_tempos_velocities_and_polyphony.mid'
+file1_path = 'test_files/test_notes/test_all_notes.mid'
+file2_path = 'test_files/test_other/test_tempos_velocities_and_polyphony.mid'
 
-output_1m_path = 'files/music21_output_1m.npy'
-output_1t_path = 'files/music21_output_1t.npy'
-output_2m_path = 'files/music21_output_2m.npy'
-output_2t_path = 'files/music21_output_2t.npy'
+output_1m_path = 'test_files/test_notes/music21_midi.npy'
+output_1t_path = 'test_files/test_notes/music21_tonal.npy'
+output_2m_path = 'test_files/test_other/music21_midi.npy'
+output_2t_path = 'test_files/test_other/music21_tonal.npy'
 
 input_list = [[(8, [80]), (8, [79]), (8, [77]), (8, [76]), (8, [77]), (8, [76]), (8, [74]), (8, [72]), (8, [74]),
                (8, [72]), (80, []), (8, [72]), (8, [73]), (8, [76]), (8, [78]), (0, [])],
@@ -34,7 +34,7 @@ partial_events = [[], [], [], [], [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 24, 8, 8, 8, 8,
 
 expected_tempos = [500000] * 80
 expected_tempos.extend([555555] * 64)
-expected_tempos.extend([500000] * 49)
+expected_tempos.extend([500000] * 48)
 
 expected_midi = [[0.6328125, 0.625, 0.609375, 0.6015625, 0.609375, 0.6015625, 0.5859375, 0.5703125, 0.5859375,
                   0.5703125, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5703125, 0.578125, 0.6015625, 0.6171875,
@@ -159,7 +159,7 @@ def test_get_list_of_tonal_features():
 
 
 def test_get_midi_features_file_1():
-    out_array = get_midi_features(file1_path, 'test_all_notes')
+    out_array = get_midi_features(file1_path, 'test_notes')
     midi_array = np.load(output_1m_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
@@ -175,7 +175,7 @@ def test_get_midi_features_file_2():
 
 
 def test_get_tonal_features_file_1():
-    out_array = get_tonal_features(file1_path, 'test_all_notes')
+    out_array = get_tonal_features(file1_path, 'test_notes')
     tonal_array = np.load(output_1t_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)

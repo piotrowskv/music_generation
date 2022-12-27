@@ -234,9 +234,9 @@ def get_file_from_music21_features(data, output_path, use_tonal_features, join_n
 if __name__ == '__main__':
     from decode import export_tempo_array
 
-    file = '../tests/test_files/test_tempos_etc/test_tempos_velocities_and_polyphony.mid'
-    path = '../tests/test_files/test_tempos_etc/AVF.npy'
-    out_path = '../tests/files/test1.mid'
+    file = '../tests/test_files/test_other/test_tempos_velocities_and_polyphony.mid'
+    path = '../tests/test_files/test_other/AVF.npy'
+    out_path = ''
 
     try:
         in_array = np.load(path, allow_pickle=True)
