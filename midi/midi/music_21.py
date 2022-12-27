@@ -4,7 +4,7 @@ from music21 import *
 try:
     from decode import get_sequence_of_notes, export_tempo_array
 except ImportError:
-    from .decode import get_sequence_of_notes, export_tempo_array  # TODO: talk with Marcin about this
+    from .decode import get_sequence_of_notes, export_tempo_array
 
 
 def check_number_of_tracks(array, filename, number):

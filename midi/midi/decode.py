@@ -33,11 +33,7 @@ class EventNote:
                self.octave == other.octave
 
     def __repr__(self):
-        out_str = 'EventNote('
-        out_str += repr(self.velocity) + ', '
-        out_str += repr(self.height) + ')'
-
-        return out_str
+        return f'EventNote({self.velocity}, {self.height})'
 
     def normalise(self,
                   max_velocity: int | float):  # TODO: check if 128
@@ -80,12 +76,7 @@ class ActiveElement:
                self.use_velocities == other.use_velocities
 
     def __repr__(self):
-        out_str = 'ActiveElement('
-        out_str += repr(self.height) + ', '
-        out_str += repr(self.value) + ', '
-        out_str += repr(self.use_velocities) + ')'
-
-        return out_str
+        return f'ActiveElement({self.height}, {self.value}, {self.use_velocities})'
 
 
 class Event:
@@ -139,21 +130,14 @@ class Event:
                self.use_velocities == other.use_velocities
 
     def __repr__(self):
-        out_str = '\nEvent('  # TODO
-        out_str += repr(self.time) + ', '
-        out_str += repr(self.length) + ', '
-        out_str += repr(self.offset) + ', '
-        out_str += repr(self.track) + ', '
-        out_str += repr(self.tempo) + ', '
+        out_str = f'Event({self.time}, {self.length}, {self.offset}, {self.track}, {self.tempo}, '
 
         notes = dict[int, EventNote]()
         self.active_notes.sort(key=lambda x: x.height)
         for note in self.active_notes:
             notes[note.height] = EventNote(float(note.value), note.height)
 
-        out_str += repr(notes) + ', '
-        out_str += repr(self.use_velocities) + ')'
-
+        out_str += f'{repr(notes)}, {self.use_velocities})'
         return out_str
 
     def __set_booleans_dictionary(self, notes):

@@ -101,11 +101,3 @@ def test_get_tempo_meta_messages():
 
     assert isinstance(meta_track, MidiTrack)
     assert meta_track == expected_meta
-
-
-# def test_get_note_messages_from_2d_array():
-#     input_array = np.load(input_array_path, allow_pickle=True)
-#     track = get_note_messages_from_2d_array(input_array, 0, float(15))
-#
-#     assert isinstance(track, MidiTrack)
-#     assert track == expected_track
