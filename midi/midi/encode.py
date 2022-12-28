@@ -1,3 +1,4 @@
+import os.path
 import numpy as np
 
 from mido import MidiTrack, MidiFile
@@ -5,10 +6,12 @@ from mido.messages import Message
 from mido.midifiles.meta import MetaMessage
 
 DEFAULT_VELOCITY = 64
+TICKS_PER_BEAT = 240
 GRID_ACCURACY = 64
 
 
-def get_tempo_meta_messages(array, accuracy):
+def get_tempo_meta_messages(array: list[int],
+                            accuracy: float):
     """
     translates a provided tempo array into a MetaMessage track
     """
@@ -28,7 +31,8 @@ def get_tempo_meta_messages(array, accuracy):
     return MidiTrack(events)
 
 
-def get_tempo_array_from_tempo_sequences(input_tempos, event_lengths):
+def get_tempo_array_from_tempo_sequences(input_tempos: list[int],
+                                         event_lengths: list[int]):
     """
     translates tempos from an events' list into a time distributed list
     """
@@ -44,7 +48,7 @@ def get_tempo_array_from_tempo_sequences(input_tempos, event_lengths):
     return tempos
 
 
-def get_sequences_from_array(array):
+def get_sequences_from_array(array: np.ndarray):
     """
     translates a time distributed single-track array into a list of events
     """
@@ -66,7 +70,7 @@ def get_sequences_from_array(array):
     return events, event_lengths
 
 
-def get_tuples_from_sequences(input_events):
+def get_tuples_from_sequences(input_events: list):  # TODO
     """
     translates a list of events into a list of tuples of active notes
     """
@@ -75,14 +79,19 @@ def get_tuples_from_sequences(input_events):
         notes = []
         for i, value in enumerate(event):
             if value:  # True or > 0.0
-                notes.append((i, min(127, round(value * 128))))
+                notes.append((i, min(127, round(value * 128))))  # velocity scaled from [0, 1] to [0, 128]
         events.append(notes)
 
     return events
 
 
-def get_messages_from_tuples(track, track_channel, event_lengths,
-                             accuracy, join_notes, use_default_velocity, default_velocity=DEFAULT_VELOCITY):
+def get_messages_from_tuples(track: np.ndarray | list,  # TODO
+                             track_channel: int,
+                             event_lengths: list[int],  # TODO
+                             accuracy: float,
+                             join_notes: bool,
+                             use_default_velocity: bool,
+                             default_velocity: int = DEFAULT_VELOCITY):
     """
     translates a list of tuples of active notes into a MidiTrack
     """
@@ -132,9 +141,12 @@ def get_messages_from_tuples(track, track_channel, event_lengths,
     return MidiTrack(messages)
 
 
-def prepare_meta_file(tempos, grid_accuracy, event_lengths=None):
-    midi_file = MidiFile(ticks_per_beat=240)  # constant of arbitrary choice
-    accuracy = float(4 * midi_file.ticks_per_beat / grid_accuracy)  # = ticks_per_measure / grid_accuracy
+def prepare_meta_file(tempos: list[int],
+                      grid_accuracy: int,
+                      event_lengths: list[int] | None = None,
+                      ticks_per_beat: int = TICKS_PER_BEAT):
+    midi_file = MidiFile(ticks_per_beat=ticks_per_beat)
+    accuracy = float(4 * ticks_per_beat / grid_accuracy)  # equal to ticks_per_measure / grid_accuracy
     if event_lengths is not None:
         tempos = get_tempo_array_from_tempo_sequences(tempos, event_lengths)
     midi_file.tracks.append(get_tempo_meta_messages(tempos, accuracy))
@@ -142,17 +154,16 @@ def prepare_meta_file(tempos, grid_accuracy, event_lengths=None):
     return tempos, accuracy, midi_file
 
 
-def get_messages_from_standard_2d_input(data, track_channel, tempos, accuracy, join_notes, use_sequences,
-                                        use_velocities, event_lengths=None):
+def get_messages_from_standard_2d_input(data: np.ndarray | list,  # TODO
+                                        track_channel: int,
+                                        accuracy: float,
+                                        join_notes: bool,
+                                        use_sequences: bool,
+                                        use_velocities: bool,
+                                        event_lengths: list[int] | None = None):
     """
     translates a two-dimensional single-track array into a MidiTrack
     """
-    if data.shape[0] != len(tempos):
-        raise IndexError('length of tempos array and input array\'s time dimension must be equal')
-
-    if use_sequences and event_lengths is None:
-        raise ValueError('no argument \'event_lengths\' for \'use_sequences\' mode provided')
-
     if use_sequences:
         events = data.tolist()
     else:
@@ -164,28 +175,65 @@ def get_messages_from_standard_2d_input(data, track_channel, tempos, accuracy, j
     return track
 
 
-def get_file_from_standard_features(data, tempos, output_path, join_notes, use_sequences, use_velocities,
-                                    event_lengths=None, grid_accuracy=GRID_ACCURACY):  # TODO: create if doesnt exist
+def get_file_from_standard_features(data: np.ndarray,
+                                    tempos: int | list[int],
+                                    output_path: str,
+                                    join_notes: bool,
+                                    use_sequences: bool,
+                                    use_velocities: bool,
+                                    event_lengths: list[int] | None = None,
+                                    grid_accuracy: int = GRID_ACCURACY):
     """
     translates a multi-dimensional array into a MIDI file
     """
+    if use_sequences and (event_lengths is None):
+        raise ValueError('no argument \'event_lengths\' for \'use_sequences\' mode provided')
+
+    # tempos' array configuration
+    if isinstance(tempos, int):
+        if data.ndim == 2:
+            tempos = [tempos] * data.shape[0]
+        elif data.ndim == 3:
+            tempos = [tempos] * data.shape[1]
+        else:
+            raise TypeError('input array must have 2 or 3 dimensions')
+    else:
+        if use_sequences:
+            if len(event_lengths) != len(tempos):
+                raise IndexError('length of tempos and event lengths\' arrays must be equal')
+        else:
+            if data.ndim == 2:
+                if data.shape[0] != len(tempos):
+                    raise IndexError('length of tempos array and input array\'s time dimension must be equal')
+            elif data.ndim == 3:
+                if data.shape[1] != len(tempos):
+                    raise IndexError('length of tempos array and input array\'s time dimension must be equal')
+            else:
+                raise TypeError('input array must have 2 or 3 dimensions')
+
+    # tracks generation
     tempos, accuracy, midi_file = prepare_meta_file(tempos, grid_accuracy, event_lengths)
     if data.ndim == 2:
-        midi_file.tracks.append(get_messages_from_standard_2d_input(data, 0, tempos, accuracy, join_notes,
+        midi_file.tracks.append(get_messages_from_standard_2d_input(data, 0, accuracy, join_notes,
                                                                     use_sequences, use_velocities, event_lengths))
-
     elif data.ndim == 3:
         for i in range(data.shape[0]):  # channels are limited to 16 in MIDI 1.0
-            midi_file.tracks.append(get_messages_from_standard_2d_input(data[i], i % 16, tempos, accuracy, join_notes,
+            midi_file.tracks.append(get_messages_from_standard_2d_input(data[i], i % 16, accuracy, join_notes,
                                                                         use_sequences, use_velocities, event_lengths))
-
     else:
         raise TypeError('input array must have 2 or 3 dimensions')
 
+    output_dir = os.path.dirname(output_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
     midi_file.save(output_path)
 
 
-def get_file_from_music21_features(data, output_path, use_tonal_features, join_notes, grid_accuracy=GRID_ACCURACY):
+def get_file_from_music21_features(data: np.ndarray,
+                                   output_path: str,
+                                   use_tonal_features: bool,
+                                   join_notes: bool,
+                                   grid_accuracy: int = GRID_ACCURACY):
     """
     translates a music_21.py output matrix of tonal features into a MIDI file
     """
@@ -201,14 +249,15 @@ def get_file_from_music21_features(data, output_path, use_tonal_features, join_n
     event_lengths = []
     tempos = []
     array = []
+    feature_range = range(int(data.shape[1] / 2 - 1)) if use_tonal_features else range(data.shape[1] - 2)
 
-    for feature_index in range(int(data.shape[1] / 2 - 1)):
+    for feature_index in feature_range:
         track = []
         for event_index in range(data.shape[0]):
             notes = [False] * 128
 
             if use_tonal_features:
-                if data[event_index][2 * feature_index + 1] != 0:  # ignore zero-length events
+                if data[event_index][2 * feature_index + 1] != 0:  # ignore 'empty notes'
                     # recalculating normalised octaves [1, 11] and tones [1, 12] to MIDI notes [0, 127]
                     feature = round((data[event_index][2 * feature_index] * 11 - 1) * 12 +
                                     data[event_index][2 * feature_index + 1] * 12 - 1)
@@ -217,10 +266,10 @@ def get_file_from_music21_features(data, output_path, use_tonal_features, join_n
             else:
                 # recalculating normalised feature notes [1, 128] to MIDI notes [0, 127]
                 feature = round(data[event_index][feature_index] * 128 - 1)
-                if feature != 0:
+                if feature > -1:
                     notes[feature] = True
 
-            track.append([notes])
+            track.append(notes)
         array.append(track)
 
     for event_index in range(data.shape[0]):
@@ -237,14 +286,15 @@ if __name__ == '__main__':
     from decode import export_tempo_array
 
     file = '../tests/test_files/test_polyphony/test_tempos_velocities_and_polyphony.mid'
-    path = '../tests/test_files/test_polyphony/AVF.npy'
-    out_path = ''
+    path = '../tests/test_files/test_polyphony/music21_tonal.npy'
+    out_path = '../tests/test_files/test_encode.mid'
 
     try:
         in_array = np.load(path, allow_pickle=True)
-        tempo_array = export_tempo_array(file)
-        tempo_array.extend(tempo_array)
-        get_file_from_standard_features(in_array, tempo_array, out_path, False, False, True)
+        tempo_array = export_tempo_array(file, False)
+        # tempo_array.extend(tempo_array)
+        # get_file_from_standard_features(in_array, 500000, out_path, False, False, True)
+        get_file_from_music21_features(in_array, out_path, True, True)
 
     except Exception as ex:
         print("{}: {}".format(path, ex))
