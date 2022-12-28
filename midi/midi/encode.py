@@ -133,8 +133,8 @@ def get_messages_from_tuples(track, track_channel, event_lengths,
 
 
 def prepare_meta_file(tempos, grid_accuracy, event_lengths=None):
-    midi_file = MidiFile(ticks_per_beat=240)
-    accuracy = float(960 / grid_accuracy)  # = ticks_per_beat / (notated_32nd_notes_per_beat * grid_accuracy / 32)
+    midi_file = MidiFile(ticks_per_beat=240)  # constant of arbitrary choice
+    accuracy = float(4 * midi_file.ticks_per_beat / grid_accuracy)  # = ticks_per_measure / grid_accuracy
     if event_lengths is not None:
         tempos = get_tempo_array_from_tempo_sequences(tempos, event_lengths)
     midi_file.tracks.append(get_tempo_meta_messages(tempos, accuracy))
@@ -209,11 +209,13 @@ def get_file_from_music21_features(data, output_path, use_tonal_features, join_n
 
             if use_tonal_features:
                 if data[event_index][2 * feature_index + 1] != 0:  # ignore zero-length events
+                    # recalculating normalised octaves [1, 11] and tones [1, 12] to MIDI notes [0, 127]
                     feature = round((data[event_index][2 * feature_index] * 11 - 1) * 12 +
                                     data[event_index][2 * feature_index + 1] * 12 - 1)
                     notes[feature] = True
 
             else:
+                # recalculating normalised feature notes [1, 128] to MIDI notes [0, 127]
                 feature = round(data[event_index][feature_index] * 128 - 1)
                 if feature != 0:
                     notes[feature] = True
