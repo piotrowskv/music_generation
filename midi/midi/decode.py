@@ -32,6 +32,9 @@ class EventNote:
                self.tone == other.tone and \
                self.octave == other.octave
 
+    def __repr__(self):
+        return f'EventNote({self.velocity}, {self.height})'
+
     def normalise(self,
                   max_velocity: int | float):  # TODO: check if 128
         """
@@ -72,18 +75,22 @@ class ActiveElement:
                self.value == other.value and \
                self.use_velocities == other.use_velocities
 
+    def __repr__(self):
+        return f'ActiveElement({self.height}, {self.value}, {self.use_velocities})'
+
+
 class Event:
     """
     stores all information available about a single piano keyboard state,
     used to store states in sequential processing
     """
-    time: int                             # time from previous event, in grid accuracy
-    length: int                           # event length, in grid accuracy
-    offset: int                           # from the beginning, in grid accuracy
-    track: int                            # omits 'Track 0'
-    tempo: int                            # from 'Track 0' (MetaMessages)
+    time: int                           # time from previous event, in grid accuracy
+    length: int                         # event length, in grid accuracy
+    offset: int                         # from the beginning, in grid accuracy
+    track: int                          # omits 'Track 0'
+    tempo: int                          # from 'Track 0' (MetaMessages)
     active_notes: list[ActiveElement]
-    all_notes: list[bool | float]  # of size 128
+    all_notes: list[bool | float]       # of size 128
     use_velocities: bool
 
     def __init__(
@@ -122,15 +129,26 @@ class Event:
                self.all_notes == other.all_notes and \
                self.use_velocities == other.use_velocities
 
+    def __repr__(self):
+        out_str = f'Event({self.time}, {self.length}, {self.offset}, {self.track}, {self.tempo}, '
+
+        notes = dict[int, EventNote]()
+        self.active_notes.sort(key=lambda x: x.height)
+        for note in self.active_notes:
+            notes[note.height] = EventNote(float(note.value), note.height)
+
+        out_str += f'{repr(notes)}, {self.use_velocities})'
+        return out_str
+
     def __set_booleans_dictionary(self, notes):
         for height in notes.keys():
             self.active_notes.append(ActiveElement(height, True, False))
-            self.active_notes.sort(key=lambda x: x.height)
+        self.active_notes.sort(key=lambda x: x.height)
 
     def __set_velocities_dictionary(self, notes):
         for height in notes.keys():
             self.active_notes.append(ActiveElement(height, notes[height].velocity, True))
-            self.active_notes.sort(key=lambda x: x.height)
+        self.active_notes.sort(key=lambda x: x.height)
 
     def __set_booleans_array(self, notes):
         self.all_notes = [False] * 128
@@ -197,12 +215,14 @@ def get_midi_length(file: MidiFile,
 
 def check_file_type(file: MidiFile):
     """
-    checks if MIDI file type is 2: if yes, raises a ValueError
+    checks if MIDI file type is 1: if not, raises a ValueError
 
     :param file:
     :return:
     """
-    if file.type == 2:
+    if file.type == 0:
+        raise ValueError('impossible to perform calculations for type 0 (single-track) file')
+    elif file.type == 2:
         raise ValueError('impossible to perform calculations for type 2 (asynchronous) file')
 
 
@@ -222,49 +242,63 @@ def get_filename(filepath: str):
     return filename
 
 
-def open_file(filepath: str):
+def open_file(filepath: str,
+              grid_accuracy: int = GRID_ACCURACY):
     """
     opens and checks if a given file is a '.mid' file:
     if yes, translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
-    and calculates amount of PPQ in grid units; if not, raises a TypeError
+    and calculates amount of PPQ in grid units; if not, raises an error
 
     :param filepath:
+    :param grid_accuracy:
     :return:
     """
     filename = get_filename(filepath)
-    file = MidiFile(filepath)
+    try:
+        file = MidiFile(filepath)
+    except (OSError, EOFError):
+        raise ImportError('file is corrupted')
+
+    file.filename = None
     check_file_type(file)
 
     # translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
-    try:
-        beat_amount = file.tracks[0][0].notated_32nd_notes_per_beat  # TODO: search for 'time_signature'
-    except (AttributeError, IndexError, NameError) as _:
+    beat_messages = [message.notated_32nd_notes_per_beat for message in file.tracks[0]
+                     if hasattr(message, 'notated_32nd_notes_per_beat')]
+    if len(beat_messages) > 0:
+        beat_amount = beat_messages[0]
+    else:
         beat_amount = 8
 
     # calculates amount of PPQ in grid units
-    accuracy = (file.ticks_per_beat * 32) / (GRID_ACCURACY * beat_amount)
+    accuracy = (file.ticks_per_beat * 32) / (grid_accuracy * beat_amount)
     return file, filename, float(accuracy)
 
 
 def get_tempo_array(file: MidiFile,
                     length: int,
-                    accuracy: float):
+                    accuracy: float,
+                    initial_ticks: int = 0):
     """
-    translates Track 0 MetaMessages to an array of tempos for each time unit
+    translates Track 0 MetaMessages to an array of tempos for each time unit,
+    with an additional time unit for the last, closing event
 
     :param file:
     :param length:
     :param accuracy:
+    :param initial_ticks:
     :return:
     """
     tempos = [0] * (length + 1)
-    ticks = 0
-    offset = 0
+    ticks = -initial_ticks
+    offset = -get_offset(initial_ticks, 0, accuracy)
     tempo = 500000  # default MIDI tempo
 
     for msg in file.tracks[0]:
         increment = get_offset(msg.time, ticks, accuracy)
-        for time in range(offset, offset + increment):
+        begin_range = min(max(offset, 0), length + 1)
+        end_range = min(max(offset + increment, 0), length + 1)
+        for time in range(begin_range, end_range):
             tempos[time] = tempo
         ticks += msg.time
         offset += increment
@@ -272,22 +306,31 @@ def get_tempo_array(file: MidiFile,
         if msg.type == 'set_tempo':
             tempo = msg.tempo
 
+        if offset > length + 1:
+            break
+
     for time in range(offset, length + 1):  # additional position for an ending event
         tempos[time] = tempo
 
     return tempos
 
 
-def export_tempo_array(filepath: str):
+def export_tempo_array(filepath: str,
+                       trim_output: bool):
     """
-    returns get_tempo_array() function output for a given MIDI file
+    returns an array of tempos for each time unit in a given MIDI file after optional trimming
 
     :param filepath:
+    :param trim_output:
     :return:
     """
-    file, _, accuracy = open_file(filepath)
-    length = get_midi_length(file, accuracy)
-    tempos = get_tempo_array(file, length, accuracy)
+    if trim_output:
+        _, _, _, _, tempos = prepare_file(filepath, False)
+    else:
+        file, _, accuracy = open_file(filepath)
+        length = get_midi_length(file, accuracy)
+        tempos = get_tempo_array(file, length, accuracy)
+    tempos = tempos[:-1]
 
     return tempos
 
@@ -321,7 +364,7 @@ def combine_and_clean_tracks(tracks: list[MidiTrack]):
 
     # in case of 'note_on' messages only, 'note_off' is marked by velocity == 0
     for i in range(len(tracks)):
-        phantom_track = []
+        phantom_track = list[Message]()
         off_notes = [x.type for x in tracks[i] if x.type == 'note_off']
         if len(off_notes) == 0:
             for msg in tracks[i]:
@@ -417,15 +460,14 @@ def prepare_file(filepath: str,
                  join_tracks: bool):
     """
     opens MIDI file, calculates accuracy factor, input length and tempo array,
-    then cleans and optionally joins tracks
+    then cleans, trims and optionally joins tracks;
+    if the file has no notes, throws a ValueError
 
     :param filepath:
     :param join_tracks:
     :return:
     """
     file, filename, accuracy = open_file(filepath)
-    length = get_midi_length(file, accuracy)
-    tempos = get_tempo_array(file, length, accuracy)
 
     if join_tracks:
         track = combine_and_clean_tracks(file.tracks[1:])
@@ -434,13 +476,38 @@ def prepare_file(filepath: str,
         for i in range(1, len(file.tracks)):
             file.tracks[i] = combine_and_clean_tracks([file.tracks[i]])
 
+    # remove empty tracks
+    to_remove = list[int]()
+    for i in range(1, len(file.tracks)):
+        if len(file.tracks[i]) == 0:
+            to_remove.append(i)
+
+    to_remove.sort(reverse=True)
+    for i in to_remove:
+        file.tracks.pop(i)
+
+    if len(file.tracks) <= 1:
+        raise ValueError('empty file - no note messages found')
+
+    # remove notes' beginning offset
+    begin_time = list[int]()
+    for track in file.tracks[1:]:
+        begin_time.append(track[0].time)
+
+    begin_time = min(begin_time)
+    for track in file.tracks[1:]:
+        track[0].time -= begin_time
+
+    length = get_midi_length(file, accuracy)
+    tempos = get_tempo_array(file, length, accuracy, begin_time)
+
     return file, filename, accuracy, length, tempos
 
 
 def get_lists_of_events(file: MidiFile,
                         accuracy: float,
                         tempos: list[int],
-                        use_velocities: bool = False):
+                        use_velocities: bool):
     """
     translates Messages to raw sequences of Events
 
@@ -500,8 +567,8 @@ def get_lists_of_events(file: MidiFile,
 
 
 def initialise_sequences(filepath: str,
-                         use_velocities: bool = False,
-                         join_tracks: bool = False,
+                         use_velocities: bool,
+                         join_tracks: bool,
                          use_custom_normalization: bool = False):
     """
     gets sequences of event_lengths from a MIDI file and normalises them to either 128 or maximal velocity
@@ -530,9 +597,9 @@ def initialise_sequences(filepath: str,
 
 
 def get_sequence_of_notes(filepath: str,
-                          use_velocities: bool = False,
-                          join_tracks: bool = False,
-                          only_active_notes: bool = True):
+                          use_velocities: bool,
+                          join_tracks: bool,
+                          only_active_notes: bool):
     """
     translates a MIDI file into a sequence representing notes;
     output type depends on parameters:
@@ -590,8 +657,8 @@ def get_sequence_of_notes(filepath: str,
 
 
 def get_array_of_notes(filepath: str,
-                       use_velocities: bool = False,
-                       join_tracks: bool = False):
+                       use_velocities: bool,
+                       join_tracks: bool):
     """
     translates a MIDI file into an array representing notes;
     output type depends on parameters:
@@ -642,8 +709,8 @@ def get_array_of_notes(filepath: str,
 
 
 if __name__ == '__main__':
-    for name in os.listdir('../../data'):
-        path = os.path.join('../../data', name)
+    for name in os.listdir('data'):
+        path = os.path.join('data', name)
         print(name)
 
         try:

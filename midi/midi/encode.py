@@ -4,227 +4,247 @@ from mido import MidiTrack, MidiFile
 from mido.messages import Message
 from mido.midifiles.meta import MetaMessage
 
-VELOCITY = 64
-ACCURACY = 64
+DEFAULT_VELOCITY = 64
+GRID_ACCURACY = 64
 
 
-def get_tempo_meta_messages(array, acc):
+def get_tempo_meta_messages(array, accuracy):
     """
-    translates provided tempo array into a MetaMessage track
-
-    :param array:
-    :param acc:
-    :return:
+    translates a provided tempo array into a MetaMessage track
     """
     events = [MetaMessage('time_signature', numerator=4, denominator=4, clocks_per_click=24,
                           notated_32nd_notes_per_beat=8, time=0)]
 
     time = 0
     last_tempo = 0
-    for i in range(len(array) - 1):
+    for i in range(len(array)):
         if array[i] != last_tempo:
             events.append(MetaMessage('set_tempo', tempo=array[i], time=round(time)))
             last_tempo = array[i]
             time -= round(time)
-        time += acc
+        time += accuracy
     events.append(MetaMessage('end_of_track', time=round(time)))
 
     return MidiTrack(events)
 
 
-def get_note_messages_from_2d_array(track, track_channel, acc):
+def get_tempo_array_from_tempo_sequences(input_tempos, event_lengths):
     """
-    translates a time distributed event_lengths' matrix into a MidiTrack of Messages
+    translates tempos from an events' list into a time distributed list
+    """
+    if len(input_tempos) != len(event_lengths):
+        print(Warning('input tempo and event length arrays are of different length - '
+                      'rewriting of the tempo array skipped'))
+        return input_tempos
 
-    :param track:
-    :param track_channel:
-    :param acc:
-    :return:
+    tempos = []
+    for i, value in enumerate(event_lengths):
+        tempos.extend([input_tempos[i]] * value)
+
+    return tempos
+
+
+def get_sequences_from_array(array):
+    """
+    translates a time distributed single-track array into a list of events
     """
     events = []
-    notes = []
+    event_lengths = []
 
-    last_offset = 0
-    for tick in track:
-        current_notes = []
-        for i in range(len(tick)):
-            if tick[i]:
-                current_notes.append(i)
+    current_notes = array[0]
+    current_length = 0
+    for value in array:
+        if not np.array_equal(current_notes, value):
+            events.append(current_notes)
+            event_lengths.append(current_length)
+            current_notes = value
+            current_length = 0
+        current_length += 1
+    events.append(current_notes)
+    event_lengths.append(current_length)
 
-        subtract = [elem for elem in notes if elem not in current_notes]
-        add = [elem for elem in current_notes if elem not in notes]
-
-        for elem in subtract:
-            events.append(Message('note_off', note=elem, channel=track_channel,
-                                  velocity=VELOCITY, time=round(last_offset * acc)))
-            last_offset = 0
-        for elem in add:
-            events.append(Message('note_on', note=elem, channel=track_channel,
-                                  velocity=VELOCITY, time=round(last_offset * acc)))
-            last_offset = 0
-
-        notes = current_notes
-        last_offset += 1
-
-    for elem in notes:
-        events.append(Message('note_off', note=elem, channel=track_channel,
-                              velocity=VELOCITY, time=round(last_offset * acc)))
-        last_offset = 0
-
-    events.append(MetaMessage('end_of_track', time=0))
-    return MidiTrack(events)
+    return events, event_lengths
 
 
-def generate_file_from_2d_array(input_array, tempos, output_filename, accuracy):
+def get_tuples_from_sequences(input_events):
     """
-    translates a time distributed single-track array into a MIDI file
-
-    :param input_array:
-    :param tempos:
-    :param output_filename:
-    :param accuracy:
-    :return:
+    translates a list of events into a list of tuples of active notes
     """
-    if input_array.ndim != 2:
-        raise TypeError('input array must have exactly 2 dimensions')
+    events = []
+    for event in input_events:
+        notes = []
+        for i, value in enumerate(event):
+            if value:  # True or > 0.0
+                notes.append((i, min(127, round(value * 128))))
+        events.append(notes)
 
-    if input_array.shape[0] + 1 != len(tempos):
-        raise IndexError('length of input array\'s time dimension must be shorter by 1 than tempos array')
-
-    midi_file = MidiFile(ticks_per_beat=240)
-    acc_factor = float(960 / accuracy)  # acc_factor = ticks_per_beat / (notated_32nd_notes_per_beat * accuracy / 32)
-    midi_file.tracks.append(get_tempo_meta_messages(tempos, acc_factor))
-
-    midi_file.tracks.append(get_note_messages_from_2d_array(input_array, 0, acc_factor))
-    midi_file.save(f'../../outputs/{output_filename}.mid')  # TODO: parametrization
+    return events
 
 
-def generate_file_from_3d_array(input_array, tempos, output_filename, accuracy):
+def get_messages_from_tuples(track, track_channel, event_lengths,
+                             accuracy, join_notes, use_default_velocity, default_velocity=DEFAULT_VELOCITY):
     """
-    translates a time distributed multi-track array into a MIDI file
-
-    :param input_array:
-    :param tempos:
-    :param output_filename:
-    :param accuracy:
-    :return:
+    translates a list of tuples of active notes into a MidiTrack
     """
-    if input_array.ndim != 3:
-        raise TypeError('input array must have exactly 3 dimensions')
+    if len(track) != len(event_lengths):
+        raise IndexError('input event length array and data event dimension must be of equal length')
 
-    if input_array.shape[1] + 1 != len(tempos):
-        raise IndexError('length of input array\'s time dimension must be shorter by 1 than tempos array')
+    messages = []
+    last_event = []
+    time = 0
+    for i, current_event in enumerate(track):
+        if join_notes:
+            subtract = [elem for elem in last_event if elem not in current_event]
+            add = [elem for elem in current_event if elem not in last_event]
 
-    midi_file = MidiFile(ticks_per_beat=240)
-    acc_factor = float(960 / accuracy)  # acc_factor = ticks_per_beat / (notated_32nd_notes_per_beat * accuracy / 32)
-    midi_file.tracks.append(get_tempo_meta_messages(tempos, acc_factor))
+            for elem in subtract:
+                messages.append(Message('note_off', note=elem[0], channel=track_channel,
+                                        velocity=0, time=round(time * accuracy)))
+                time = 0
 
-    for i in range(input_array.shape[0]):
-        midi_file.tracks.append(get_note_messages_from_2d_array(input_array[i], i, acc_factor))
-    midi_file.save(f'../../outputs/{output_filename}.mid')  # TODO: parametrization
+            for elem in add:
+                messages.append(Message('note_on', note=elem[0], channel=track_channel,
+                                        velocity=default_velocity if use_default_velocity else elem[1],
+                                        time=round(time * accuracy)))
+                time = 0
+
+        else:
+            for elem in last_event:
+                messages.append(Message('note_off', note=elem[0], channel=track_channel,
+                                        velocity=0, time=round(time * accuracy)))
+                time = 0
+
+            for elem in current_event:
+                messages.append(Message('note_on', note=elem[0], channel=track_channel,
+                                        velocity=default_velocity if use_default_velocity else elem[1],
+                                        time=round(time * accuracy)))
+                time = 0
+
+        last_event = current_event
+        time += event_lengths[i]
+
+    for elem in last_event:
+        messages.append(Message('note_off', note=elem[0], channel=track_channel,
+                                velocity=0, time=round(time * accuracy)))
+        time = 0
+
+    messages.append(MetaMessage('end_of_track', time=0))
+    return MidiTrack(messages)
 
 
-def generate_file_from_midi_features(input_array, output_filename, accuracy):   # TODO: check if > 0
+def prepare_meta_file(tempos, grid_accuracy, event_lengths=None):
+    midi_file = MidiFile(ticks_per_beat=240)  # constant of arbitrary choice
+    accuracy = float(4 * midi_file.ticks_per_beat / grid_accuracy)  # = ticks_per_measure / grid_accuracy
+    if event_lengths is not None:
+        tempos = get_tempo_array_from_tempo_sequences(tempos, event_lengths)
+    midi_file.tracks.append(get_tempo_meta_messages(tempos, accuracy))
+
+    return tempos, accuracy, midi_file
+
+
+def get_messages_from_standard_2d_input(data, track_channel, tempos, accuracy, join_notes, use_sequences,
+                                        use_velocities, event_lengths=None):
     """
-    translates a music_21.py output matrix of MIDI features into a MIDI file
-
-    :param input_array:
-    :param output_filename:
-    :param accuracy:
-    :return:
+    translates a two-dimensional single-track array into a MidiTrack
     """
-    if input_array.ndim != 2:
-        raise TypeError('input array must have exactly 2 dimensions')
+    if data.shape[0] != len(tempos):
+        raise IndexError('length of tempos array and input array\'s time dimension must be equal')
 
-    tempos = []
-    array = []
+    if use_sequences and event_lengths is None:
+        raise ValueError('no argument \'event_lengths\' for \'use_sequences\' mode provided')
 
-    for feature_index in range(input_array.shape[1] - 2):
-        track = []
-        for event_index in range(input_array.shape[0]):
-            notes = [False] * 128
-            feature = round(input_array[event_index][feature_index] * 128)
-            if feature != 0:
-                notes[feature] = True
+    if use_sequences:
+        events = data.tolist()
+    else:
+        events, event_lengths = get_sequences_from_array(data)
 
-            length = round(1 / input_array[event_index][-2])
-            track.extend([notes] * length)
+    events = get_tuples_from_sequences(events)
+    track = get_messages_from_tuples(events, track_channel, event_lengths, accuracy, join_notes, not use_velocities)
 
-        array.append(track)
-
-    for event_index in range(input_array.shape[0]):
-        length = round(1 / input_array[event_index][-2])
-        tempo = round(1000 / input_array[event_index][-1])
-        tempos.extend([tempo] * length)
-    tempos.extend([round(1000 / input_array[-1][-1])])
-
-    array = np.asarray(array)
-    generate_file_from_3d_array(array, tempos, output_filename, accuracy)
+    return track
 
 
-def generate_file_from_tonal_features(input_array, output_filename, accuracy):   # TODO: check if even and > 0
+def get_file_from_standard_features(data, tempos, output_path, join_notes, use_sequences, use_velocities,
+                                    event_lengths=None, grid_accuracy=GRID_ACCURACY):  # TODO: create if doesnt exist
+    """
+    translates a multi-dimensional array into a MIDI file
+    """
+    tempos, accuracy, midi_file = prepare_meta_file(tempos, grid_accuracy, event_lengths)
+    if data.ndim == 2:
+        midi_file.tracks.append(get_messages_from_standard_2d_input(data, 0, tempos, accuracy, join_notes,
+                                                                    use_sequences, use_velocities, event_lengths))
+
+    elif data.ndim == 3:
+        for i in range(data.shape[0]):  # channels are limited to 16 in MIDI 1.0
+            midi_file.tracks.append(get_messages_from_standard_2d_input(data[i], i % 16, tempos, accuracy, join_notes,
+                                                                        use_sequences, use_velocities, event_lengths))
+
+    else:
+        raise TypeError('input array must have 2 or 3 dimensions')
+
+    midi_file.save(output_path)
+
+
+def get_file_from_music21_features(data, output_path, use_tonal_features, join_notes, grid_accuracy=GRID_ACCURACY):
     """
     translates a music_21.py output matrix of tonal features into a MIDI file
-
-    :param input_array:
-    :param output_filename:
-    :param accuracy:
-    :return:
     """
-    if input_array.ndim != 2:
+    if data.ndim != 2:
         raise TypeError('input array must have exactly 2 dimensions')
 
+    if data.shape[1] <= 2:
+        raise ValueError('number of MIDI tracks with notes\' messages must be at least 1')
+
+    if use_tonal_features and data.shape[1] % 2 == 1:
+        raise ValueError('odd number of tracks - each tonal track must be provided with two features')
+
+    event_lengths = []
     tempos = []
     array = []
 
-    for feature_index in range(int(input_array.shape[1] / 2 - 1)):
+    for feature_index in range(int(data.shape[1] / 2 - 1)):
         track = []
-        for event_index in range(input_array.shape[0]):
+        for event_index in range(data.shape[0]):
             notes = [False] * 128
-            if input_array[event_index][2 * feature_index + 1] != 0:
-                feature = round((input_array[event_index][2 * feature_index] * 8 + 1) * 12 +
-                                input_array[event_index][2 * feature_index + 1] * 12 - 1)
-                notes[feature] = True
 
-            length = round(1 / input_array[event_index][-2])
-            track.extend([notes] * length)
+            if use_tonal_features:
+                if data[event_index][2 * feature_index + 1] != 0:  # ignore zero-length events
+                    # recalculating normalised octaves [1, 11] and tones [1, 12] to MIDI notes [0, 127]
+                    feature = round((data[event_index][2 * feature_index] * 11 - 1) * 12 +
+                                    data[event_index][2 * feature_index + 1] * 12 - 1)
+                    notes[feature] = True
 
+            else:
+                # recalculating normalised feature notes [1, 128] to MIDI notes [0, 127]
+                feature = round(data[event_index][feature_index] * 128 - 1)
+                if feature != 0:
+                    notes[feature] = True
+
+            track.append([notes])
         array.append(track)
 
-    for event_index in range(input_array.shape[0]):
-        length = round(1 / input_array[event_index][-2])
-        tempo = round(1000 / input_array[event_index][-1])
-        tempos.extend([tempo] * length)
-    tempos.extend([round(1000 / input_array[-1][-1])])
+    for event_index in range(data.shape[0]):
+        length = round(1 / data[event_index][-2])
+        tempo = round(1000 / data[event_index][-1])
+        event_lengths.append(length)
+        tempos.append(tempo)
 
     array = np.asarray(array)
-    generate_file_from_3d_array(array, tempos, output_filename, accuracy)
+    get_file_from_standard_features(array, tempos, output_path, join_notes, True, False, event_lengths, grid_accuracy)
 
 
 if __name__ == '__main__':
-    # import os
-    # from decode import export_tempo_array, get_array_of_notes
+    from decode import export_tempo_array
 
-    # for name in os.listdir('../../sequences'):
-    #     path = os.path.join('../../sequences', name)
-    #     name = name.split('.')[0]
+    file = '../tests/test_files/test_polyphony/test_tempos_velocities_and_polyphony.mid'
+    path = '../tests/test_files/test_polyphony/AVF.npy'
+    out_path = ''
 
-    path = '../../sequences/fugue1.npy'
-    name = 'fugue1'
     try:
-        # output_file = get_array_of_notes(path, False, True)               # ENCODER 1
-        # # output_file = np.load(path, allow_pickle=True)
-        # tempo_array = export_tempo_array(path)
-        # generate_file_from_2d_array(output_file, tempo_array, name, ACCURACY)
-
-        # output_file = get_array_of_notes(path, False, False)              # ENCODER 2
-        # # output_file = np.load(path, allow_pickle=True)
-        # tempo_array = export_tempo_array(path)
-        # generate_file_from_3d_array(output_file, tempo_array, name, ACCURACY)
-
-        output_file = np.load(path, allow_pickle=True)
-        generate_file_from_midi_features(output_file, name, ACCURACY)       # ENCODER 3
-        # generate_file_from_tonal_features(output_file, name, ACCURACY)    # ENCODER 4
+        in_array = np.load(path, allow_pickle=True)
+        tempo_array = export_tempo_array(file)
+        tempo_array.extend(tempo_array)
+        get_file_from_standard_features(in_array, tempo_array, out_path, False, False, True)
 
     except Exception as ex:
-        print("{}: {}".format(name, ex))
+        print("{}: {}".format(path, ex))
