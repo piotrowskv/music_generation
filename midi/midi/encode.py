@@ -75,7 +75,7 @@ def get_sequences_from_array(array: np.ndarray):
             current_notes = value
             current_length = 0
         current_length += 1
-    events.append(current_notes)
+    events.append(current_notes.tolist())
     event_lengths.append(current_length)
 
     return events, event_lengths
@@ -331,21 +331,25 @@ def get_file_from_music21_features(data: np.ndarray,
 
 
 if __name__ == '__main__':
-    # from decode import export_tempo_array
+    from decode import export_tempo_array
 
     file = '../tests/test_files/test_polyphony/test_tempos_velocities_and_polyphony.mid'
-    path = '../tests/test_files/SVTF_array.npy'  # '../tests/test_files/test_polyphony/ABT.npy'
+    # path = '../tests/test_files/test_polyphony/SVTF_array.npy'
+    path = '../tests/test_files/test_polyphony/ABT.npy'
     out_path = '../tests/test_files/test_encode.mid'
 
     try:
         in_array = np.load(path, allow_pickle=True)
-        # tempo_array = export_tempo_array(file, False)
-        in_tempos = [500000] * 8
-        in_tempos.extend([555555] * 8)
-        in_tempos.extend([500000] * 9)
-        # get_file_from_standard_features(in_array, tempo_array, out_path, False, False, False)
-        get_file_from_standard_features(in_array, in_tempos, out_path, False, True, True,
-                                        [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 24, 8, 8, 8, 8, 8, 8, 4, 4, 8, 8, 8, 4, 4, 0])
+
+        tempo_array = export_tempo_array(file, False)
+        get_file_from_standard_features(in_array, 500000, out_path, True, False, False)
+
+        # in_tempos = [500000] * 8
+        # in_tempos.extend([555555] * 8)
+        # in_tempos.extend([500000] * 9)
+        # get_file_from_standard_features(in_array, in_tempos, out_path, False, True, True,
+        #                                 [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 24, 8, 8, 8, 8, 8, 8, 4, 4, 8, 8, 8, 4, 4, 0])
+
         # get_file_from_music21_features(in_array, out_path, True, True)
 
     except Exception as ex:
