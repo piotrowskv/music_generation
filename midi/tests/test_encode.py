@@ -1,4 +1,4 @@
-import pytest
+# import pytest
 
 from midi.encode import *
 
@@ -96,8 +96,31 @@ expected_track = MidiTrack([
     MetaMessage('end_of_track', time=0)
 ])
 
+
 def test_get_tempo_meta_messages():
     meta_track = get_tempo_meta_messages(input_tempos, float(15))
 
     assert isinstance(meta_track, MidiTrack)
     assert meta_track == expected_meta
+
+# TODO: tests to write
+# def test_get_tempo_array_from_tempo_sequences():
+# def test_get_sequences_from_array():
+# def test_get_tuples_from_sequences_boolean_mode():
+# def test_get_tuples_from_sequences_velocities_mode():
+# def test_get_messages_from_tuples_separate_notes():
+# def test_get_messages_from_tuples_join_notes():
+# def test_get_messages_from_tuples_with_default_velocities():
+# def test_prepare_meta_file_with_event_lengths():
+# def test_prepare_meta_file_without_event_lengths():
+# def test_prepare_meta_file_with_custom_ticks_per_beat():
+# def test_get_messages_from_standard_2d_input_with_sequences():
+# def test_get_messages_from_standard_2d_input_without_sequences():
+# def test_get_file_from_standard_features_with_constant_tempo():
+# def test_get_file_from_standard_features_with_list_of_tempos():
+# def test_get_file_from_standard_features_with_sequences():
+# def test_get_file_from_standard_features_with_custom_grid_accuracy():
+# def test_get_file_from_standard_features_2d_input():
+# def test_get_file_from_standard_features_3d_input():
+# def test_get_file_from_music21_features_midi_mode():
+# def test_get_file_from_music21_features_tonal_mode():
