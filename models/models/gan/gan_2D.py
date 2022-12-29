@@ -6,7 +6,7 @@ import tensorflow as tf
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU, Conv1D, Conv1DTranspose, Activation
 from tensorflow.keras import activations
 from models.music_model import MusicModel
@@ -17,8 +17,8 @@ DATA_PATH = 'data/sequences'
 AVG = 512
 LATENT_DIM = 128 
 REAL_MULTIPLIER = 1.0
-SAVE_STEP = 10
-TRESHOLD = 0.7
+SAVE_STEP = 100
+TRESHOLD = 0.75
 os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
 class GAN(MusicModel):
@@ -77,17 +77,11 @@ class GAN(MusicModel):
         os.makedirs(save_path, exist_ok=True)
         np.save('{}/{}'.format(save_path, save_name), prediction)
 
-    def load_generator(self, path):
-        self.generator = keras.models.load_model(path)
-
-    def load_discriminator(self, path):
-        self.discriminator = keras.models.load_model(path)
-
-    def load_gan(self, path):
-        self.model = keras.models.load_model(path)
-
     def load(self, path):
-        pass
+        # path to GAN defined exactly like in define_gan
+        self.model = load_model(path)
+        self.generator = self.model.get_layer('sequential')
+        self.discriminator = self.model.get_layer('sequential_1')
 
     def define_discriminator(self):
         model = Sequential()
@@ -103,9 +97,6 @@ class GAN(MusicModel):
 
         model.add(Conv1D(64, 3, strides=2, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
-
-        #model.add(Conv1D(256, 3, strides=2, padding='same'))   
-        #model.add(LeakyReLU(alpha=0.2))
 
         model.add(Flatten())
         model.add(Dropout(0.4))
@@ -131,7 +122,6 @@ class GAN(MusicModel):
 
         model.add(Conv1DTranspose(64, 3, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
-        #model.add(Reshape((8*start_height, 256)))
         
         model.add(Conv1DTranspose(filters, 3, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
@@ -139,7 +129,6 @@ class GAN(MusicModel):
 
 
         model.add(Dropout(0.2))
-        #model.add(Conv1D(81, 3, activation='tanh', padding='same'))
         model.add(Reshape((128, AVG)))
         print(model.summary())
         return model
@@ -164,7 +153,7 @@ class GAN(MusicModel):
            X[i]=np.asarray(X[i], dtype=np.float16)
 
         y = np.ones((n_samples, 1))
-        return np.asarray(X), y
+        return np.swapaxes(np.asarray(X), 1, 2), y
 
     def generate_latent_points(self, latent_dim, n_samples):
         x_input = np.random.randn(latent_dim * n_samples)
@@ -212,8 +201,6 @@ class GAN(MusicModel):
             disc_accuracy = 0.0
             for disc_batch in range(n_batch):
                 X_real, y_real = self.generate_real_samples(xtrain, half_batch)
-                
-                X_real = np.swapaxes(X_real, 1, 2)
                 #y_real = np.swapaxes(y_real, 1, 2)
                 disc_data_real =  self.discriminator.train_on_batch(X_real, y_real)
                 disc_loss_real += disc_data_real[0]
@@ -241,11 +228,6 @@ class GAN(MusicModel):
 g = GAN()
 path = 'data'
 midi_paths = []
+models = 'mamdoscv5/gan_models/gan_model200.h5'
 
-for dirpath, dirs, files in os.walk(path): 
-    for filename in files:
-        fname = os.path.join(dirpath,filename)
-        if fname.endswith('.mid'):
-            midi_paths.append(fname)
-print(len(g.data))
-g.train_on_files(midi_paths, 16, lambda epoch, loss : None, checkpoint_path='mamdoscv3')
+g.load(models)
