@@ -14,6 +14,8 @@ numpy = "==1.23.5"
 autopep8 = "*"
 mypy = "*"
 pytest = "*"
+types-requests = "*"
+types-tqdm = "*"
 
 [requires]
 python_version = "3.10"

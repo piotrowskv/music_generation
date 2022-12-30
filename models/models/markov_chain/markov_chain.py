@@ -1,8 +1,11 @@
 import os
 import random
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 from keras.callbacks import Callback, ModelCheckpoint
+from midi.bach import download_bach_dataset
 from midi.decode import get_array_of_notes
 
 from models.music_model import MusicModel
@@ -11,7 +14,7 @@ N_GRAM = 3
 
 
 class MarkovChain(MusicModel):
-    def __init__(self):
+    def __init__(self) -> None:
         self.data = []
         self.tokens = set()
         self.n_grams = set()
@@ -20,7 +23,7 @@ class MarkovChain(MusicModel):
         self.probabilities = []
         self.n_grams_next_token = []
 
-    def train(self, epochs=0, xtrain=None, ytrain=None, loss_callback=None, checkpoint_path=None):
+    def train(self, epochs=0, xtrain=None, ytrain=None, loss_callback=None, checkpoint_path=None) -> None:
 
         # count probabilities
         n = len(self.n_grams_list[0])
@@ -50,13 +53,13 @@ class MarkovChain(MusicModel):
                         self.probabilities[i][n_gram_next[i][j]] = float(
                             n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
 
-    def create_dataset(self, dataset: list[tuple[any, any]]) -> tuple[any, any]:
+    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
 
         self.generate_tokens()
         self.generate_n_grams(N_GRAM)
         return (0, 0)
 
-    def generate_tokens(self):
+    def generate_tokens(self) -> None:
 
         for i in range(len(self.data)):
             for j in range(len(self.data[i])):
@@ -68,20 +71,20 @@ class MarkovChain(MusicModel):
                 self.data[i][j] = tuple(notes)
                 self.tokens.add(tuple(notes))
 
-    def prepare_data(self, midi_file) -> tuple[any, any]:
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
 
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
         return data_lines
 
-    def save(self, path):
+    def save(self, path) -> None:
         np.save(path, np.asarray(self.probabilities))
 
-    def load(self, path):
+    def load(self, path) -> None:
         self.probabilities = np.load(path, allow_pickle=True)
 
-    def generate_n_grams(self, n):
+    def generate_n_grams(self, n) -> None:
         print("Generating " + str(n) + "-grams")
         for i in range(len(self.data)):
             for j in range(len(self.data[i])-n+1):
@@ -144,9 +147,10 @@ class MarkovChain(MusicModel):
 
 # 21379, 21133, 21095, 20987, 20750
 if __name__ == '__main__':
-    path = '..\\data\\chorales'
-    midi_paths = []
-    for filename in os.listdir(path):
-        midi_paths.append(os.path.join(path, filename))
+    dl_path = Path('data')
+    download_bach_dataset(dl_path)
+
+    midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
+
     model = MarkovChain()
     model.train_on_files(midi_paths, 10, lambda epoch, loss: None)

@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 
 import keras
 
@@ -14,5 +14,6 @@ class LossCallback(keras.callbacks.Callback):
         super(LossCallback, self).__init__()
         self.callback = callback
 
-    def on_epoch_end(self, epoch: int, logs: dict[str, any] | None = None):
-        self.callback(epoch, logs['loss'])
+    def on_epoch_end(self, epoch: int, logs: dict[str, Any] | None = None) -> None:
+        if logs is not None:
+            self.callback(epoch, logs['loss'])
