@@ -13,13 +13,26 @@ from models.music_model import MusicModel
 from midi.decode import get_array_of_notes
 
 
-DATA_PATH = 'data/sequences'
-AVG = 512
-LATENT_DIM = 128 
-REAL_MULTIPLIER = 1.0
+DATA_PATH = 'data'
+
+AVG = 512 # length of generated array 
+
+LATENT_DIM = 512 # dimension of latent space
+# higher LATNT_DIM -> samples produced by generator converge more to dataset
+
+
+REAL_MULTIPLIER = 1.0 # multiplier of real sampls [0;1];
+# if it's closer to 0, discriminator will struggle to distiguish real and fake samples more
+
 SAVE_STEP = 100
-TRESHOLD = 0.75
-os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
+
+TRESHOLD = 0.7 # treshold of probability while generating a midi file
+# GAN generates probabilities that note is on during specific time unit
+
+N_BATCH = 10 # number of batches the dataset is divided into
+
+#physical_devices = tf.config.experimental.list_physical_devices('GPU')
+#tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 class GAN(MusicModel):
     model: Sequential 
@@ -33,14 +46,11 @@ class GAN(MusicModel):
         self.model = self.define_gan(self.generator, self.discriminator)
 
     def prepare_data(self, midi_file):
-
         data_lines = get_array_of_notes(midi_file, False, False)
-
         for i in range(len(data_lines)): #serialize tracks
-
-
+            assert data_lines[i].shape[1]==128, "Incorrct number of notes (expected: 128)"
             data_processed = np.zeros((1, AVG, 128))
-            #trim or extend data shape (AVG x 128)
+            #trim or extend data to shape (AVG x 128)
             if((data_lines[i].shape[0])> AVG):
                 data_processed[0] = np.delete(data_lines[i], slice(AVG, data_lines[i].shape[0]),0)
             else:
@@ -49,8 +59,8 @@ class GAN(MusicModel):
             self.data = np.append(self.data, data_processed, axis=0)
         
         self.data = np.array(self.data, dtype=np.float16)
-        print(self.data.shape)
 
+        # y: 1 - the image is real, 0 - the image is fake
         return data_processed, 1
 
     def postprocess_array(self, array):
@@ -59,7 +69,6 @@ class GAN(MusicModel):
         out =  (array - np.min(array)) / (np.max(array) - np.min(array))
         out[out<TRESHOLD] = 0
         out*=255
-        print(out.shape)
         print(out)
         return out
 
@@ -70,8 +79,7 @@ class GAN(MusicModel):
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path):
-        self.save_models(self, save_path, self.generator, self.discriminator, self.model, 0)
-
+        self.save_models(self, save_path, self.model, 0)
 
     def save_npy(self, prediction, save_path, save_name):
         os.makedirs(save_path, exist_ok=True)
@@ -80,8 +88,11 @@ class GAN(MusicModel):
     def load(self, path):
         # path to GAN defined exactly like in define_gan
         self.model = load_model(path)
+        assert len(self.model.layers)==3 and self.model.layers[0].name =='sequential_1' and self.model.layers[1].name =='sequential', "Incorrect model."
+
         self.generator = self.model.get_layer('sequential')
         self.discriminator = self.model.get_layer('sequential_1')
+        print("Model loaded!")
 
     def define_discriminator(self):
         model = Sequential()
@@ -125,8 +136,6 @@ class GAN(MusicModel):
         
         model.add(Conv1DTranspose(filters, 3, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
-        
-
 
         model.add(Dropout(0.2))
         model.add(Reshape((128, AVG)))
@@ -147,7 +156,6 @@ class GAN(MusicModel):
 
     def generate_real_samples(self, dataset, n_samples):
         ix = np.random.randint(0, len(dataset), n_samples)
-       #X = np.zeros((n_samples, AVG, 128))
         X = np.array(dataset)[ix]
         for i in range(ix.shape[0]):
            X[i]=np.asarray(X[i], dtype=np.float16)
@@ -163,27 +171,19 @@ class GAN(MusicModel):
     def generate_fake_samples(self, generator, latent_dim, n_samples):
         x_input = self.generate_latent_points(latent_dim, n_samples)
         X = generator.predict(x_input)
-        y = np.ones((n_samples, 1)) 
+        y = np.zeros((n_samples, 1)) 
         return X, y
 
-    def save_models(self, save_path, generator, discriminator, gan, step):
-        save_generator_path = f'{save_path}/generator_models'
-        save_discriminator_path = f'{save_path}/discriminator_models'
+    def save_models(self, save_path, gan, step):
         save_gan_path = f'{save_path}/gan_models'
-        if not os.path.exists(save_generator_path):
-            os.makedirs(save_generator_path)
-        if not os.path.exists(save_discriminator_path):
-            os.makedirs(save_discriminator_path)
         if not os.path.exists(save_gan_path):
             os.makedirs(save_gan_path)
-        generator.save(save_generator_path + f'/generator_model' + str(step) + '.h5')
-        discriminator.save(save_discriminator_path + f'/discriminator_model' + str(step)+'.h5')
         gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
 
     def train(self, epochs, xtrain, ytrain, loss_callback, checkpoint_path):
         latent_dim = LATENT_DIM
         real_samples_multiplier= REAL_MULTIPLIER 
-        n_batch = 10 #adjustable
+        n_batch = N_BATCH
         print(n_batch)
         save_step = SAVE_STEP
         batch_per_epoch = len(xtrain)// n_batch
@@ -201,7 +201,6 @@ class GAN(MusicModel):
             disc_accuracy = 0.0
             for disc_batch in range(n_batch):
                 X_real, y_real = self.generate_real_samples(xtrain, half_batch)
-                #y_real = np.swapaxes(y_real, 1, 2)
                 disc_data_real =  self.discriminator.train_on_batch(X_real, y_real)
                 disc_loss_real += disc_data_real[0]
                 X_fake, y_fake = self.generate_fake_samples(self.generator, latent_dim, half_batch)
@@ -211,23 +210,28 @@ class GAN(MusicModel):
             disc_loss_fake /= n_batch
             disc_accuracy = (disc_data_real[1] + disc_data_fake[1])/2
             X_gan = self.generate_latent_points(latent_dim, n_batch)
-            y_gan = np.ones((n_batch, 1)) * real_samples_multiplier
+            y_gan = np.zeros((n_batch, 1)) * real_samples_multiplier
             g_data = self.model.train_on_batch(X_gan, y_gan)
             g_loss= g_data[0]
             
             history['discriminator_real_loss'].append(disc_loss_real)
             history['discriminator_fake_loss'].append(disc_loss_fake)
-            history['generator_loss'].append(g_loss)
+            history['GAN_loss'].append(g_loss)
             epoch = step // batch_per_epoch+1
             if step%batch_per_epoch==0:
                 print('epoch: %d, discriminator_real_loss=%.3f, discriminator_fake_loss=%.3f, generator_loss=%.3f \n discriminator_accuracy = %.3f, GAN_accuracy = %.3f' % (epoch, disc_loss_real, disc_loss_fake, g_loss, disc_accuracy, g_data[1]))
             if step%save_step==0:
                 self.save_npy(self.postprocess_array(X_fake[0]), checkpoint_path, step)
-                self.save_models(checkpoint_path, self.generator, self.discriminator, self.model, step)
-                    
-g = GAN()
-path = 'data'
-midi_paths = []
-models = 'mamdoscv5/gan_models/gan_model200.h5'
+                self.save_models(checkpoint_path, self.model, step)
 
-g.load(models)
+
+if __name__ == '__main__':
+    g = GAN()
+    midi_paths = []
+    for dirpath, dirs, files in os.walk(DATA_PATH): 
+        for filename in files:
+            fname = os.path.join(dirpath,filename)
+            if fname.endswith('.mid'):
+                midi_paths.append(fname)
+    print(len(g.data))
+    g.train_on_files(midi_paths, 16, lambda epoch, loss : None, checkpoint_path='idk')
