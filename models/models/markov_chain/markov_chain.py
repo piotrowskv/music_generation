@@ -144,7 +144,6 @@ class MarkovChain(MusicModel):
         np.save('{}/{}'.format(save_path, save_name), result)
 
 
-# 21379, 21133, 21095, 20987, 20750
 if __name__ == '__main__':
     dl_path = Path('data')
     download_bach_dataset(dl_path)
