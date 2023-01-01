@@ -35,3 +35,10 @@ def get_models() -> m.ModelVariants:
     models = [e.value for e in SupportedModels]
 
     return m.ModelVariants(models)
+
+
+@app.post("/training/session", response_model=None)
+def start_training_session() -> None:
+    # TODO
+
+    return None

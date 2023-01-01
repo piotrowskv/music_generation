@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from keras.callbacks import Callback, ModelCheckpoint
@@ -42,7 +43,7 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self, epochs: int, xtrain: any, ytrain: any, loss_callback: Callback, weights_path: Path | None = None):
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: Callback, weights_path: Path | None = None) -> None:
         callbacks = [loss_callback] if weights_path is None else [ModelCheckpoint(
             weights_path,
             monitor='loss',
@@ -59,7 +60,7 @@ class MusicLstm(MusicModel):
             callbacks=callbacks
         )
 
-    def create_dataset(self, dataset: list[tuple[any, any]]) -> tuple[any, any]:
+    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
         notes_input = []
         notes_output = []
 
@@ -70,7 +71,7 @@ class MusicLstm(MusicModel):
         return np.asarray(notes_input), np.asarray(notes_output)
         # return [x for (x, y) in dataset], [y for (x, y) in dataset]
 
-    def prepare_data(self, midi_file: Path) -> tuple[any, any]:
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
         midi_input = get_sequence_of_notes(str(midi_file), True, True, False)
 
         notes_sequences = []
@@ -99,10 +100,10 @@ class MusicLstm(MusicModel):
         self.model.summary(print_fn=lambda x: stringlist.append(x))
         return "\n".join(stringlist)
 
-    def save(self, path: Path):
+    def save(self, path: Path) -> None:
         self.model.save(path)
 
-    def load(self, path: Path):
+    def load(self, path: Path) -> None:
         self.model = load_model(path)
 
 

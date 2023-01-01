@@ -14,6 +14,7 @@ midi = {editable = true, path = "./../midi"}
 [dev-packages]
 autopep8 = "*"
 pytest = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.10"
