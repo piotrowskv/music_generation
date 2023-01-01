@@ -331,7 +331,7 @@ def export_tempo_array(filepath: str,
     :param trim_output:
     :return:
     """
-    tempos = list[int]
+    tempos = list[int]()
     if trim_output:
         _, _, _, _, tempos = prepare_file(filepath, False)
     else:
@@ -663,7 +663,7 @@ def get_sequence_of_notes(filepath: str,
 
     if join_tracks:
         new_output_list = list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]] |
-                               list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]
+                               list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]()
         new_output_list = output_list[0]
         output_list = new_output_list
 
@@ -694,7 +694,7 @@ def get_array_of_notes(filepath: str,
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
 
-    array_size = tuple[int, int] | tuple[int, int, int]
+    array_size = tuple[int, int] | tuple[int, int, int]()
     if join_tracks:
         array_size = (length, 128)
     else:
