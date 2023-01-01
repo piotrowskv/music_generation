@@ -72,12 +72,7 @@ class MarkovChain(MusicModel):
                 self.tokens.add(tuple(notes))
 
 <<<<<<< HEAD
-    def prepare_data(self, midi_file) -> tuple[any, any]:
-        print(midi_file)
-=======
-    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
-
->>>>>>> 9124f21fa57471665700c3bf68eaea0fc8ba1b54
+    def prepare_data(self, midi_file):
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
