@@ -53,7 +53,7 @@ class MarkovChain(MusicModel):
                         self.probabilities[i][n_gram_next[i][j]] = float(
                             n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
 
-    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
+    def create_dataset(self, dataset):
 
         self.generate_tokens()
         self.generate_n_grams(N_GRAM)
