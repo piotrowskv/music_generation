@@ -26,7 +26,8 @@ class EventNote:
         self.tone = height % 12 + 1
         self.octave = height // 12 - 1
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self,
+               other: object) -> bool:
         return self.velocity == other.velocity and \
                self.height == other.height and \
                self.tone == other.tone and \
@@ -70,7 +71,8 @@ class ActiveElement:
         else:                        # isinstance(value, float)
             self.value = value
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self,
+               other: object) -> bool:
         return self.height == other.height and \
                self.value == other.value and \
                self.use_velocities == other.use_velocities
@@ -84,13 +86,13 @@ class Event:
     stores all information available about a single piano keyboard state,
     used to store states in sequential processing
     """
-    time: int                           # time from previous event, in grid accuracy
-    length: int                         # event length, in grid accuracy
-    offset: int                         # from the beginning, in grid accuracy
-    track: int                          # omits 'Track 0'
-    tempo: int                          # from 'Track 0' (MetaMessages)
+    time: int                            # time from previous event, in grid accuracy
+    length: int                          # event length, in grid accuracy
+    offset: int                          # from the beginning, in grid accuracy
+    track: int                           # omits 'Track 0'
+    tempo: int                           # from 'Track 0' (MetaMessages)
     active_notes: list[ActiveElement]
-    all_notes: list[bool | float]       # of size 128
+    all_notes: list[bool] | list[float]  # of size 128
     use_velocities: bool
 
     def __init__(
@@ -119,7 +121,8 @@ class Event:
             self.__set_booleans_dictionary(notes)
             self.__set_booleans_array(notes)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self,
+               other: object) -> bool:
         return self.time == other.time and \
                self.length == other.length and \
                self.offset == other.offset and \
@@ -140,22 +143,26 @@ class Event:
         out_str += f'{repr(notes)}, {self.use_velocities})'
         return out_str
 
-    def __set_booleans_dictionary(self, notes) -> None:
+    def __set_booleans_dictionary(self,
+                                  notes: dict[int, EventNote]) -> None:
         for height in notes.keys():
             self.active_notes.append(ActiveElement(height, True, False))
         self.active_notes.sort(key=lambda x: x.height)
 
-    def __set_velocities_dictionary(self, notes) -> None:
+    def __set_velocities_dictionary(self,
+                                    notes: dict[int, EventNote]) -> None:
         for height in notes.keys():
             self.active_notes.append(ActiveElement(height, notes[height].velocity, True))
         self.active_notes.sort(key=lambda x: x.height)
 
-    def __set_booleans_array(self, notes) -> None:
+    def __set_booleans_array(self,
+                             notes: dict[int, EventNote]) -> None:
         self.all_notes = [False] * 128
         for height in notes.keys():
             self.all_notes[height] = True
 
-    def __set_velocities_array(self, notes) -> None:
+    def __set_velocities_array(self,
+                               notes: dict[int, EventNote]) -> None:
         self.all_notes = [float(0)] * 128
         for height in notes.keys():
             self.all_notes[height] = notes[height].velocity
@@ -324,6 +331,7 @@ def export_tempo_array(filepath: str,
     :param trim_output:
     :return:
     """
+    tempos = list[int]
     if trim_output:
         _, _, _, _, tempos = prepare_file(filepath, False)
     else:
@@ -639,10 +647,10 @@ def get_sequence_of_notes(filepath: str,
 
         if only_active_notes:
             for event in sequence:
-                event_list = list[int | tuple[int, float]]()
+                event_list = list[int | list[bool] | list[float] | tuple[int, float]]()  # type checking consistency
                 for element in event.active_notes:
                     if use_velocities:
-                        event_list.append((element.height, element.value))
+                        event_list.append((element.height, float(element.value)))  # type checking consistency
                     else:
                         event_list.append(element.height)
 
@@ -654,7 +662,10 @@ def get_sequence_of_notes(filepath: str,
         output_list.append(track_list)
 
     if join_tracks:
-        output_list = output_list[0]
+        new_output_list = list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]] |
+                               list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]
+        new_output_list = output_list[0]
+        output_list = new_output_list
 
     return output_list
 
@@ -683,6 +694,7 @@ def get_array_of_notes(filepath: str,
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
 
+    array_size = tuple[int, int] | tuple[int, int, int]
     if join_tracks:
         array_size = (length, 128)
     else:
