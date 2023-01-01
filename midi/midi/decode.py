@@ -694,7 +694,7 @@ def get_array_of_notes(filepath: str,
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
 
-    array_size = tuple[int, int] | tuple[int, int, int]()
+    array_size = tuple[int, int, None | int]()
     if join_tracks:
         array_size = (length, 128)
     else:
