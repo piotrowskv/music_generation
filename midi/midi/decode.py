@@ -1,6 +1,8 @@
 import os
+
 import numpy as np
 
+from typing import *
 from mido import MidiTrack, MidiFile
 from mido.messages import Message
 
@@ -27,7 +29,7 @@ class EventNote:
         self.octave = height // 12 - 1
 
     def __eq__(self,
-               other: any) -> bool:
+               other: Any) -> bool:
         return self.velocity == other.velocity and \
                self.height == other.height and \
                self.tone == other.tone and \
@@ -72,7 +74,7 @@ class ActiveElement:
             self.value = value
 
     def __eq__(self,
-               other: any) -> bool:
+               other: Any) -> bool:
         return self.height == other.height and \
                self.value == other.value and \
                self.use_velocities == other.use_velocities
@@ -122,7 +124,7 @@ class Event:
             self.__set_booleans_array(notes)
 
     def __eq__(self,
-               other: any) -> bool:
+               other: Any) -> bool:
         return self.time == other.time and \
                self.length == other.length and \
                self.offset == other.offset and \
@@ -345,7 +347,7 @@ def export_tempo_array(filepath: str,
 
 def export_output(folder: str,
                   filename: str,
-                  output: any) -> None:
+                  output: Any) -> None:
     """
     saves a given object under the path defined by parameters
 
@@ -657,7 +659,7 @@ def get_sequence_of_notes(filepath: str,
                 track_list.append((event.length, event_list))
         else:
             for event in sequence:
-                new_tuple = tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]()
+                new_tuple = tuple[int, list[Union[int, list[bool], list[float], tuple[int, float]]]]()
                 new_tuple = (event.length, event.all_notes)
                 track_list.append(new_tuple)
 
@@ -696,7 +698,7 @@ def get_array_of_notes(filepath: str,
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
 
-    array_size = tuple[int, int, None | int]()
+    array_size = tuple[int, int, Union[None, int]]()
     if join_tracks:
         array_size = (length, 128)
     else:
