@@ -20,7 +20,7 @@ class EventNote:
 
     def __init__(
             self,
-            velocity: int | float,
+            velocity: Union[int, float],
             height: int
     ):
         self.velocity = float(velocity)
@@ -39,7 +39,7 @@ class EventNote:
         return f'EventNote({self.velocity}, {self.height})'
 
     def normalise(self,
-                  max_velocity: int | float) -> None:
+                  max_velocity: Union[int, float]) -> None:
         """
         divides note velocity by a given value
 
@@ -54,13 +54,13 @@ class ActiveElement:
     stores single output-typed value, used to store values in sequential processing
     """
     height: int
-    value: bool | float
+    value: Union[bool, float]
     use_velocities: bool
 
     def __init__(
             self,
             height: int,
-            value: bool | int | float,
+            value: Union[bool, int, float],
             use_velocities: bool
     ):
         self.height = height
@@ -88,13 +88,13 @@ class Event:
     stores all information available about a single piano keyboard state,
     used to store states in sequential processing
     """
-    time: int                            # time from previous event, in grid accuracy
-    length: int                          # event length, in grid accuracy
-    offset: int                          # from the beginning, in grid accuracy
-    track: int                           # omits 'Track 0'
-    tempo: int                           # from 'Track 0' (MetaMessages)
+    time: int                                  # time from previous event, in grid accuracy
+    length: int                                # event length, in grid accuracy
+    offset: int                                # from the beginning, in grid accuracy
+    track: int                                 # omits 'Track 0'
+    tempo: int                                 # from 'Track 0' (MetaMessages)
     active_notes: list[ActiveElement]
-    all_notes: list[float] | list[bool]  # of size 128
+    all_notes: Union[list[float], list[bool]]  # of size 128
     use_velocities: bool
 
     def __init__(
@@ -170,7 +170,7 @@ class Event:
             self.all_notes[height] = notes[height].velocity
 
     def normalise(self,
-                  max_velocity: int | float) -> None:
+                  max_velocity: Union[int, float]) -> None:
         """
         if velocities are used, divides note velocity by a given value
 
@@ -252,7 +252,7 @@ def get_filename(filepath: str) -> str:
 
 
 def open_file(filepath: str,
-              grid_accuracy: int = GRID_ACCURACY) -> tuple[MidiFile, str, float]:
+              grid_accuracy: int = GRID_ACCURACY) -> Tuple[MidiFile, str, float]:
     """
     opens and checks if a given file is a '.mid' file:
     if yes, translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
@@ -333,7 +333,7 @@ def export_tempo_array(filepath: str,
     :param trim_output:
     :return:
     """
-    tempos = list[int]()
+    tempos: list[int]
     if trim_output:
         _, _, _, _, tempos = prepare_file(filepath, False)
     else:
@@ -368,8 +368,8 @@ def combine_and_clean_tracks(tracks: list[MidiTrack]) -> MidiTrack:
     :return:
     """
     note_grid = [0] * 128                            # list with numbers of active notes, one for each height
-    raw_messages = list[tuple[int, Message]]()       # all messages with their starting times
-    filtered_messages = list[tuple[int, Message]]()  # as raw_messages, but without repetitions
+    raw_messages = list[Tuple[int, Message]]()       # all messages with their starting times
+    filtered_messages = list[Tuple[int, Message]]()  # as raw_messages, but without repetitions
     messages = list[Message]()                       # all messages with corrected timestamps
 
     # in case of 'note_on' messages only, 'note_off' is marked by velocity == 0
@@ -467,7 +467,7 @@ def get_max_velocity(tracks: list[MidiTrack]) -> int:
 
 
 def prepare_file(filepath: str,
-                 join_tracks: bool) -> tuple[MidiFile, str, float, int, list[int]]:
+                 join_tracks: bool) -> Tuple[MidiFile, str, float, int, list[int]]:
     """
     opens MIDI file, calculates accuracy factor, input length and tempo array,
     then cleans, trims and optionally joins tracks;
@@ -579,7 +579,7 @@ def get_lists_of_events(file: MidiFile,
 def initialise_sequences(filepath: str,
                          use_velocities: bool,
                          join_tracks: bool,
-                         use_custom_normalization: bool = False) -> tuple[MidiFile, str, int, list[list[Event]]]:
+                         use_custom_normalization: bool = False) -> Tuple[MidiFile, str, int, list[list[Event]]]:
     """
     gets sequences of event_lengths from a MIDI file and normalises them to either 128 or maximal velocity
 
@@ -610,29 +610,29 @@ def get_sequence_of_notes(filepath: str,
                           use_velocities: bool,
                           join_tracks: bool,
                           only_active_notes: bool) \
-        -> list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]] |
-                list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]:
+        -> Union[list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]],
+                 list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]]:
     """
     translates a MIDI file into a sequence representing notes;
     output type depends on parameters:
 
     get_sequence_of_notes(str, False, False, True) -> <list> 'tracks'
-      (<list> 'event_lengths' (<tuple> (<int> 'time offset', <list> 'active notes')))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> 'active notes')))
     get_sequence_of_notes(str, False, False, False) -> <list> 'tracks'
-      (<list> 'event_lengths' (<tuple> (<int> 'time offset', <list> (<list [bool], size: 128>))))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [bool], size: 128>))))
     get_sequence_of_notes(str, False, True, True) ->
-      <list> 'event_lengths' (<tuple> (<int> 'time offset', <list> 'active notes'))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> 'active notes'))
     get_sequence_of_notes(str, False, True, False) ->
-      <list> 'event_lengths' (<tuple> (<int> 'time offset', <list> (<list [bool], size: 128>)))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [bool], size: 128>)))
 
     get_sequence_of_notes(str, True, False, True) -> <list> 'tracks'
-      (<list> 'event_lengths' (<tuple> (<int> 'time offset', <list> (<tuple> (<int> 'note height', <float> 'note velocity')))))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<Tuple> (<int> 'note height', <float> 'note velocity')))))
     get_sequence_of_notes(str, True, False, False) -> <list> 'tracks'
-      (<list> 'event_lengths' (<tuple> (<int> 'time offset', <list> (<list [float], size: 128>))))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [float], size: 128>))))
     get_sequence_of_notes(str, True, True, True) ->
-      <list> 'event_lengths' (<tuple> (<int> 'time offset', <list> (<tuple> (<int> 'note height', <float> 'note velocity'))))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<Tuple> (<int> 'note height', <float> 'note velocity'))))
     get_sequence_of_notes(str, True, True, False) ->
-      <list> 'event_lengths' (<tuple> (<int> 'time offset', <list> (<list [float], size: 128>)))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [float], size: 128>)))
 
     :param filepath:
     :param use_velocities:
@@ -641,15 +641,15 @@ def get_sequence_of_notes(filepath: str,
     :return:
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
-    output_list = list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]] |
-                       list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]()
+    output_list = Union[list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]],
+                        list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]]()
 
     for sequence in initial_sequences:
-        track_list = list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]()
+        track_list = list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]()
 
         if only_active_notes:
             for event in sequence:
-                event_list = list[int | list[bool] | list[float] | tuple[int, float]]()  # type checking consistency
+                event_list = list[Union[int, list[bool], list[float], Tuple[int, float]]]()  # type checking consistency
                 for element in event.active_notes:
                     if use_velocities:
                         event_list.append((element.height, float(element.value)))  # type checking consistency
@@ -659,16 +659,16 @@ def get_sequence_of_notes(filepath: str,
                 track_list.append((event.length, event_list))
         else:
             for event in sequence:
-                new_tuple = tuple[int, list[Union[int, list[bool], list[float], tuple[int, float]]]]()
-                new_tuple = (event.length, event.all_notes)
+                new_tuple: Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]] \
+                    = (event.length, event.all_notes)
                 track_list.append(new_tuple)
 
         output_list.append(track_list)
 
     if join_tracks:
-        new_output_list = list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]] |
-                               list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]()
-        new_output_list = output_list[0]
+        new_output_list: Union[list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]],
+                               list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]] \
+            = output_list[0]
         output_list = new_output_list
 
     return output_list
@@ -698,11 +698,10 @@ def get_array_of_notes(filepath: str,
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
 
-    array_size = tuple[int, int, Union[None, int]]()
     if join_tracks:
-        array_size = (length, 128)
+        array_size: Union[Tuple[int, int], Tuple[int, int, int]] = (length, 128)
     else:
-        array_size = (len(file.tracks) - 1, length, 128)
+        array_size: Union[Tuple[int, int], Tuple[int, int, int]] = (len(file.tracks) - 1, length, 128)
 
     if use_velocities:
         output_array = np.zeros(array_size, dtype=np.float_)
