@@ -26,17 +26,17 @@ class EventNote:
         self.tone = height % 12 + 1
         self.octave = height // 12 - 1
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.velocity == other.velocity and \
                self.height == other.height and \
                self.tone == other.tone and \
                self.octave == other.octave
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'EventNote({self.velocity}, {self.height})'
 
     def normalise(self,
-                  max_velocity: int | float):
+                  max_velocity: int | float) -> None:
         """
         divides note velocity by a given value
 
@@ -70,12 +70,12 @@ class ActiveElement:
         else:                        # isinstance(value, float)
             self.value = value
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.height == other.height and \
                self.value == other.value and \
                self.use_velocities == other.use_velocities
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'ActiveElement({self.height}, {self.value}, {self.use_velocities})'
 
 
@@ -119,7 +119,7 @@ class Event:
             self.__set_booleans_dictionary(notes)
             self.__set_booleans_array(notes)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.time == other.time and \
                self.length == other.length and \
                self.offset == other.offset and \
@@ -129,7 +129,7 @@ class Event:
                self.all_notes == other.all_notes and \
                self.use_velocities == other.use_velocities
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         out_str = f'Event({self.time}, {self.length}, {self.offset}, {self.track}, {self.tempo}, '
 
         notes = dict[int, EventNote]()
@@ -140,28 +140,28 @@ class Event:
         out_str += f'{repr(notes)}, {self.use_velocities})'
         return out_str
 
-    def __set_booleans_dictionary(self, notes):
+    def __set_booleans_dictionary(self, notes) -> None:
         for height in notes.keys():
             self.active_notes.append(ActiveElement(height, True, False))
         self.active_notes.sort(key=lambda x: x.height)
 
-    def __set_velocities_dictionary(self, notes):
+    def __set_velocities_dictionary(self, notes) -> None:
         for height in notes.keys():
             self.active_notes.append(ActiveElement(height, notes[height].velocity, True))
         self.active_notes.sort(key=lambda x: x.height)
 
-    def __set_booleans_array(self, notes):
+    def __set_booleans_array(self, notes) -> None:
         self.all_notes = [False] * 128
         for height in notes.keys():
             self.all_notes[height] = True
 
-    def __set_velocities_array(self, notes):
+    def __set_velocities_array(self, notes) -> None:
         self.all_notes = [float(0)] * 128
         for height in notes.keys():
             self.all_notes[height] = notes[height].velocity
 
     def normalise(self,
-                  max_velocity: int | float):
+                  max_velocity: int | float) -> None:
         """
         if velocities are used, divides note velocity by a given value
 
@@ -176,7 +176,7 @@ class Event:
 
 def get_offset(time: int,
                ticks: int,
-               accuracy: float):
+               accuracy: float) -> int:
     """
     translates MIDI ticks to the closest grid accuracy time units
 
@@ -193,7 +193,7 @@ def get_offset(time: int,
 
 # gets the length of the longest track
 def get_midi_length(file: MidiFile,
-                    accuracy: float):
+                    accuracy: float) -> int:
     """
     returns the length of the longest track
 
@@ -213,7 +213,7 @@ def get_midi_length(file: MidiFile,
     return max(lengths)
 
 
-def check_file_type(file: MidiFile):
+def check_file_type(file: MidiFile) -> None:
     """
     checks if MIDI file type is 1: if not, raises a ValueError
 
@@ -226,7 +226,7 @@ def check_file_type(file: MidiFile):
         raise ValueError('impossible to perform calculations for type 2 (asynchronous) file')
 
 
-def get_filename(filepath: str):
+def get_filename(filepath: str) -> str:
     """
     checks if file is of '.mid' format:
     if yes, returns a filename without extension; if not, raises a TypeError
@@ -243,7 +243,7 @@ def get_filename(filepath: str):
 
 
 def open_file(filepath: str,
-              grid_accuracy: int = GRID_ACCURACY):
+              grid_accuracy: int = GRID_ACCURACY) -> tuple[MidiFile, str, float]:
     """
     opens and checks if a given file is a '.mid' file:
     if yes, translates notated_32nd_notes_per_beat to pulses per quarter (PPQ) if necessary
@@ -278,7 +278,7 @@ def open_file(filepath: str,
 def get_tempo_array(file: MidiFile,
                     length: int,
                     accuracy: float,
-                    initial_ticks: int = 0):
+                    initial_ticks: int = 0) -> list[int]:
     """
     translates Track 0 MetaMessages to an array of tempos for each time unit,
     with an additional time unit for the last, closing event
@@ -316,7 +316,7 @@ def get_tempo_array(file: MidiFile,
 
 
 def export_tempo_array(filepath: str,
-                       trim_output: bool):
+                       trim_output: bool) -> list[int]:
     """
     returns an array of tempos for each time unit in a given MIDI file after optional trimming
 
@@ -337,7 +337,7 @@ def export_tempo_array(filepath: str,
 
 def export_output(folder: str,
                   filename: str,
-                  output):
+                  output) -> None:
     """
     saves a given object under the path defined by parameters
 
@@ -350,7 +350,7 @@ def export_output(folder: str,
     np.save('{}/{}'.format(folder, filename), output)
 
 
-def combine_and_clean_tracks(tracks: list[MidiTrack]):
+def combine_and_clean_tracks(tracks: list[MidiTrack]) -> MidiTrack:
     """
     translates all Messages to a single list, then removes vacuous Messages
 
@@ -436,7 +436,7 @@ def combine_and_clean_tracks(tracks: list[MidiTrack]):
     return MidiTrack(messages)
 
 
-def get_max_velocity(tracks: list[MidiTrack]):
+def get_max_velocity(tracks: list[MidiTrack]) -> int:
     """
     returns the highest velocity across all Messages inside MidiTracks
 
@@ -457,7 +457,7 @@ def get_max_velocity(tracks: list[MidiTrack]):
 
 
 def prepare_file(filepath: str,
-                 join_tracks: bool):
+                 join_tracks: bool) -> tuple[MidiFile, str, float, int, list[int]]:
     """
     opens MIDI file, calculates accuracy factor, input length and tempo array,
     then cleans, trims and optionally joins tracks;
@@ -494,12 +494,12 @@ def prepare_file(filepath: str,
     for track in file.tracks[1:]:
         begin_time.append(track[0].time)
 
-    begin_time = min(begin_time)
+    min_time = min(begin_time)
     for track in file.tracks[1:]:
-        track[0].time -= begin_time
+        track[0].time -= min_time
 
     length = get_midi_length(file, accuracy)
-    tempos = get_tempo_array(file, length, accuracy, begin_time)
+    tempos = get_tempo_array(file, length, accuracy, min_time)
 
     return file, filename, accuracy, length, tempos
 
@@ -507,7 +507,7 @@ def prepare_file(filepath: str,
 def get_lists_of_events(file: MidiFile,
                         accuracy: float,
                         tempos: list[int],
-                        use_velocities: bool):
+                        use_velocities: bool) -> list[list[Event]]:
     """
     translates Messages to raw sequences of Events
 
@@ -569,7 +569,7 @@ def get_lists_of_events(file: MidiFile,
 def initialise_sequences(filepath: str,
                          use_velocities: bool,
                          join_tracks: bool,
-                         use_custom_normalization: bool = False):
+                         use_custom_normalization: bool = False) -> tuple[MidiFile, str, int, list[list[Event]]]:
     """
     gets sequences of event_lengths from a MIDI file and normalises them to either 128 or maximal velocity
 
@@ -599,7 +599,9 @@ def initialise_sequences(filepath: str,
 def get_sequence_of_notes(filepath: str,
                           use_velocities: bool,
                           join_tracks: bool,
-                          only_active_notes: bool):
+                          only_active_notes: bool) \
+        -> list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]] |
+                list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]:
     """
     translates a MIDI file into a sequence representing notes;
     output type depends on parameters:
@@ -629,14 +631,15 @@ def get_sequence_of_notes(filepath: str,
     :return:
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
-    output_list = list[list[tuple[int, list[int | tuple[int, bool | float]]] | tuple[int, list[bool | float]]]]()
+    output_list = list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]] |
+                       list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]]()
 
     for sequence in initial_sequences:
-        track_list = list[tuple[int, list[int | tuple[int, bool | float]]] | tuple[int, list[bool | float]]]()
+        track_list = list[tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]]()
 
         if only_active_notes:
             for event in sequence:
-                event_list = list[int | tuple[int, bool | float]]()
+                event_list = list[int | tuple[int, float]]()
                 for element in event.active_notes:
                     if use_velocities:
                         event_list.append((element.height, element.value))
@@ -658,7 +661,7 @@ def get_sequence_of_notes(filepath: str,
 
 def get_array_of_notes(filepath: str,
                        use_velocities: bool,
-                       join_tracks: bool):
+                       join_tracks: bool) -> np.ndarray:
     """
     translates a MIDI file into an array representing notes;
     output type depends on parameters:
