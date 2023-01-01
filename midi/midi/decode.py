@@ -27,7 +27,7 @@ class EventNote:
         self.octave = height // 12 - 1
 
     def __eq__(self,
-               other: object) -> bool:
+               other: any) -> bool:
         return self.velocity == other.velocity and \
                self.height == other.height and \
                self.tone == other.tone and \
@@ -72,7 +72,7 @@ class ActiveElement:
             self.value = value
 
     def __eq__(self,
-               other: object) -> bool:
+               other: any) -> bool:
         return self.height == other.height and \
                self.value == other.value and \
                self.use_velocities == other.use_velocities
@@ -92,7 +92,7 @@ class Event:
     track: int                           # omits 'Track 0'
     tempo: int                           # from 'Track 0' (MetaMessages)
     active_notes: list[ActiveElement]
-    all_notes: list[bool] | list[float]  # of size 128
+    all_notes: list[float] | list[bool]  # of size 128
     use_velocities: bool
 
     def __init__(
@@ -122,7 +122,7 @@ class Event:
             self.__set_booleans_array(notes)
 
     def __eq__(self,
-               other: object) -> bool:
+               other: any) -> bool:
         return self.time == other.time and \
                self.length == other.length and \
                self.offset == other.offset and \
@@ -345,7 +345,7 @@ def export_tempo_array(filepath: str,
 
 def export_output(folder: str,
                   filename: str,
-                  output) -> None:
+                  output: any) -> None:
     """
     saves a given object under the path defined by parameters
 
@@ -657,7 +657,9 @@ def get_sequence_of_notes(filepath: str,
                 track_list.append((event.length, event_list))
         else:
             for event in sequence:
-                track_list.append((event.length, event.all_notes))
+                new_tuple = tuple[int, list[int | list[bool] | list[float] | tuple[int, float]]]()
+                new_tuple = (event.length, event.all_notes)
+                track_list.append(new_tuple)
 
         output_list.append(track_list)
 
