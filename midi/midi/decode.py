@@ -610,29 +610,29 @@ def get_sequence_of_notes(filepath: str,
                           use_velocities: bool,
                           join_tracks: bool,
                           only_active_notes: bool) \
-        -> Union[list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]],
-                 list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]]:
+        -> Union[list[list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]],
+                 list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]]:
     """
     translates a MIDI file into a sequence representing notes;
     output type depends on parameters:
 
     get_sequence_of_notes(str, False, False, True) -> <list> 'tracks'
-      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> 'active notes')))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list [int]> 'notes')))
     get_sequence_of_notes(str, False, False, False) -> <list> 'tracks'
-      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [bool], size: 128>))))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list [bool], size: 128>)))
     get_sequence_of_notes(str, False, True, True) ->
-      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> 'active notes'))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list [int]> 'notes'))
     get_sequence_of_notes(str, False, True, False) ->
-      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [bool], size: 128>)))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list [bool], size: 128>))
 
     get_sequence_of_notes(str, True, False, True) -> <list> 'tracks'
-      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<Tuple> (<int> 'note height', <float> 'note velocity')))))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<Tuple> (<int> 'note', <float> 'note velocity')))))
     get_sequence_of_notes(str, True, False, False) -> <list> 'tracks'
-      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [float], size: 128>))))
+      (<list> 'event_lengths' (<Tuple> (<int> 'time offset', <list [float], size: 128>)))
     get_sequence_of_notes(str, True, True, True) ->
-      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<Tuple> (<int> 'note height', <float> 'note velocity'))))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<Tuple> (<int> 'note', <float> 'note velocity'))))
     get_sequence_of_notes(str, True, True, False) ->
-      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list> (<list [float], size: 128>)))
+      <list> 'event_lengths' (<Tuple> (<int> 'time offset', <list [float], size: 128>))
 
     :param filepath:
     :param use_velocities:
@@ -641,14 +641,14 @@ def get_sequence_of_notes(filepath: str,
     :return:
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
-    output_list = list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]]()
+    output_list = list[list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]]()
 
     for sequence in initial_sequences:
-        track_list = list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]()
+        track_list = list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]()  # change to union of lists?
 
         if only_active_notes:
             for event in sequence:
-                event_list = list[Union[int, list[bool], list[float], Tuple[int, float]]]()  # type checking consistency
+                event_list = list[Union[int, bool, float, Tuple[int, float]]]()  # type checking consistency
                 for element in event.active_notes:
                     if use_velocities:
                         event_list.append((element.height, float(element.value)))  # type checking consistency
@@ -658,14 +658,14 @@ def get_sequence_of_notes(filepath: str,
                 track_list.append((event.length, event_list))
         else:
             for event in sequence:
-                new_tuple: Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]] \
+                new_tuple: Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]] \
                     = (event.length, event.all_notes)
                 track_list.append(new_tuple)
 
         output_list.append(track_list)
 
-    output: Union[list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]],
-                  list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]]
+    output: Union[list[list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]],
+                  list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]]
     if join_tracks:
         output = output_list[0]
     else:
@@ -697,11 +697,12 @@ def get_array_of_notes(filepath: str,
     :return:
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
+    array_size: Union[Tuple[int, int], Tuple[int, int, int]]
 
     if join_tracks:
-        array_size: Union[Tuple[int, int], Tuple[int, int, int]] = (length, 128)
+        array_size = (length, 128)
     else:
-        array_size: Union[Tuple[int, int], Tuple[int, int, int]] = (len(file.tracks) - 1, length, 128)
+        array_size = (len(file.tracks) - 1, length, 128)
 
     if use_velocities:
         output_array = np.zeros(array_size, dtype=np.float_)
