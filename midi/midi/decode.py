@@ -641,8 +641,9 @@ def get_sequence_of_notes(filepath: str,
     :return:
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
-    output_list = Union[list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]],
-                        list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]]()
+    output_list: Union[list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]],
+                       list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]] \
+        = list[list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]]()
 
     for sequence in initial_sequences:
         track_list = list[Tuple[int, list[Union[int, list[bool], list[float], Tuple[int, float]]]]]()
