@@ -71,13 +71,7 @@ class MarkovChain(MusicModel):
                 self.data[i][j] = tuple(notes)
                 self.tokens.add(tuple(notes))
 
-<<<<<<< HEAD
-    def prepare_data(self, midi_file) -> tuple[any, any]:
-        print(midi_file)
-=======
-    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
-
->>>>>>> 9124f21fa57471665700c3bf68eaea0fc8ba1b54
+    def prepare_data(self, midi_file):
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
@@ -152,18 +146,6 @@ class MarkovChain(MusicModel):
 
 # 21379, 21133, 21095, 20987, 20750
 if __name__ == '__main__':
-<<<<<<< HEAD
-    #path = '..\\data\\chorales'
-    one_note = "test_files/test_one_note.mid"
-    all_notes = "test_files/test_all_notes.mid"
-    sample_file =  "test_files/test_tempos_velocities_and_polyphony.mid"
-
-    midi_paths =[]
-
-    model=MarkovChain()
-    model.train_on_files(list(one_note), 10, lambda epoch, loss : None)
-    print(model.probabilities)
-=======
     dl_path = Path('data')
     download_bach_dataset(dl_path)
 
@@ -171,4 +153,3 @@ if __name__ == '__main__':
 
     model = MarkovChain()
     model.train_on_files(midi_paths, 10, lambda epoch, loss: None)
->>>>>>> 9124f21fa57471665700c3bf68eaea0fc8ba1b54
