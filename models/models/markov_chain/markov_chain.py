@@ -152,7 +152,6 @@ class MarkovChain(MusicModel):
 
 # 21379, 21133, 21095, 20987, 20750
 if __name__ == '__main__':
-<<<<<<< HEAD
     #path = '..\\data\\chorales'
     one_note = "test_files/test_one_note.mid"
     all_notes = "test_files/test_all_notes.mid"
@@ -163,12 +162,3 @@ if __name__ == '__main__':
     model=MarkovChain()
     model.train_on_files(list(one_note), 10, lambda epoch, loss : None)
     print(model.probabilities)
-=======
-    dl_path = Path('data')
-    download_bach_dataset(dl_path)
-
-    midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
-
-    model = MarkovChain()
-    model.train_on_files(midi_paths, 10, lambda epoch, loss: None)
->>>>>>> 9124f21fa57471665700c3bf68eaea0fc8ba1b54
