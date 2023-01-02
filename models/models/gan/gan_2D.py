@@ -224,7 +224,7 @@ class GAN(MusicModel):
             if step%batch_per_epoch==0:
                 print('epoch: %d, discriminator_real_loss=%.3f, discriminator_fake_loss=%.3f, generator_loss=%.3f \n discriminator_accuracy = %.3f, GAN_accuracy = %.3f' % (epoch, disc_loss_real, disc_loss_fake, g_loss, disc_accuracy, g_data[1]))
             if step%save_step==0:
-                self.save_npy(self.postprocess_array(X_fake[0]), checkpoint_path, step)
+                self.save_npy(self.postprocess_array(X_fake[0]), checkpoint_path, str(step))
                 self.save_models(checkpoint_path, self.model, step)
 
 
