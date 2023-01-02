@@ -174,7 +174,7 @@ class GAN(MusicModel):
         y = np.zeros((n_samples, 1)) 
         return X, y
 
-    def save_models(self, save_path: str, gan: Sequential, step: int) -> None:
+    def save_models(self, save_path: Path, gan: Sequential, step: int) -> None:
         save_gan_path = f'{save_path}/gan_models'
         if not os.path.exists(save_gan_path):
             os.makedirs(save_gan_path)
