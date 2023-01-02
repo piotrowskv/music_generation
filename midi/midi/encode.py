@@ -57,14 +57,14 @@ def get_tempo_array_from_tempo_sequences(input_tempos: list[int],
     return tempos
 
 
-def get_sequences_from_array(array: np.ndarray) -> Tuple[list[list[bool | float]], list[int]]:
+def get_sequences_from_array(array: np.ndarray) -> Tuple[list[Union[list[bool], list[float]]], list[int]]:
     """
     translates a time distributed single-track array into a list of events
 
     :param array:
     :return:
     """
-    events = list[list[bool | float]]()
+    events = list[Union[list[bool], list[float]]]()
     event_lengths = list[int]()
 
     current_notes = array[0]
@@ -82,16 +82,16 @@ def get_sequences_from_array(array: np.ndarray) -> Tuple[list[list[bool | float]
     return events, event_lengths
 
 
-def get_tuples_from_sequences(input_events: list[list[bool | float]]) -> list[list[tuple[int, int]]]:
+def get_tuples_from_sequences(input_events: list[Union[list[bool], list[float]]]) -> list[list[Tuple[int, int]]]:
     """
     translates a list of events into a list of tuples of active notes
 
     :param input_events:
     :return:
     """
-    events = list[list[tuple[int, int]]]()
+    events = list[list[Tuple[int, int]]]()
     for event in input_events:
-        notes = list[tuple[int, int]]()
+        notes = list[Tuple[int, int]]()
         for i, value in enumerate(event):
             if value:  # True or > 0.0
                 notes.append((i, min(127, round(value * 128))))  # velocity scaled from [0, 1] to [0, 128]
@@ -100,7 +100,7 @@ def get_tuples_from_sequences(input_events: list[list[bool | float]]) -> list[li
     return events
 
 
-def get_messages_from_tuples(track: list[list[tuple[int, int]]],
+def get_messages_from_tuples(track: list[list[Tuple[int, int]]],
                              track_channel: int,
                              event_lengths: list[int],
                              accuracy: float,
@@ -122,8 +122,8 @@ def get_messages_from_tuples(track: list[list[tuple[int, int]]],
     if len(track) != len(event_lengths):
         raise IndexError('input event length array and data event dimension must be of equal length')
 
-    messages = list[Message | MetaMessage]()
-    last_event = list[tuple[int, int]]()
+    messages = list[Union[Message, MetaMessage]]()
+    last_event = list[Tuple[int, int]]()
     time = 0
     for i, current_event in enumerate(track):
         if join_notes:
@@ -157,7 +157,7 @@ def get_messages_from_tuples(track: list[list[tuple[int, int]]],
 
 def prepare_meta_file(tempos: list[int],
                       grid_accuracy: int,
-                      event_lengths: list[int] | None = None,
+                      event_lengths: Union[list[int], None] = None,
                       ticks_per_beat: int = TICKS_PER_BEAT) -> Tuple[list[int], float, MidiFile]:
     """
     generates a MIDI file with MetaMessages tempo track from the tempos' array
@@ -183,7 +183,7 @@ def get_messages_from_standard_2d_input(data: np.ndarray,
                                         join_notes: bool,
                                         use_sequences: bool,
                                         use_velocities: bool,
-                                        event_lengths: list[int] | None = None) -> MidiTrack:
+                                        event_lengths: Union[list[int], None] = None) -> MidiTrack:
     """
     translates a two-dimensional single-track array into a MidiTrack
 
@@ -213,12 +213,12 @@ def get_messages_from_standard_2d_input(data: np.ndarray,
 
 
 def get_file_from_standard_features(data: np.ndarray,
-                                    tempos: int | list[int],
+                                    tempos: Union[int, list[int]],
                                     output_path: str,
                                     join_notes: bool,
                                     use_sequences: bool,
                                     use_velocities: bool,
-                                    event_lengths: list[int] | None = None,
+                                    event_lengths: Union[list[int], None] = None,
                                     grid_accuracy: int = GRID_ACCURACY) -> None:
     """
     translates a multi-dimensional array into a MIDI file
@@ -233,7 +233,7 @@ def get_file_from_standard_features(data: np.ndarray,
     :param grid_accuracy:
     :return:
     """
-    lengths = list[int]()
+    lengths = list[int]()  # type checking consistency
     if use_sequences:
         if isinstance(event_lengths, list):
             lengths = event_lengths
