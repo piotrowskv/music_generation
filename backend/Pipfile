@@ -8,6 +8,7 @@ fastapi = "*"
 hypercorn = "*"
 models = {editable = true, path = "./../models"}
 midi = {editable = true, path = "./../midi"}
+python-multipart = "*"
 
 [dev-packages]
 autopep8 = "*"

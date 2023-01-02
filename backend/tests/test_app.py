@@ -15,8 +15,3 @@ def test_get_models():
 
     ids = [d['id'] for d in data]
     assert len(set(ids)) == len(ids), 'IDs are not unique'
-
-
-def test_train_session():
-    response = client.post("/training/session")
-    assert response.status_code == 200

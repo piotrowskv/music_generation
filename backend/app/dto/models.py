@@ -13,3 +13,8 @@ class ModelVariant(BaseModel):
 @dataclass(frozen=True)
 class ModelVariants(BaseModel):
     variants: list[ModelVariant]
+
+
+@dataclass(frozen=True)
+class TrainingSessionCreated(BaseModel):
+    token: str
