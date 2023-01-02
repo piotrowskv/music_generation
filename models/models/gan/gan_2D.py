@@ -4,7 +4,7 @@ import glob
 import numpy as np
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
-from typing import Any, Callable, cast
+from typing import Any, Callable
 from keras.callbacks import Callback, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential, load_model
@@ -232,11 +232,8 @@ class GAN(MusicModel):
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
         if seed is None:
             X_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1)
-        elif isinstance(seed, int):
-            cast(int, seed)
-            X_fake, y_fake = self.generate_fake_samples(self.generator, seed, 1)
         else:
-            raise Exception("Incorrect parameters.")
+            X_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1)
             
         X_array = self.postprocess_array(X_fake[0])
         get_file_from_standard_features(X_array, 500000, path, True, False, False)
