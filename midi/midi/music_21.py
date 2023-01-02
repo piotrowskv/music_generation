@@ -112,7 +112,7 @@ def preprocess_features(filepath, filename, check_tracks=False, number_of_tracks
 
     if check_tracks:
         check_number_of_tracks(file_input, filename, number_of_tracks)
-    tempo_array = export_tempo_array(filepath)
+    tempo_array = export_tempo_array(filepath, True)
     event_lists = get_event_lists(file_input)
 
     return event_lists, tempo_array
