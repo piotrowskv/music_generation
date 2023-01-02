@@ -82,9 +82,10 @@ class GAN(MusicModel):
     def save(self, path: Path) -> None:
         self.save_models(path, self.model, 0)
 
-    def save_npy(self, prediction: np.ndarray, save_path: Path, save_name: str) -> None:
-        os.makedirs(save_path, exist_ok=True)
-        np.save('{}/{}'.format(save_path, save_name), prediction)
+    def save_npy(self, prediction: np.ndarray, save_path: Path | None, save_name: str) -> None:
+        if(save_path is not None):
+            os.makedirs(save_path, exist_ok=True)
+            np.save('{}/{}'.format(save_path, save_name), prediction)
 
     def load(self, path: Path) -> None:
         # path to GAN defined exactly like in define_gan
@@ -175,11 +176,12 @@ class GAN(MusicModel):
         y = np.zeros((n_samples, 1)) 
         return X, y
 
-    def save_models(self, save_path: Path, gan: Sequential, step: int) -> None:
-        save_gan_path = f'{save_path}/gan_models'
-        if not os.path.exists(save_gan_path):
-            os.makedirs(save_gan_path)
-        gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
+    def save_models(self, save_path: Path | None, gan: Sequential, step: int) -> None:
+        if(save_path is not None):
+            save_gan_path = f'{save_path}/gan_models'
+            if not os.path.exists(save_gan_path):
+                os.makedirs(save_gan_path)
+            gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
 
     def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: Callback, checkpoint_path: Path | None = None) -> None:
         latent_dim = LATENT_DIM
@@ -223,8 +225,7 @@ class GAN(MusicModel):
                 print('epoch: %d, discriminator_real_loss=%.3f, discriminator_fake_loss=%.3f, generator_loss=%.3f \n discriminator_accuracy = %.3f, GAN_accuracy = %.3f' % (epoch, disc_loss_real, disc_loss_fake, g_loss, disc_accuracy, g_data[1]))
             if step%save_step==0:
                 self.save_npy(self.postprocess_array(X_fake[0]), checkpoint_path, step)
-                if(checkopint_path is not None):
-                    self.save_models(checkpoint_path, self.model, step)
+                self.save_models(checkpoint_path, self.model, step)
 
 
 if __name__ == '__main__':
