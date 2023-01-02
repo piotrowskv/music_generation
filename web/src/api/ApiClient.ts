@@ -13,6 +13,12 @@ export class ApiClient {
         }
     }
 
+    #secureProtocol(protocolName: string): string {
+        const s = import.meta.env.DEV ? '' : 's'
+
+        return `${protocolName}${s}://`
+    }
+
     private async baseRequest<T>(
         path: string,
         options: RequestInit,
@@ -25,15 +31,18 @@ export class ApiClient {
             return mockResponse
         }
 
-        const res = await fetch(`${this.baseUrl}/${path}`, {
-            headers: {
-                ...(!(options.body instanceof FormData) && {
-                    'Content-Type': 'application/json',
-                }),
-                ...headers,
-            },
-            ...otherOptions,
-        })
+        const res = await fetch(
+            `${this.#secureProtocol('http')}${this.baseUrl}/${path}`,
+            {
+                headers: {
+                    ...(!(options.body instanceof FormData) && {
+                        'Content-Type': 'application/json',
+                    }),
+                    ...headers,
+                },
+                ...otherOptions,
+            }
+        )
 
         if (!res.ok) {
             throw new FailedRequestError(res)

@@ -24,7 +24,7 @@ jobs:
 
       - name: Build
         env:
-          VITE_API_URL: https://vps.shilangyu.dev
+          VITE_API_URL: vps.shilangyu.dev
         run: |
           npm install
           npm run build:gh-pages

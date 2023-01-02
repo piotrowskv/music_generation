@@ -18,7 +18,7 @@ function App() {
             <div className="min-w-screen flex min-h-screen flex-col bg-white p-4 text-black dark:bg-black dark:text-white">
                 <div className="flex">
                     <h1 className="text-3xl font-bold">Music generation</h1>
-                    <MusicNote className="h-9 w-9 dark:fill-white" />
+                    <MusicNote className="h-9 w-9 hover:animate-[wiggle-xl_0.7s_ease-in-out_infinite] dark:fill-white" />
                     <div className="flex-1"></div>
 
                     <ThemeSwitch />
