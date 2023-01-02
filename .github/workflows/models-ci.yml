@@ -46,4 +46,4 @@ jobs:
 
       - name: Type check
         run: |
-          pipenv run mypy main.py --disallow-untyped-defs --ignore-missing-imports
+          pipenv run mypy models/ --disallow-untyped-defs --ignore-missing-imports
