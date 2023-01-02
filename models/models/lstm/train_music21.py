@@ -1,14 +1,15 @@
 import os
-import numpy as np
+from typing import Any
 
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM, Activation, BatchNormalization
+import numpy as np
 from keras.callbacks import ModelCheckpoint
+from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
+from keras.models import Sequential
 
 SEQUENCE_LENGTH = 100
 
 
-def train_music21_network(lstm_model, lstm_input, lstm_output):
+def train_music21_network(lstm_model: Sequential, lstm_input: Any, lstm_output: Any) -> None:
     filepath = 'weights.hdf5'
     checkpoint = ModelCheckpoint(
         filepath,
@@ -27,7 +28,7 @@ def train_music21_network(lstm_model, lstm_input, lstm_output):
     )
 
 
-def get_music21_network(input_size):
+def get_music21_network(input_size: tuple[int, ...]) -> Sequential:
     model = Sequential()
     model.add(LSTM(
         160,
@@ -73,7 +74,7 @@ def get_music21_network(input_size):
     return model
 
 
-def get_music21_sequences(raw_input):
+def get_music21_sequences(raw_input: Any) -> tuple[list[Any], list[Any]]:
     sequences = []
     predictions = []
 
@@ -88,7 +89,7 @@ def get_music21_sequences(raw_input):
     return sequences, predictions
 
 
-def run_music21_features():
+def run_music21_features() -> None:
     features_input = []
     features_output = []
 

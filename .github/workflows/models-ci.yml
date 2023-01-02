@@ -1,0 +1,49 @@
+name: models-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - models/**
+      - .github/**
+  pull_request:
+    paths:
+      - models/**
+      - .github/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: models
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pipenv"
+
+      - name: Install pipenv
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+
+      - name: Install dependencies
+        run: |
+          pipenv --version
+          python --version
+          pipenv install --dev
+
+      - name: Run tests
+        run: |
+          pipenv run pytest -W ignore::DeprecationWarning
+
+      - name: Build
+        run: |
+          pipenv run python -m py_compile models/**/*.py
+
+      - name: Type check
+        run: |
+          pipenv run mypy models/ --disallow-untyped-defs --ignore-missing-imports

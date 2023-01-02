@@ -38,7 +38,7 @@ def get_models() -> m.ModelVariants:
 
 
 @app.post("/training/session", response_model=None)
-def get_models() -> None:
+def start_training_session() -> None:
     # TODO
 
     return None

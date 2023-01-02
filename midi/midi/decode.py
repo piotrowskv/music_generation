@@ -36,7 +36,7 @@ class EventNote:
         return f'EventNote({self.velocity}, {self.height})'
 
     def normalise(self,
-                  max_velocity: int | float):  # TODO: check if 128
+                  max_velocity: int | float):
         """
         divides note velocity by a given value
 
