@@ -53,7 +53,7 @@ class MarkovChain(MusicModel):
                         self.probabilities[i][n_gram_next[i][j]] = float(
                             n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
 
-    def create_dataset(self, dataset):
+    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
 
         self.generate_tokens()
         self.generate_n_grams(N_GRAM)
@@ -71,19 +71,19 @@ class MarkovChain(MusicModel):
                 self.data[i][j] = tuple(notes)
                 self.tokens.add(tuple(notes))
 
-    def prepare_data(self, midi_file):
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
         return data_lines
 
-    def save(self, path) -> None:
+    def save(self, path: Path) -> None:
         np.save(path, np.asarray(self.probabilities))
 
-    def load(self, path) -> None:
+    def load(self, path: Path) -> None:
         self.probabilities = np.load(path, allow_pickle=True)
 
-    def generate_n_grams(self, n) -> None:
+    def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
         for i in range(len(self.data)):
             for j in range(len(self.data[i])-n+1):
@@ -91,8 +91,7 @@ class MarkovChain(MusicModel):
 
         self.tokens_list = list(self.tokens)
         self.n_grams_list = list(self.n_grams)
-        print(len(self.n_grams_list))
-        print(str(n) + "-grams generated!")
+        print(str(len(self.n_grams_list)) + " " + str(n) + "-grams generated!")
 
     def model_summary(self) -> str:
         return (
@@ -101,7 +100,7 @@ class MarkovChain(MusicModel):
             str(len(self.data)) + " files"
         )
 
-    def predict(self, initial_notes, length, deterministic, rand, save_path, save_name):
+    def predict(self, initial_notes, length, deterministic, rand, save_path, save_name) -> None:
 
         # deterministic - if True, next note will be always note with maximum probability
         #               - if False, next note will be sampled according to all notes probability
@@ -133,7 +132,6 @@ class MarkovChain(MusicModel):
             previous_n_gram = previous_n_gram[1:] + (next_note,)
             prediction.append(next_note)
 
-        print(prediction)
         result = np.full((len(prediction), 128), False)
         for i in range(len(prediction)):
             for j in range(len(prediction[i])):
