@@ -18,3 +18,23 @@ class ModelVariants(BaseModel):
 @dataclass(frozen=True)
 class TrainingSessionCreated(BaseModel):
     token: str
+
+
+@dataclass(frozen=True)
+class ChartPoint(BaseModel):
+    x: float
+    y: float
+
+
+@dataclass(frozen=True)
+class ChartSeries(BaseModel):
+    legend: str
+    points: list[ChartPoint]
+
+
+@dataclass(frozen=True)
+class TrainingProgress(BaseModel):
+    finished: bool
+    x_label: str
+    y_label: str
+    chart_series: list[ChartSeries]

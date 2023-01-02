@@ -15,7 +15,7 @@ function App() {
 
     return (
         <div className={clsx(mode === ResolvedTheme.dark && 'dark')}>
-            <div className="flex h-screen w-screen flex-col bg-white p-4 text-black dark:bg-black dark:text-white">
+            <div className="min-w-screen flex min-h-screen flex-col bg-white p-4 text-black dark:bg-black dark:text-white">
                 <div className="flex">
                     <h1 className="text-3xl font-bold">Music generation</h1>
                     <MusicNote className="h-9 w-9 dark:fill-white" />
