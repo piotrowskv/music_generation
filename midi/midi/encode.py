@@ -23,7 +23,7 @@ def get_tempo_meta_messages(array: list[int],
     events = [MetaMessage('time_signature', numerator=4, denominator=4, clocks_per_click=24,
                           notated_32nd_notes_per_beat=8, time=0)]
 
-    time = 0
+    time = float(0)
     last_tempo = 0
     for i in range(len(array)):
         if array[i] != last_tempo:
@@ -177,7 +177,7 @@ def prepare_meta_file(tempos: list[int],
     return tempos, accuracy, midi_file
 
 
-def get_messages_from_standard_2d_input(data: np.ndarray | list,  # TODO: is list necessary?
+def get_messages_from_standard_2d_input(data: np.ndarray,
                                         track_channel: int,
                                         accuracy: float,
                                         join_notes: bool,
@@ -196,13 +196,18 @@ def get_messages_from_standard_2d_input(data: np.ndarray | list,  # TODO: is lis
     :param event_lengths:
     :return:
     """
+    lengths: list[int]
     if use_sequences:
         events = data.tolist()
+        if isinstance(event_lengths, list):
+            lengths = event_lengths
+        else:
+            raise ValueError('no argument \'event_lengths\' for \'use_sequences\' mode provided')
     else:
-        events, event_lengths = get_sequences_from_array(data)
+        events, lengths = get_sequences_from_array(data)
 
     events = get_tuples_from_sequences(events)
-    track = get_messages_from_tuples(events, track_channel, event_lengths, accuracy, join_notes, not use_velocities)
+    track = get_messages_from_tuples(events, track_channel, lengths, accuracy, join_notes, not use_velocities)
 
     return track
 
@@ -228,8 +233,12 @@ def get_file_from_standard_features(data: np.ndarray,
     :param grid_accuracy:
     :return:
     """
-    if use_sequences and (event_lengths is None):
-        raise ValueError('no argument \'event_lengths\' for \'use_sequences\' mode provided')
+    lengths = list[int]()
+    if use_sequences:
+        if isinstance(event_lengths, list):
+            lengths = event_lengths
+        else:
+            raise ValueError('no argument \'event_lengths\' for \'use_sequences\' mode provided')
 
     # tempos' array configuration
     if isinstance(tempos, int):
@@ -241,7 +250,7 @@ def get_file_from_standard_features(data: np.ndarray,
             raise TypeError('input array must have 2 or 3 dimensions')
     else:
         if use_sequences:
-            if len(event_lengths) != len(tempos):
+            if len(lengths) != len(tempos):
                 raise IndexError('length of tempos and event lengths\' arrays must be equal')
         else:
             if data.ndim == 2:
