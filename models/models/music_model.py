@@ -65,3 +65,10 @@ class MusicModel(ABC):
         Loads the model from `path`.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+        """
+        Generates a sample and saves it as a .mid file as `path`.
+        """
+        raise NotImplementedError
