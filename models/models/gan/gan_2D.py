@@ -1,10 +1,10 @@
-import glob
 from pathlib import Path
 import os
 import glob
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
+from typing import Any, Callable
 from keras.callbacks import Callback, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential, load_model
@@ -39,14 +39,15 @@ class GAN(MusicModel):
     model: Sequential 
     discriminator: Sequential
     generator: Sequential
+    data: np.ndarray
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.data = np.zeros((0, AVG, 128), dtype=np.float16)
         self.discriminator = self.define_discriminator()
         self.generator = self.define_generator(LATENT_DIM)
         self.model = self.define_gan(self.generator, self.discriminator)
 
-    def prepare_data(self, midi_file: Path) -> tuple[any, any]:
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)): #serialize tracks
             assert data_lines[i].shape[1]==128, "Incorrct number of notes (expected: 128)"
@@ -72,20 +73,20 @@ class GAN(MusicModel):
         out*=255
         return out
 
-    def create_dataset(self, dataset: list[tuple[any, any]]) -> tuple[any, any]:
+    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
         return self.data, np.ones(len(dataset))
 
     def model_summary(self) -> str:
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path: Path) -> None:
-        self.save_models(self, save_path, self.model, 0)
+        self.save_models(self, path, self.model, 0)
 
-    def save_npy(self, prediction: np.ndarray, save_path: Path, save_name: str):
+    def save_npy(self, prediction: np.ndarray, save_path: Path, save_name: str) -> None:
         os.makedirs(save_path, exist_ok=True)
         np.save('{}/{}'.format(save_path, save_name), prediction)
 
-    def load(self, path: Path):
+    def load(self, path: Path) -> None:
         # path to GAN defined exactly like in define_gan
         self.model = load_model(path)
         assert len(self.model.layers)==3 and self.model.layers[0].name =='sequential_1' and self.model.layers[1].name =='sequential', "Incorrect model."
@@ -142,7 +143,7 @@ class GAN(MusicModel):
         print(model.summary())
         return model
 
-    def define_gan(self, g_model: Sequential, d_model: Sequential, loss='binary_crossentropy', optimizer=None) -> Sequential:
+    def define_gan(self, g_model: Sequential, d_model: Sequential, loss:str ='binary_crossentropy', optimizer: Any =None) -> Sequential:
         d_model.trainable = False
         model = Sequential()
         model.add(g_model)
@@ -180,7 +181,7 @@ class GAN(MusicModel):
             os.makedirs(save_gan_path)
         gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
 
-    def train(self, epochs: int, xtrain: any, ytrain: any, loss_callback: Callback, checkpoint_path: str) -> None:
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: Callback, checkpoint_path: Path) -> None:
         latent_dim = LATENT_DIM
         real_samples_multiplier= REAL_MULTIPLIER 
         n_batch = N_BATCH
@@ -191,7 +192,7 @@ class GAN(MusicModel):
         half_batch = n_batch // 2
         seed = self.generate_latent_points(latent_dim, 128)
         n_steps = batch_per_epoch * epochs
-        history = {'discriminator_real_loss': [],
+        history : dict = {'discriminator_real_loss': [],
                 'discriminator_fake_loss': [],
                 'generator_loss': []}
         for step in range(n_steps):
@@ -226,6 +227,7 @@ class GAN(MusicModel):
 
 
 if __name__ == '__main__':
+    '''
     g = GAN()
     midi_paths = []
     for dirpath, dirs, files in os.walk(DATA_PATH): 
@@ -235,3 +237,4 @@ if __name__ == '__main__':
                 midi_paths.append(fname)
     print(len(g.data))
     g.train_on_files(midi_paths, 16, lambda epoch, loss : None, checkpoint_path='idk')
+    '''
