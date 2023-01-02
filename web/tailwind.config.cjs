@@ -21,6 +21,9 @@ module.exports = {
                     '50%': { transform: 'rotate(1deg)' },
                 },
             },
+            blur: {
+                xs: '1px',
+            },
         },
     },
     plugins: [],

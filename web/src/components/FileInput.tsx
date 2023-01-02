@@ -1,4 +1,5 @@
 import { FC, ReactNode, useRef } from 'react'
+import Button from './Button'
 
 interface Props {
     onChange: (files: File[]) => void
@@ -12,12 +13,9 @@ const FileInput: FC<Props> = ({ onChange, accept, children }) => {
 
     return (
         <div>
-            <button
-                className="cursor-pointer appearance-none rounded-md bg-black px-3 py-2 text-center text-white dark:bg-white dark:text-black"
-                onClick={() => fileInputRef.current?.click()}
-            >
+            <Button onClick={() => fileInputRef.current?.click()}>
                 {children}
-            </button>
+            </Button>
             <input
                 ref={fileInputRef}
                 type="file"

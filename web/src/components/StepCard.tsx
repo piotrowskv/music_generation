@@ -3,11 +3,12 @@ import { FC, ReactNode, useRef, useState } from 'react'
 
 interface Props {
     completed: boolean
+    disabled: boolean
     children: ReactNode
     onDrop?: (files: File[]) => void
 }
 
-const StepCard: FC<Props> = ({ completed, children, onDrop }) => {
+const StepCard: FC<Props> = ({ completed, children, onDrop, disabled }) => {
     const dragRc = useRef(0)
     const [isDropHovering, setIsDropHovering] = useState(false)
 
@@ -37,9 +38,10 @@ const StepCard: FC<Props> = ({ completed, children, onDrop }) => {
     return (
         <div
             className={clsx(
-                'w-full rounded-xl border-4 border-black p-4 dark:border-white',
+                'w-full rounded-xl border-4 border-black p-4  dark:border-white',
                 completed ? 'border-solid' : 'border-dashed',
-                isDropHovering && 'animate-[wiggle_0.7s_ease-in-out_infinite]'
+                isDropHovering && 'animate-[wiggle_0.7s_ease-in-out_infinite]',
+                disabled && 'pointer-events-none select-none blur-xs'
             )}
             {...(onDrop && {
                 onDrop: handleDrop,
