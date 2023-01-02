@@ -80,7 +80,7 @@ class GAN(MusicModel):
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path: Path) -> None:
-        self.save_models(self, path, self.model, 0)
+        self.save_models(path, self.model, 0)
 
     def save_npy(self, prediction: np.ndarray, save_path: Path, save_name: str) -> None:
         os.makedirs(save_path, exist_ok=True)
@@ -155,7 +155,7 @@ class GAN(MusicModel):
         print(model.summary())
         return model
 
-    def generate_real_samples(self, dataset: np.ndarray, n_samples: int) -> np.ndarray:
+    def generate_real_samples(self, dataset: np.ndarray, n_samples: int) -> tuple[Any, Any]:
         ix = np.random.randint(0, len(dataset), n_samples)
         X = np.array(dataset)[ix]
         for i in range(ix.shape[0]):
@@ -181,7 +181,7 @@ class GAN(MusicModel):
             os.makedirs(save_gan_path)
         gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: Callback, checkpoint_path: Path) -> None:
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: Callback, checkpoint_path: Path | None = None) -> None:
         latent_dim = LATENT_DIM
         real_samples_multiplier= REAL_MULTIPLIER 
         n_batch = N_BATCH
@@ -223,7 +223,8 @@ class GAN(MusicModel):
                 print('epoch: %d, discriminator_real_loss=%.3f, discriminator_fake_loss=%.3f, generator_loss=%.3f \n discriminator_accuracy = %.3f, GAN_accuracy = %.3f' % (epoch, disc_loss_real, disc_loss_fake, g_loss, disc_accuracy, g_data[1]))
             if step%save_step==0:
                 self.save_npy(self.postprocess_array(X_fake[0]), checkpoint_path, step)
-                self.save_models(checkpoint_path, self.model, step)
+                if(checkopint_path is not None):
+                    self.save_models(checkpoint_path, self.model, step)
 
 
 if __name__ == '__main__':
