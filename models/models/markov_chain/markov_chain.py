@@ -4,7 +4,6 @@ import random
 from pathlib import Path
 from typing import Any, cast
 import numpy as np
-from keras.callbacks import Callback, ModelCheckpoint
 from midi.bach import download_bach_dataset
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features

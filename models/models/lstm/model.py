@@ -17,7 +17,7 @@ SEQUENCE_LENGTH = 100
 class MusicLstm(MusicModel):
     model: Sequential
 
-    def __init__(self, input_shape: int):
+    def __init__(self, input_shape: int = 128):
         self.model = Sequential()
         self.model.add(LSTM(
             256,

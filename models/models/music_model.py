@@ -11,20 +11,20 @@ class ProgressMetadata:
     legends: list[str]
 
 
-SeriesProgressCallback: TypeAlias = list[tuple[float, float]]
+SeriesProgress: TypeAlias = list[tuple[float, float]]
 
 
 @dataclass(frozen=True)
 class TrainingProgress:
     finished: bool
-    series: SeriesProgressCallback
+    series: SeriesProgress
 
 
 CompleteProgressCallback: TypeAlias = Callable[[TrainingProgress], None]
 
 # This callback is called with the progress of a model training.
 # Called with a list of chart series together with (x, y) coords
-ProgressCallback: TypeAlias = Callable[[SeriesProgressCallback], None]
+ProgressCallback: TypeAlias = Callable[[SeriesProgress], None]
 
 
 class MusicModel(ABC):
