@@ -24,7 +24,7 @@ const UploadFiles: FC<Props> = ({ files, onChange }) => {
                     ? 'Choose files'
                     : `${files.length} file${
                           files.length === 1 ? '' : 's'
-                      } uploaded`}
+                      } chosen`}
             </FileInput>
         </div>
     )
