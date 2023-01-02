@@ -1,6 +1,7 @@
 import os.path
 import numpy as np
 
+from typing import *
 from mido import MidiTrack, MidiFile
 from mido.messages import Message
 from mido.midifiles.meta import MetaMessage
@@ -11,7 +12,7 @@ GRID_ACCURACY = 64
 
 
 def get_tempo_meta_messages(array: list[int],
-                            accuracy: float):
+                            accuracy: float) -> MidiTrack:
     """
     translates a provided tempo array into a MetaMessage track
 
@@ -28,7 +29,7 @@ def get_tempo_meta_messages(array: list[int],
         if array[i] != last_tempo:
             events.append(MetaMessage('set_tempo', tempo=array[i], time=round(time)))
             last_tempo = array[i]
-            time -= round(time)
+            time -= float(round(time))
         time += accuracy
     events.append(MetaMessage('end_of_track', time=round(time)))
 
@@ -36,7 +37,7 @@ def get_tempo_meta_messages(array: list[int],
 
 
 def get_tempo_array_from_tempo_sequences(input_tempos: list[int],
-                                         event_lengths: list[int]):
+                                         event_lengths: list[int]) -> list[int]:
     """
     translates tempos from an events' list into a time distributed list
 
@@ -56,7 +57,7 @@ def get_tempo_array_from_tempo_sequences(input_tempos: list[int],
     return tempos
 
 
-def get_sequences_from_array(array: np.ndarray):
+def get_sequences_from_array(array: np.ndarray) -> Tuple[list[list[bool | float]], list[int]]:
     """
     translates a time distributed single-track array into a list of events
 
@@ -81,7 +82,7 @@ def get_sequences_from_array(array: np.ndarray):
     return events, event_lengths
 
 
-def get_tuples_from_sequences(input_events: list[list[bool | float]]):
+def get_tuples_from_sequences(input_events: list[list[bool | float]]) -> list[list[tuple[int, int]]]:
     """
     translates a list of events into a list of tuples of active notes
 
@@ -105,7 +106,7 @@ def get_messages_from_tuples(track: list[list[tuple[int, int]]],
                              accuracy: float,
                              join_notes: bool,
                              use_default_velocity: bool,
-                             default_velocity: int = DEFAULT_VELOCITY):
+                             default_velocity: int = DEFAULT_VELOCITY) -> MidiTrack:
     """
     translates a list of tuples of active notes into a MidiTrack
 
@@ -157,7 +158,7 @@ def get_messages_from_tuples(track: list[list[tuple[int, int]]],
 def prepare_meta_file(tempos: list[int],
                       grid_accuracy: int,
                       event_lengths: list[int] | None = None,
-                      ticks_per_beat: int = TICKS_PER_BEAT):
+                      ticks_per_beat: int = TICKS_PER_BEAT) -> Tuple[list[int], float, MidiFile]:
     """
     generates a MIDI file with MetaMessages tempo track from the tempos' array
     
@@ -176,13 +177,13 @@ def prepare_meta_file(tempos: list[int],
     return tempos, accuracy, midi_file
 
 
-def get_messages_from_standard_2d_input(data: np.ndarray | list,
+def get_messages_from_standard_2d_input(data: np.ndarray | list,  # TODO: is list necessary?
                                         track_channel: int,
                                         accuracy: float,
                                         join_notes: bool,
                                         use_sequences: bool,
                                         use_velocities: bool,
-                                        event_lengths: list[int] | None = None):
+                                        event_lengths: list[int] | None = None) -> MidiTrack:
     """
     translates a two-dimensional single-track array into a MidiTrack
 
@@ -213,7 +214,7 @@ def get_file_from_standard_features(data: np.ndarray,
                                     use_sequences: bool,
                                     use_velocities: bool,
                                     event_lengths: list[int] | None = None,
-                                    grid_accuracy: int = GRID_ACCURACY):
+                                    grid_accuracy: int = GRID_ACCURACY) -> None:
     """
     translates a multi-dimensional array into a MIDI file
 
@@ -274,7 +275,7 @@ def get_file_from_music21_features(data: np.ndarray,
                                    output_path: str,
                                    use_tonal_features: bool,
                                    join_notes: bool,
-                                   grid_accuracy: int = GRID_ACCURACY):
+                                   grid_accuracy: int = GRID_ACCURACY) -> None:
     """
     translates a music_21.py output matrix of tonal features into a MIDI file
 
@@ -326,8 +327,9 @@ def get_file_from_music21_features(data: np.ndarray,
         event_lengths.append(length)
         tempos.append(tempo)
 
-    array = np.asarray(array)
-    get_file_from_standard_features(array, tempos, output_path, join_notes, True, False, event_lengths, grid_accuracy)
+    new_data = np.asarray(array)
+    get_file_from_standard_features(new_data, tempos, output_path, join_notes,
+                                    True, False, event_lengths, grid_accuracy)
 
 
 if __name__ == '__main__':

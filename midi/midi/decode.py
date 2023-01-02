@@ -644,7 +644,7 @@ def get_sequence_of_notes(filepath: str,
     output_list = list[list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]]()
 
     for sequence in initial_sequences:
-        track_list = list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]()  # change to union of lists?
+        track_list = list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]()  # TODO: change to union of lists
 
         if only_active_notes:
             for event in sequence:
