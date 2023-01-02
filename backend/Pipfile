@@ -7,6 +7,7 @@ name = "pypi"
 fastapi = "*"
 hypercorn = "*"
 models = {editable = true, path = "./../models"}
+midi = {editable = true, path = "./../midi"}
 
 [dev-packages]
 autopep8 = "*"
