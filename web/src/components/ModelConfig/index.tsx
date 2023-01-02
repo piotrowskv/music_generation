@@ -1,10 +1,14 @@
 import { FC, useEffect } from 'react'
-import { useModelConfigContext } from '../../stores/ModelConfigContext'
+import {
+    ModelTraining,
+    useModelConfigContext,
+} from '../../stores/ModelConfigContext'
 import ErrorMessage from '../ErrorMessage'
 import LoadingIndicator from '../LoadingIndicator'
 import StepCard from '../StepCard'
 import PickModel from './PickModel'
 import PickTraining from './PickTraining'
+import UploadFiles, { midiMimeType } from './UploadFiles'
 
 const ModelConfig: FC = () => {
     const {
@@ -16,6 +20,8 @@ const ModelConfig: FC = () => {
         models,
         modelTraining,
         setModelTraining,
+        midiFiles,
+        setMidiFiles,
     } = useModelConfigContext()
 
     useEffect(() => {
@@ -39,6 +45,21 @@ const ModelConfig: FC = () => {
                             <PickTraining
                                 modelTraining={modelTraining}
                                 onChange={setModelTraining}
+                            />
+                        </StepCard>
+                    )}
+                    {modelTraining === ModelTraining.trainMyself && (
+                        <StepCard
+                            completed={midiFiles.length > 0}
+                            onDrop={files =>
+                                setMidiFiles(
+                                    files.filter(e => e.type === midiMimeType)
+                                )
+                            }
+                        >
+                            <UploadFiles
+                                files={midiFiles}
+                                onChange={setMidiFiles}
                             />
                         </StepCard>
                     )}

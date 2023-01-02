@@ -14,6 +14,8 @@ const ModelConfigContext = createContext<{
     pickModel: (id: string | undefined) => void
     modelTraining: ModelTraining | undefined
     setModelTraining: (id: ModelTraining | undefined) => void
+    midiFiles: File[]
+    setMidiFiles: (files: File[]) => void
     models: ModelVariants | undefined
     loading: boolean
     error: {} | undefined
@@ -35,6 +37,7 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     const [modelTraining, setModelTraining] = useState<
         ModelTraining | undefined
     >(undefined)
+    const [midiFiles, setMidiFiles] = useState<File[]>([])
 
     return (
         <ModelConfigContext.Provider
@@ -45,6 +48,8 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                 pickModel: setChosenModelId,
                 modelTraining,
                 setModelTraining,
+                midiFiles,
+                setMidiFiles,
                 loading,
                 error,
                 models,
