@@ -610,8 +610,8 @@ def get_sequence_of_notes(filepath: str,
                           use_velocities: bool,
                           join_tracks: bool,
                           only_active_notes: bool) \
-        -> Union[list[list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]],
-                 list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]]:
+        -> Union[list[list[Tuple[int, Union[list[int], list[bool], list[float], list[Tuple[int, float]]]]]],
+                 list[Tuple[int, Union[list[int], list[bool], list[float], list[Tuple[int, float]]]]]]:
     """
     translates a MIDI file into a sequence representing notes;
     output type depends on parameters:
@@ -641,32 +641,37 @@ def get_sequence_of_notes(filepath: str,
     :return:
     """
     file, filename, length, initial_sequences = initialise_sequences(filepath, use_velocities, join_tracks, False)
-    output_list = list[list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]]()
+    output_list = list[list[Tuple[int, Union[list[int], list[bool], list[float], list[Tuple[int, float]]]]]]()
 
     for sequence in initial_sequences:
-        track_list = list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]()
+        track_list = list[Tuple[int, Union[list[int], list[bool], list[float], list[Tuple[int, float]]]]]()
 
         if only_active_notes:
             for event in sequence:
-                event_list = list[Union[int, bool, float, Tuple[int, float]]]()  # type checking consistency
-                for element in event.active_notes:
-                    if use_velocities:
-                        event_list.append((element.height, float(element.value)))  # type checking consistency
-                    else:
-                        event_list.append(element.height)
-
+                event_list: Union[list[int], list[bool], list[float], list[Tuple[int, float]]]  # type consistency
+                if use_velocities:
+                    type_list = list[Tuple[int, float]]()
+                    for element in event.active_notes:
+                        type_list.append((element.height, float(element.value)))
+                    event_list = type_list
+                else:
+                    type_list = list[int]()
+                    for element in event.active_notes:
+                        type_list.append(element.height)
+                    event_list = type_list
                 track_list.append((event.length, event_list))
+
         else:
             for event in sequence:
-                notes: list[Union[int, bool, float, Tuple[int, float]]] = event.all_notes
-                new_tuple: Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]] \
+                notes: Union[list[int], list[bool], list[float], list[Tuple[int, float]]] = event.all_notes
+                new_tuple: Tuple[int, Union[list[int], list[bool], list[float], list[Tuple[int, float]]]] \
                     = (event.length, notes)
                 track_list.append(new_tuple)
 
         output_list.append(track_list)
 
-    output: Union[list[list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]],
-                  list[Tuple[int, list[Union[int, bool, float, Tuple[int, float]]]]]]
+    output: Union[list[list[Tuple[int, Union[list[int], list[bool], list[float], list[Tuple[int, float]]]]]],
+                  list[Tuple[int, Union[list[int], list[bool], list[float], list[Tuple[int, float]]]]]]
     if join_tracks:
         output = output_list[0]
     else:
