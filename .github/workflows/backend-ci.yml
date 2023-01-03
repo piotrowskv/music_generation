@@ -50,4 +50,4 @@ jobs:
 
       - name: Type check
         run: |
-          pipenv run mypy main.py --disallow-untyped-defs
+          pipenv run mypy main.py --disallow-untyped-defs --ignore-missing-imports
