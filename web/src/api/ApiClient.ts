@@ -50,7 +50,7 @@ export class ApiClient {
         )
 
         if (!res.ok) {
-            throw new FailedRequestError(res)
+            throw await FailedRequestError.fromResponse(res)
         } else {
             try {
                 const json = await res.json()
@@ -161,7 +161,11 @@ export class ApiClient {
 }
 
 export class FailedRequestError extends Error {
-    constructor(public response: Response) {
-        super()
+    constructor(public response: Response, message: string | undefined) {
+        super(message)
+    }
+
+    static async fromResponse(response: Response): Promise<FailedRequestError> {
+        return new FailedRequestError(response, (await response.json())?.detail)
     }
 }

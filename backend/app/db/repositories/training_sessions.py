@@ -81,4 +81,7 @@ class TrainingSessionsRepository:
                 r[1], '%Y-%m-%d %H:%M:%S')
             filenames.append(r[2])
 
+        if len(filenames) == 0:
+            return None
+
         return TrainingSessionData(model_id, create_date, filenames)
