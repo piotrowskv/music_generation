@@ -11,3 +11,20 @@ export type ModelVariant = {
 export type TrainingSessionCreated = {
     session_id: string
 }
+
+export type ChartPoint = {
+    x: number
+    y: number
+}
+
+export type ChartSeries = {
+    legend: string
+    points: ChartPoint[]
+}
+
+export type TrainingProgress = {
+    finished: boolean
+    x_label: string
+    y_label: string
+    chart_series: ChartSeries[]
+}

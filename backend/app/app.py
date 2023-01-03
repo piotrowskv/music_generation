@@ -41,7 +41,7 @@ async def register_training(files: list[UploadFile], model_id: str = Form()) -> 
     return m.TrainingSessionCreated(session_id)
 
 
-@app.websocket("/training/progress/{session_id}/ws")
+@app.websocket("/training/{session_id}/progress/ws")
 async def training_progress(websocket: WebSocket, session_id: str) -> None:
     await websocket.accept()
 

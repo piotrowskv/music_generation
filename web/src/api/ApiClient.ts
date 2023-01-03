@@ -1,4 +1,8 @@
-import { ModelVariants, TrainingSessionCreated } from './dto/models'
+import {
+    ModelVariants,
+    TrainingProgress,
+    TrainingSessionCreated,
+} from './dto/models'
 
 export class ApiClient {
     get isMocked() {
@@ -104,6 +108,30 @@ export class ApiClient {
         )
 
         return res
+    }
+
+    // returns closing function
+    trainingProgress = (
+        sessionId: string,
+        onMessage: (msg: TrainingProgress) => void
+    ): (() => void) => {
+        const ws = new WebSocket(
+            `${this.#secureProtocol('ws')}${
+                this.baseUrl
+            }/training/${sessionId}/progress/ws`
+        )
+
+        ws.onmessage = event => {
+            const msg = JSON.parse(event.data) as TrainingProgress
+
+            onMessage(msg)
+
+            if (msg.finished) {
+                ws.close()
+            }
+        }
+
+        return () => ws.close()
     }
 }
 
