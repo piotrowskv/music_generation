@@ -9,5 +9,5 @@ export type ModelVariant = {
 }
 
 export type TrainingSessionCreated = {
-    token: string
+    session_id: string
 }

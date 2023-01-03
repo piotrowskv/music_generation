@@ -100,7 +100,7 @@ export class ApiClient {
                 method: 'POST',
                 body: formData,
             },
-            { token: '123123123' }
+            { session_id: '123123123' }
         )
 
         return res

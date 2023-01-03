@@ -17,7 +17,7 @@ class ModelVariants(BaseModel):
 
 @dataclass(frozen=True)
 class TrainingSessionCreated(BaseModel):
-    token: str
+    session_id: str
 
 
 @dataclass(frozen=True)

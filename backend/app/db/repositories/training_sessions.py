@@ -33,7 +33,7 @@ class TrainingSessionsRepository:
 
         Returns
         ---
-        Returns a token identifying this session.
+        Returns a session_id identifying this session.
         """
 
         session_id = str(uuid.uuid4())

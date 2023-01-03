@@ -28,7 +28,7 @@ def get_models() -> m.ModelVariants:
     return m.ModelVariants(models)
 
 
-@app.post("/training/register", response_model=m.TrainingSessionCreated, description="Registers a new training session and returns the token for it")
+@app.post("/training/register", response_model=m.TrainingSessionCreated, description="Registers a new training session and returns the session ID for it")
 async def register_training(files: list[UploadFile], model_id: str = Form()) -> m.TrainingSessionCreated:
     for file in files:
         if file.content_type != "audio/midi":
@@ -36,24 +36,24 @@ async def register_training(files: list[UploadFile], model_id: str = Form()) -> 
                 status_code=400,
                 detail="Uploaded files have to be of mimetype audio/midi")
 
-    token = await training_sessions.register_session(model_id, files)
+    session_id = await training_sessions.register_session(model_id, files)
 
-    return m.TrainingSessionCreated(token)
+    return m.TrainingSessionCreated(session_id)
 
 
-@app.websocket("/training/progress/{session_token}/ws")
-async def training_progress(websocket: WebSocket, session_token: str) -> None:
+@app.websocket("/training/progress/{session_id}/ws")
+async def training_progress(websocket: WebSocket, session_id: str) -> None:
     await websocket.accept()
 
     try:
         points = [
-            m.ChartPoint(0, 1),
-            m.ChartPoint(12, 3),
-            m.ChartPoint(32, 5),
-            m.ChartPoint(53, 10),
-            m.ChartPoint(78, 11),
-            m.ChartPoint(98, 14),
-            m.ChartPoint(100, 16),
+            m.ChartPoint(1, 0),
+            m.ChartPoint(3, 12),
+            m.ChartPoint(5, 32),
+            m.ChartPoint(10, 53),
+            m.ChartPoint(11, 78),
+            m.ChartPoint(14, 98),
+            m.ChartPoint(16, 100),
         ]
 
         for p in points[:-1]:
