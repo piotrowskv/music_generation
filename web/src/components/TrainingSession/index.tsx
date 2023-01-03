@@ -5,8 +5,13 @@ import LoadingIndicator from '../LoadingIndicator'
 import TrainingChart from './TrainingChart'
 
 const TrainingSession: FC = () => {
-    const { init, initialLoading, trainingSession, initialError } =
-        useTrainingSessionContext()
+    const {
+        init,
+        initialLoading,
+        trainingSession,
+        initialError,
+        trainingFinished,
+    } = useTrainingSessionContext()
 
     useEffect(() => init(), [])
 
@@ -16,7 +21,16 @@ const TrainingSession: FC = () => {
                 <LoadingIndicator message="Fetching training session" />
             )}
             {trainingSession && (
-                <TrainingChart trainingSession={trainingSession} />
+                <>
+                    <h3 className="text-2xl">
+                        {trainingSession.model.name} training on{' '}
+                        {trainingSession.training_file_names.length} MIDI files
+                    </h3>
+                    <div className="italic text-gray-400">
+                        {trainingFinished ? 'Ready!' : 'In progress...'}
+                    </div>
+                    <TrainingChart />
+                </>
             )}
             {initialError && (
                 <ErrorMessage error={initialError} onRetry={init}>
