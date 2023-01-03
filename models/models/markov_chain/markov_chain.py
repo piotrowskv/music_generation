@@ -65,7 +65,6 @@ class MarkovChain(MusicModel):
             for j in range(len(self.data[i])):
                 notes = []
                 for k in range(128):
-                    print(k)
                     if self.data[i][j][k] == True:
                         notes.append(k)
 
@@ -87,9 +86,7 @@ class MarkovChain(MusicModel):
     def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
         for i in range(len(self.data)):
-            print(i)
             for j in range(len(self.data[i])-n+1):
-                print(j)
                 self.n_grams.add(tuple(self.data[i][j:j+n]))
 
         self.tokens_list = list(self.tokens)
