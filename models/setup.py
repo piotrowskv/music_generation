@@ -5,7 +5,7 @@ from setuptools import setup
 extra_deps = ['tensorflow-macos==2.10.0',
               'tensorflow-metal==0.6.0'] if platform == "darwin" else ['tensorflow==2.10.0']
 
-# ../midi is not listed as requirements! It is the responsibility of `models` dependents to also install `../midi`
+# ../midi is not listed as requirements! It is the responsibility of `models` users to also install `../midi`
 
 setup(
     name='models',
