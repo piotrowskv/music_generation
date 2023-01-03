@@ -214,7 +214,7 @@ class GAN(MusicModel):
             g_data = self.model.train_on_batch(X_gan, y_gan)
             g_loss= g_data[0]
             
-            progress_callback(SeriesProgress([((disc_loss_real + disc_loss_fake)/2, step), (g_loss, step)]))
+            progress_callback([((disc_loss_real + disc_loss_fake)/2, step), (g_loss, step)])
 
             history['discriminator_real_loss'].append(disc_loss_real)
             history['discriminator_fake_loss'].append(disc_loss_fake)
