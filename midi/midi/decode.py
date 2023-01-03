@@ -1,5 +1,5 @@
 import os
-
+import copy
 import numpy as np
 
 from typing import *
@@ -178,9 +178,11 @@ class Event:
         :return:
         """
         if self.use_velocities:
+            float_list: list[float] = [float(0)] * 128
             for element in self.active_notes:
-                element.value /= float(max_velocity)
-                self.all_notes[element.height] /= float(max_velocity)
+                element.value = float(element.value / max_velocity)
+                float_list[element.height] = float(self.all_notes[element.height] / max_velocity)
+            self.all_notes = float_list
 
 
 def get_offset(time: int,
@@ -371,6 +373,7 @@ def combine_and_clean_tracks(tracks: list[MidiTrack]) -> MidiTrack:
     raw_messages = list[Tuple[int, Message]]()       # all messages with their starting times
     filtered_messages = list[Tuple[int, Message]]()  # as raw_messages, but without repetitions
     messages = list[Message]()                       # all messages with corrected timestamps
+    tracks = copy.deepcopy(tracks)
 
     # in case of 'note_on' messages only, 'note_off' is marked by velocity == 0
     for i in range(len(tracks)):
@@ -650,15 +653,15 @@ def get_sequence_of_notes(filepath: str,
             for event in sequence:
                 event_list: Union[list[int], list[bool], list[float], list[Tuple[int, float]]]  # type consistency
                 if use_velocities:
-                    type_list = list[Tuple[int, float]]()
+                    tuple_list = list[Tuple[int, float]]()
                     for element in event.active_notes:
-                        type_list.append((element.height, float(element.value)))
-                    event_list = type_list
+                        tuple_list.append((element.height, float(element.value)))
+                    event_list = tuple_list
                 else:
-                    type_list = list[int]()
+                    int_list = list[int]()
                     for element in event.active_notes:
-                        type_list.append(element.height)
-                    event_list = type_list
+                        int_list.append(element.height)
+                    event_list = int_list
                 track_list.append((event.length, event_list))
 
         else:

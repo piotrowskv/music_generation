@@ -1,4 +1,3 @@
-import copy
 import pytest
 
 from midi.music_21 import *
@@ -27,10 +26,9 @@ expected_events = [[[80], [79], [77], [76], [77], [76], [74], [72], [74], [72], 
                    [[], [], [], [], [], [63], [62], [60], [59], [59], [60], [60], [59], [59], [60], [60], [64],
                     [64], [64], [59, 61], [59, 61], [59, 61], [59, 61], [59, 61]],
                    [[], [], [], [], [], [], [], [], [], [], [], [49], [49], [51], [51], [54], [54], [52], [53],
-                    [55], [55], [55], [55], []],
-                   [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 24, 8, 8, 8, 8, 8, 8, 4, 4, 8, 8, 8, 4, 4]]
+                    [55], [55], [55], [55], []]]
 
-partial_events = [[], [], [], [], [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 24, 8, 8, 8, 8, 8, 8, 4, 4, 8, 8, 8, 4, 4]]
+expected_lengths = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 24, 8, 8, 8, 8, 8, 8, 4, 4, 8, 8, 8, 4, 4]
 
 expected_tempos = [500000] * 80
 expected_tempos.extend([555555] * 64)
@@ -63,9 +61,7 @@ partial_midi = [[0.6328125, 0.625, 0.609375, 0.6015625, 0.609375, 0.6015625, 0.5
                  0.46875, 0.46875, 0.4765625, 0.4765625, 0.5078125, 0.5078125, 0.5078125, 0.484375, 0.484375,
                  0.484375, 0.484375, 0.484375],
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.390625, 0.390625, 0.40625, 0.40625,
-                 0.4296875, 0.4296875, 0.4140625, 0.421875, 0.4375, 0.4375, 0.4375, 0.4375, 0.0],
-                [],
-                []]
+                 0.4296875, 0.4296875, 0.4140625, 0.421875, 0.4375, 0.4375, 0.4375, 0.4375, 0.0]]
 
 expected_tonal = [[0.6363636363636364, 0.6363636363636364, 0.6363636363636364, 0.6363636363636364, 0.6363636363636364,
                    0.6363636363636364, 0.6363636363636364, 0.6363636363636364, 0.6363636363636364, 0.6363636363636364,
@@ -107,59 +103,62 @@ expected_tonal = [[0.6363636363636364, 0.6363636363636364, 0.6363636363636364, 0
 
 
 def test_check_number_of_tracks_correct():
-    check_number_of_tracks([1, 2, 3, 4, 5, 6], 'filename', 6)
+    check_number_of_tracks([[(1, [13, 14])], [(2, [])]], 2)
 
 
 def test_check_number_of_tracks_incorrect():
-    with pytest.raises(ValueError):
-        check_number_of_tracks([1, 2, 3], 'filename', 4)
+    with pytest.raises(Warning):
+        check_number_of_tracks([[(1, [13, 14]), (2, [])]], 2)
 
 
 def test_get_event_lists():
-    events = get_event_lists(copy.deepcopy(input_list))
+    events, lengths = get_event_lists(input_list)
 
     assert isinstance(events, list)
+    assert isinstance(lengths, list)
     assert events == expected_events
+    assert lengths == expected_lengths
 
 
 def test_preprocess_features_check_correct():
-    events, tempos = preprocess_features(file2_path, 'test_tempos_velocities_and_polyphony', True, 4)
+    events, lengths, tempos = preprocess_features(file2_path, True, 4)
 
     assert isinstance(events, list)
+    assert isinstance(lengths, list)
     assert isinstance(tempos, list)
     assert events == expected_events
+    assert lengths == expected_lengths
     assert tempos == expected_tempos
 
 
 def test_preprocess_features_check_incorrect():
-    with pytest.raises(ValueError):
-        _, _ = preprocess_features(file2_path, 'test_tempos_velocities_and_polyphony', True, 2)
+    with pytest.raises(Warning):
+        _, _, _ = preprocess_features(file2_path, True, 2)
 
 
 def test_insert_meta_features():
-    meta_features = insert_meta_features(copy.deepcopy(partial_midi), copy.deepcopy(partial_events),
-                                         copy.deepcopy(expected_tempos))
+    meta_features = insert_meta_features(partial_midi, expected_lengths, expected_tempos)
 
     assert isinstance(meta_features, list)
     assert meta_features == expected_midi
 
 
 def test_get_list_of_midi_features():
-    midi_features = get_list_of_midi_features(copy.deepcopy(expected_events), copy.deepcopy(expected_tempos))
+    midi_features = get_list_of_midi_features(expected_events, expected_lengths, expected_tempos)
 
     assert isinstance(midi_features, list)
     assert midi_features == expected_midi
 
 
 def test_get_list_of_tonal_features():
-    tonal_features = get_list_of_tonal_features(copy.deepcopy(expected_events), copy.deepcopy(expected_tempos))
+    tonal_features = get_list_of_tonal_features(expected_events, expected_lengths, expected_tempos)
 
     assert isinstance(tonal_features, list)
     assert tonal_features == expected_tonal
 
 
 def test_get_midi_features_file_1():
-    out_array = get_midi_features(file1_path, 'test_notes')
+    out_array = get_midi_features(file1_path)
     midi_array = np.load(output_1_midi_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
@@ -167,7 +166,7 @@ def test_get_midi_features_file_1():
 
 
 def test_get_midi_features_file_2():
-    out_array = get_midi_features(file2_path, 'test_tempos_velocities_and_polyphony')
+    out_array = get_midi_features(file2_path)
     midi_array = np.load(output_2_midi_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
@@ -175,7 +174,7 @@ def test_get_midi_features_file_2():
 
 
 def test_get_tonal_features_file_1():
-    out_array = get_tonal_features(file1_path, 'test_notes')
+    out_array = get_tonal_features(file1_path)
     tonal_array = np.load(output_1_tonal_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)
@@ -183,7 +182,7 @@ def test_get_tonal_features_file_1():
 
 
 def test_get_tonal_features_file_2():
-    out_array = get_tonal_features(file2_path, 'test_tempos_velocities_and_polyphony')
+    out_array = get_tonal_features(file2_path)
     tonal_array = np.load(output_2_tonal_path, allow_pickle=True)
 
     assert isinstance(out_array, np.ndarray)

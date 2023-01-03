@@ -1,3 +1,4 @@
+import copy
 import os.path
 import numpy as np
 
@@ -171,10 +172,12 @@ def prepare_meta_file(tempos: list[int],
     midi_file = MidiFile(ticks_per_beat=ticks_per_beat)
     accuracy = float(4 * ticks_per_beat / grid_accuracy)  # equal to ticks_per_measure / grid_accuracy
     if event_lengths is not None:
-        tempos = get_tempo_array_from_tempo_sequences(tempos, event_lengths)
-    midi_file.tracks.append(get_tempo_meta_messages(tempos, accuracy))
+        new_tempos = get_tempo_array_from_tempo_sequences(copy.deepcopy(tempos), event_lengths)
+    else:
+        new_tempos = copy.deepcopy(tempos)
 
-    return tempos, accuracy, midi_file
+    midi_file.tracks.append(get_tempo_meta_messages(new_tempos, accuracy))
+    return new_tempos, accuracy, midi_file
 
 
 def get_messages_from_standard_2d_input(data: np.ndarray,
@@ -263,7 +266,7 @@ def get_file_from_standard_features(data: np.ndarray,
                 raise TypeError('input array must have 2 or 3 dimensions')
 
     # tracks generation
-    tempos, accuracy, midi_file = prepare_meta_file(tempos, grid_accuracy, event_lengths)
+    _, accuracy, midi_file = prepare_meta_file(tempos, grid_accuracy, event_lengths)
     if data.ndim == 2:
         midi_file.tracks.append(get_messages_from_standard_2d_input(data, 0, accuracy, join_notes,
                                                                     use_sequences, use_velocities, event_lengths))
