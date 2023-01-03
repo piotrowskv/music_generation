@@ -18,35 +18,35 @@ def test_generate_n_grams():
 def test_data_loading():
     model = MarkovChain()
     print(all_notes)
-    model.train_on_files(all_notes, 10, lambda epoch, loss : None)
+    model.train_on_files(all_notes, 10, lambda epoch : None)
     assert len(model.data)>0
     assert len(model.probabilities) >0
     assert len(model.tokens) >0
 
 def test_multiple_tokens():
     model = MarkovChain()
-    model.train_on_files(all_notes, 10, lambda epoch, loss : None)
+    model.train_on_files(all_notes, 10, lambda epoch: None)
     assert len(model.tokens) ==128
 
 def test_probabilities_all_notes1():
     model = MarkovChain()
-    model.train_on_files(all_notes, 10, lambda epoch, loss : None)
+    model.train_on_files(all_notes, 10, lambda epoch: None)
     assert len(model.probabilities[0]) == 1
 
 def test_probabilities_all_notes2():
     model = MarkovChain()
-    model.train_on_files(all_notes, 10, lambda epoch, loss : None)
+    model.train_on_files(all_notes, 10, lambda epoch: None)
     print(model.data)
     assert model.probabilities[0][(97,)] == 1.0
 
 def test_multiple_tracks():
     model = MarkovChain()
-    model.train_on_files(sample_file, 10, lambda epoch, loss : None)
+    model.train_on_files(sample_file, 10, lambda epoch: None)
     assert len(model.data) > 1
 
 def test_model_saving_and_loading():
     model = MarkovChain()
-    model.train_on_files(sample_file, 10, lambda epoch, loss : None)
+    model.train_on_files(sample_file, 10, lambda epoch: None)
     model.save(markov_saved)
     model2 = MarkovChain()
     model2.load(markov_saved)
