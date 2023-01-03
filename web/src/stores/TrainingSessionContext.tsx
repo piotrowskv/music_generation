@@ -1,38 +1,54 @@
-import {
-    createContext,
-    FC,
-    ReactNode,
-    useContext,
-    useEffect,
-    useState,
-} from 'react'
+import { createContext, FC, ReactNode, useContext, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PathParamsFor } from 'ts-routes'
 import { apiClient } from '../api'
-import { ChartPoint, ChartSeries, TrainingProgress } from '../api/dto/models'
+import {
+    ChartPoint,
+    ChartSeries,
+    TrainingProgress,
+    TrainingSession,
+} from '../api/dto/models'
 import { routes } from '../routes'
+import { useAsync } from '../utils/useAsync'
 
 const TrainingSessionContext = createContext<{
     xLabel: string
     yLabel: string
     legends: string[]
     dataPoints: ChartPoint[][]
+    trainingFinished: boolean
+    // returns dispose callback
+    init: () => () => void
+    initialLoading: boolean
+    initialError: {} | undefined
+    trainingSession: TrainingSession | undefined
 }>(null!)
 
 export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
     children,
 }) => {
+    const { sessionId } =
+        useParams<PathParamsFor<typeof routes.trainingSession>>()
     const [trainingData, setTrainingData] = useState<TrainingProgress>({
         finished: false,
         x_label: '',
         y_label: '',
         chart_series: [],
     })
-    const { sessionId } =
-        useParams<PathParamsFor<typeof routes.trainingSession>>()
 
-    useEffect(() => {
-        return apiClient.trainingProgress(sessionId!, msg =>
+    const {
+        loading: initialLoading,
+        call: getTrainingSession,
+        result: trainingSession,
+        error: initialError,
+    } = useAsync(apiClient.getTrainingSession)
+
+    function init() {
+        const id = sessionId!
+
+        getTrainingSession(id)
+
+        return apiClient.trainingProgress(id, msg =>
             setTrainingData(state => ({
                 finished: msg.finished,
                 x_label: msg.x_label,
@@ -46,7 +62,7 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
                 })),
             }))
         )
-    }, [])
+    }
 
     const dataPoints = transformChartSeries(trainingData.chart_series)
 
@@ -57,6 +73,11 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
                 yLabel: trainingData.y_label,
                 legends: trainingData.chart_series.map(e => e.legend),
                 dataPoints,
+                trainingFinished: trainingData.finished,
+                init,
+                initialLoading,
+                initialError,
+                trainingSession,
             }}
         >
             {children}
