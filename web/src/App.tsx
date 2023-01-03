@@ -4,9 +4,11 @@ import MusicNote from './assets/MusicNote'
 import Credits from './components/Credits'
 import ModelConfig from './components/ModelConfig'
 import ThemeSwitch from './components/ThemeSwitch'
+import TrainingSession from './components/TrainingSession'
 import { routes } from './routes'
 import { ModelConfigProvider } from './stores/ModelConfigContext'
 import { ResolvedTheme, useThemeContext } from './stores/ThemeContext'
+import { TrainingSessionProvider } from './stores/TrainingSessionContext'
 
 function App() {
     const { mode } = useThemeContext()
@@ -29,6 +31,14 @@ function App() {
                                 <ModelConfigProvider>
                                     <ModelConfig />
                                 </ModelConfigProvider>
+                            }
+                        />
+                        <Route
+                            path={routes.trainingSession.pattern}
+                            element={
+                                <TrainingSessionProvider>
+                                    <TrainingSession />
+                                </TrainingSessionProvider>
                             }
                         />
                         <Route

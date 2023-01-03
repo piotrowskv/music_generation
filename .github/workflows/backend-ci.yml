@@ -46,7 +46,7 @@ jobs:
 
       - name: Check formatting
         run: |
-          pipenv run autopep8 --diff -aaa --recursive --exit-code .
+          pipenv run autopep8 --diff --recursive --exit-code .
 
       - name: Type check
         run: |

@@ -1,4 +1,4 @@
-import { ModelVariants } from './dto/models'
+import { ModelVariants, TrainingSessionCreated } from './dto/models'
 
 export class ApiClient {
     get isMocked() {
@@ -27,7 +27,9 @@ export class ApiClient {
 
         const res = await fetch(`${this.baseUrl}/${path}`, {
             headers: {
-                'Content-Type': 'application/json',
+                ...(!(options.body instanceof FormData) && {
+                    'Content-Type': 'application/json',
+                }),
                 ...headers,
             },
             ...otherOptions,
@@ -68,6 +70,28 @@ export class ApiClient {
                     },
                 ],
             }
+        )
+
+        return res
+    }
+
+    registerTraining = async (
+        modelId: string,
+        files: File[]
+    ): Promise<TrainingSessionCreated> => {
+        const formData = new FormData()
+        formData.append('model_id', modelId)
+        for (const file of files) {
+            formData.append(`files`, file)
+        }
+
+        const res = await this.baseRequest<TrainingSessionCreated>(
+            `training/register`,
+            {
+                method: 'POST',
+                body: formData,
+            },
+            { token: '123123123' }
         )
 
         return res

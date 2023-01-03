@@ -15,6 +15,15 @@ module.exports = {
             animation: {
                 'spin-once': 'spin 0.5s reverse cubic-bezier(0.32, 0, 0.67, 0)',
             },
+            keyframes: {
+                wiggle: {
+                    '0%, 100%': { transform: 'rotate(-1deg)' },
+                    '50%': { transform: 'rotate(1deg)' },
+                },
+            },
+            blur: {
+                xs: '1px',
+            },
         },
     },
     plugins: [],

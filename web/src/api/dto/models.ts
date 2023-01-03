@@ -7,3 +7,7 @@ export type ModelVariant = {
     name: string
     description: string
 }
+
+export type TrainingSessionCreated = {
+    token: string
+}

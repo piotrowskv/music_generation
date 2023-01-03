@@ -1,6 +1,15 @@
-import { createContext, FC, ReactNode, useContext, useState } from 'react'
+import {
+    createContext,
+    FC,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState,
+} from 'react'
+import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../api'
 import { ModelVariant, ModelVariants } from '../api/dto/models'
+import { routes } from '../routes'
 import { useAsync } from '../utils/useAsync'
 
 export enum ModelTraining {
@@ -10,24 +19,35 @@ export enum ModelTraining {
 
 const ModelConfigContext = createContext<{
     init: () => void
+    registerTrainingSession: (modelId: string, files: File[]) => void
     selectedModel: ModelVariant | undefined
     pickModel: (id: string | undefined) => void
     modelTraining: ModelTraining | undefined
     setModelTraining: (id: ModelTraining | undefined) => void
+    midiFiles: File[]
+    setMidiFiles: (files: File[]) => void
     models: ModelVariants | undefined
-    loading: boolean
-    error: {} | undefined
+    initialLoading: boolean
+    initialError: {} | undefined
+    sessionRegisterLoading: boolean
+    sessionRegisterError: {} | undefined
 }>(null!)
 
 export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     children,
 }) => {
     const {
-        loading,
+        loading: initialLoading,
         call: init,
         result: models,
-        error,
+        error: initialError,
     } = useAsync(apiClient.getModelVariants)
+    const {
+        loading: sessionRegisterLoading,
+        call: registerTrainingSession,
+        result: trainingSessionToken,
+        error: sessionRegisterError,
+    } = useAsync(apiClient.registerTraining)
 
     const [chosenModelId, setChosenModelId] = useState<string | undefined>(
         undefined
@@ -35,6 +55,16 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     const [modelTraining, setModelTraining] = useState<
         ModelTraining | undefined
     >(undefined)
+    const [midiFiles, setMidiFiles] = useState<File[]>([])
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        const token = trainingSessionToken?.token
+        if (token) {
+            // we got a training token, navigate to the session automatically
+            navigate(routes.trainingSession({ sessionToken: token }))
+        }
+    }, [trainingSessionToken])
 
     return (
         <ModelConfigContext.Provider
@@ -45,8 +75,13 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                 pickModel: setChosenModelId,
                 modelTraining,
                 setModelTraining,
-                loading,
-                error,
+                midiFiles,
+                setMidiFiles,
+                initialLoading,
+                initialError,
+                sessionRegisterLoading,
+                sessionRegisterError,
+                registerTrainingSession,
                 models,
                 init,
             }}
