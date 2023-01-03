@@ -7,7 +7,9 @@ from midi.bach import download_bach_dataset
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
 
-from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
+import time
+
+from models.music_model import MusicModel, ProgressCallback, ProgressMetadata, SeriesProgress
 
 N_GRAM = 3
 
@@ -42,7 +44,15 @@ class MarkovChain(MusicModel):
         for i in range(n_gram_next.shape[0]):
             self.probabilities[i] = {}
 
+
+        start = time.time()
+        time.perf_counter()
+
         for i in range(len(n_gram_next)):
+
+            elapsed = time.time() - start
+            progress_callback([(elapsed, 100*i/len(n_gram_next))])
+            
             for j in range(len(n_gram_next[i])):
                 if len(n_gram_next[i]) <= 1:
                     self.probabilities[n_gram_next[i]][j] = 1
