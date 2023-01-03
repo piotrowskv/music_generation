@@ -1,6 +1,7 @@
 import {
     ModelVariants,
     TrainingProgress,
+    TrainingSession,
     TrainingSessionCreated,
 } from './dto/models'
 
@@ -105,6 +106,30 @@ export class ApiClient {
                 body: formData,
             },
             { session_id: '123123123' }
+        )
+
+        return res
+    }
+
+    getTrainingSession = async (
+        sessionId: string
+    ): Promise<TrainingSession> => {
+        const res = await this.baseRequest<TrainingSession>(
+            `training/${sessionId}`,
+            {
+                method: 'GET',
+            },
+            {
+                session_id: '123',
+                model: {
+                    id: '0f5e5af5-9ede-4cc8-814d-f7a0dfb8a6d6',
+                    name: 'LSTM',
+                    description:
+                        'Sequential model generating each timestep one by one.',
+                },
+                created_at: '2023-01-03T11:11:13.238Z',
+                training_file_names: ['file.mid', 'otherfile.mid'],
+            }
         )
 
         return res

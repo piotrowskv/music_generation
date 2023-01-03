@@ -28,3 +28,10 @@ export type TrainingProgress = {
     y_label: string
     chart_series: ChartSeries[]
 }
+
+export type TrainingSession = {
+    session_id: string
+    model: ModelVariant
+    created_at: string
+    training_file_names: string[]
+}

@@ -1,7 +1,16 @@
+import datetime
 import uuid
+from dataclasses import dataclass
 from sqlite3 import Connection
 
 from fastapi import UploadFile
+
+
+@dataclass(frozen=True)
+class TrainingSessionData:
+    model_id: str
+    created_at: datetime.datetime
+    training_file_names: list[str]
 
 
 class TrainingSessionsRepository:
@@ -22,6 +31,7 @@ class TrainingSessionsRepository:
         self._conn.execute(f"""
             CREATE TABLE IF NOT EXISTS {self.FILES_TABLE_NAME}(
                 session_id TEXT NOT NULL,
+                file_name TEXT NOT NULL,
                 midi_file BLOB NOT NULL,
                 FOREIGN KEY (session_id)
                    REFERENCES {self.SESSIONS_TABLE_NAME} (session_id)
@@ -42,11 +52,33 @@ class TrainingSessionsRepository:
             f"INSERT INTO {self.SESSIONS_TABLE_NAME}(model_id, session_id) VALUES(?, ?)",
             (model_id, session_id))
 
-        insert_files = [(session_id, await file.read()) for file in files]
+        insert_files = [(session_id, file.filename, await file.read()) for file in files]
         self._conn.executemany(
-            f"INSERT INTO {self.FILES_TABLE_NAME}(session_id, midi_file) VALUES(?, ?)",
+            f"INSERT INTO {self.FILES_TABLE_NAME}(session_id, file_name, midi_file) VALUES(?, ?, ?)",
             insert_files)
 
         self._conn.commit()
 
         return session_id
+
+    async def get_session(self, session_id: str) -> TrainingSessionData | None:
+        """
+        Finds a training session and returns some information about it.
+        Returns None if the session was not found.
+        """
+
+        model_id: str
+        create_date: datetime.datetime
+        filenames: list[str] = []
+
+        for r in self._conn.execute(f"""
+            SELECT s.model_id, s.create_date, f.file_name FROM {self.SESSIONS_TABLE_NAME} AS s
+            INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
+            WHERE s.session_id=?
+            """, (session_id,)):
+            model_id = r[0]
+            create_date = datetime.datetime.strptime(
+                r[1], '%Y-%m-%d %H:%M:%S')
+            filenames.append(r[2])
+
+        return TrainingSessionData(model_id, create_date, filenames)

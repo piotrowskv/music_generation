@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 
 from pydantic import BaseModel
@@ -18,6 +19,14 @@ class ModelVariants(BaseModel):
 @dataclass(frozen=True)
 class TrainingSessionCreated(BaseModel):
     session_id: str
+
+
+@dataclass(frozen=True)
+class TrainingSession(BaseModel):
+    session_id: str
+    model: ModelVariant
+    created_at: datetime.datetime
+    training_file_names: list[str]
 
 
 @dataclass(frozen=True)
