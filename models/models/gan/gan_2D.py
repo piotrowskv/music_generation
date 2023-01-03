@@ -12,6 +12,8 @@ from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU,
 from tensorflow.keras import activations
 from models.music_model import MusicModel
 from midi.decode import get_array_of_notes
+from midi.encode import get_file_from_standard_features
+
 
 
 DATA_PATH = 'data'
@@ -226,6 +228,19 @@ class GAN(MusicModel):
             if step%save_step==0:
                 self.save_npy(self.postprocess_array(X_fake[0]), checkpoint_path, str(step))
                 self.save_models(checkpoint_path, self.model, step)
+
+    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+        if seed is None:
+            X_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1)
+        elif isinstance(seed, int):
+            X_fake, y_fake = self.generate_fake_samples(self.generator, seed, 1)
+        else:
+            raise Exception("Incorrect parameters.")
+            
+        X_array = self.postprocess_array(X_fake[0])
+        get_file_from_standard_features(X_array, 500000, path, True, False, False)
+
+
 
 
 if __name__ == '__main__':
