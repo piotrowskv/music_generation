@@ -51,7 +51,7 @@ class MarkovChain(MusicModel):
         for i in range(len(n_gram_next)):
 
             elapsed = time.time() - start
-            progress_callback(SeriesProgress([(elapsed, 100*i/len(n_gram_next))]))
+            progress_callback([(elapsed, 100*i/len(n_gram_next))])
             
             for j in range(len(n_gram_next[i])):
                 if len(n_gram_next[i]) <= 1:
