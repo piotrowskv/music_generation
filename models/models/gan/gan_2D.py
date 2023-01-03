@@ -10,6 +10,7 @@ from models.music_model import MusicModel, ProgressCallback
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
 
+from models.music_model import MusicModel, ProgressCallback, ProgressMetadata, SeriesProgress
 
 
 DATA_PATH = 'data'
@@ -185,10 +186,8 @@ class GAN(MusicModel):
         latent_dim = LATENT_DIM
         real_samples_multiplier= REAL_MULTIPLIER 
         n_batch = N_BATCH
-        print(n_batch)
         save_step = SAVE_STEP
         batch_per_epoch = len(xtrain)// n_batch
-        print(batch_per_epoch)
         half_batch = n_batch // 2
         seed = self.generate_latent_points(latent_dim, 128)
         n_steps = batch_per_epoch * epochs
@@ -215,6 +214,8 @@ class GAN(MusicModel):
             g_data = self.model.train_on_batch(X_gan, y_gan)
             g_loss= g_data[0]
             
+            progress_callback(SeriesProgress([((disc_loss_real + disc_loss_fake)/2, step), (g_loss, step)]))
+
             history['discriminator_real_loss'].append(disc_loss_real)
             history['discriminator_fake_loss'].append(disc_loss_fake)
             history['generator_loss'].append(g_loss)
@@ -229,6 +230,10 @@ class GAN(MusicModel):
         X_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1)
         X_array = self.postprocess_array(X_fake[0])
         get_file_from_standard_features(X_array, 500000, path, True, False, False)
+
+    def get_progress_metadata(self) -> ProgressMetadata:
+        return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
+
 
 if __name__ == '__main__':
     '''
