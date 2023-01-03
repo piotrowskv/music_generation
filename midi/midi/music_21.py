@@ -33,7 +33,6 @@ def get_event_lists(array: list[list[Tuple[int, list[int]]]]) -> Tuple[list[list
     array = copy.deepcopy(array)
     events: list[list[list[int]]] = [[] for _ in range(len(array))]
     tuples = dict[int, Tuple[int, list[int]]]()
-    # tuples: list[Tuple[int, list[int]]] = [] * len(array)
     lengths = list[int]()
 
     active_range = range(len(array))
@@ -46,7 +45,6 @@ def get_event_lists(array: list[list[Tuple[int, list[int]]]]) -> Tuple[list[list
             tuples[track] = array[track].pop(0)
         else:
             to_remove.append(track)
-            # active_tracks.remove(track)
 
     for track in to_remove:
         active_tracks.remove(track)
@@ -57,7 +55,6 @@ def get_event_lists(array: list[list[Tuple[int, list[int]]]]) -> Tuple[list[list
         d: list[int] = [tuples[i][0] for i in active_tracks]
         diff = min(d)
         lengths.append(diff)
-        # events[len(array)].append(diff)
 
         for track in active_tracks:
             events[track].append(tuples[track][1])
