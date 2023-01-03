@@ -45,7 +45,7 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     const {
         loading: sessionRegisterLoading,
         call: registerTrainingSession,
-        result: trainingSessionToken,
+        result: trainingSessionId,
         error: sessionRegisterError,
     } = useAsync(apiClient.registerTraining)
 
@@ -59,12 +59,12 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     const navigate = useNavigate()
 
     useEffect(() => {
-        const token = trainingSessionToken?.token
-        if (token) {
-            // we got a training token, navigate to the session automatically
-            navigate(routes.trainingSession({ sessionToken: token }))
+        const sessionId = trainingSessionId?.session_id
+        if (sessionId) {
+            // we got a training sessionId, navigate to the session automatically
+            navigate(routes.trainingSession({ sessionId }))
         }
-    }, [trainingSessionToken])
+    }, [trainingSessionId])
 
     return (
         <ModelConfigContext.Provider

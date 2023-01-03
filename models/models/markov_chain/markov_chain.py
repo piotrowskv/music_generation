@@ -1,15 +1,13 @@
-import os
-import glob
 import random
 from pathlib import Path
 from typing import Any, cast
+
 import numpy as np
-from keras.callbacks import Callback, ModelCheckpoint
 from midi.bach import download_bach_dataset
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
-from models.music_model import MusicModel
 
+from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 N_GRAM = 3
 
@@ -23,11 +21,11 @@ class MarkovChain(MusicModel):
         self.n_grams_list: list[tuple] = []
         self.probabilities: np.ndarray
 
-    def train(self, epochs: int =0, xtrain: Any = None, ytrain: Any = None, loss_callback: Callback = None, checkpoint_path: Path | None = None) -> None:
-
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
         # count probabilities
         n = len(self.n_grams_list[0])
-        n_gram_next : np.ndarray = np.ndarray((len(self.n_grams_list,)), dtype=object)
+        n_gram_next: np.ndarray = np.ndarray(
+            (len(self.n_grams_list,)), dtype=object)
         for i in range(n_gram_next.shape[0]):
             n_gram_next[i] = []
 
@@ -102,36 +100,41 @@ class MarkovChain(MusicModel):
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
 
-        assert len(self.tokens)>0, "Model was not initiated with data"
+        assert len(self.tokens) > 0, "Model was not initiated with data"
 
         if seed is None:
             result = self.predict(self.tokens_list[0], 512, True, 0, path)
-            get_file_from_standard_features(result, 500000, path, False, False, False)
+            get_file_from_standard_features(
+                result, 500000, path, False, False, False)
 
         elif isinstance(seed, int):
             # seed decides on length of the sequence
 
             cast(int, seed)
             result = self.predict(self.tokens_list[0], seed, True, 0, path)
-            get_file_from_standard_features(result, 500000, path, False, False, False)
+            get_file_from_standard_features(
+                result, 500000, path, False, False, False)
 
         elif isinstance(seed, list):
             cast(list, seed)
-            if len(seed)==2:
-            # seed decides on length and determinisrtic
+            if len(seed) == 2:
+                # seed decides on length and determinisrtic
 
-                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), 0, path)
-                get_file_from_standard_features(result, 500000, path, False, False, False)
-        
-            elif len(seed)==3:
+                result = self.predict(
+                    self.tokens_list[0], seed[0], bool(seed[1]), 0, path)
+                get_file_from_standard_features(
+                    result, 500000, path, False, False, False)
+
+            elif len(seed) == 3:
                 # seed decides on length, deterministic and random chance
 
-                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), seed[2], path)
-                get_file_from_standard_features(result, 500000, path, False, False, False)
+                result = self.predict(
+                    self.tokens_list[0], seed[0], bool(seed[1]), seed[2], path)
+                get_file_from_standard_features(
+                    result, 500000, path, False, False, False)
 
             else:
                 raise Exception("Incorrect parameters.")
-
 
     def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int, save_path: Path) -> np.ndarray:
 
@@ -173,6 +176,9 @@ class MarkovChain(MusicModel):
 
         return result
 
+    def get_progress_metadata(self) -> ProgressMetadata:
+        return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
+
 
 if __name__ == '__main__':
     dl_path = Path('data')
@@ -181,4 +187,4 @@ if __name__ == '__main__':
     midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
 
     model = MarkovChain()
-    model.train_on_files(midi_paths, 10, lambda epoch, loss: None)
+    model.train_on_files(midi_paths, 10, lambda x: None)

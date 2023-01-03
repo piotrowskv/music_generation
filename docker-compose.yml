@@ -12,7 +12,7 @@ services:
     build:
       context: web
       args:
-        VITE_API_URL: http://localhost:3000
+        VITE_API_URL: localhost:3000
 
     depends_on:
       - backend
