@@ -1,16 +1,12 @@
 from pathlib import Path
 import os
-import glob
 import numpy as np
-import tensorflow as tf
-from sklearn.preprocessing import MinMaxScaler
-from typing import Any, Callable
-from keras.callbacks import Callback, ModelCheckpoint
+from typing import Any
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU, Conv1D, Conv1DTranspose, Activation
 from tensorflow.keras import activations
-from models.music_model import MusicModel
+from models.music_model import MusicModel, ProgressCallback
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
 
@@ -185,7 +181,7 @@ class GAN(MusicModel):
                 os.makedirs(save_gan_path)
             gan.save(save_gan_path + f'/gan_model' +str(step) + '.h5')
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: Callback, checkpoint_path: Path | None = None) -> None:
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
         latent_dim = LATENT_DIM
         real_samples_multiplier= REAL_MULTIPLIER 
         n_batch = N_BATCH

@@ -9,6 +9,7 @@ hypercorn = "*"
 models = {editable = true, path = "./../models"}
 midi = {editable = true, path = "./../midi"}
 python-multipart = "*"
+websockets = "*"
 
 [dev-packages]
 autopep8 = "*"

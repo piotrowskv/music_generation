@@ -2,12 +2,14 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from keras.callbacks import Callback, ModelCheckpoint
+from keras.callbacks import ModelCheckpoint
 from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
 from keras.models import Sequential, load_model
 from midi.decode import get_sequence_of_notes
 
-from ..music_model import MusicModel
+from models.loss_callback import LossCallback
+
+from ..music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 SEQUENCE_LENGTH = 100
 
@@ -15,7 +17,7 @@ SEQUENCE_LENGTH = 100
 class MusicLstm(MusicModel):
     model: Sequential
 
-    def __init__(self, input_shape: int):
+    def __init__(self, input_shape: int = 128):
         self.model = Sequential()
         self.model.add(LSTM(
             256,
@@ -43,9 +45,10 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, loss_callback: Callback, weights_path: Path | None = None) -> None:
-        callbacks = [loss_callback] if weights_path is None else [ModelCheckpoint(
-            weights_path,
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
+        loss_callback = LossCallback(progress_callback)
+        callbacks = [loss_callback] if checkpoint_path is None else [ModelCheckpoint(
+            checkpoint_path,
             monitor='loss',
             verbose=0,
             save_best_only=True,
@@ -95,6 +98,9 @@ class MusicLstm(MusicModel):
         # data = np.array([x[1] for x in midi_input])
         # return data[:data.shape[0]-1, :], data[1:, :]
 
+    def get_progress_metadata(self) -> ProgressMetadata:
+        return ProgressMetadata(x_label='Epoch', y_label='Training loss', legends=['LSTM model'])
+
     def model_summary(self) -> str:
         stringlist = []
         self.model.summary(print_fn=lambda x: stringlist.append(x))
@@ -110,5 +116,5 @@ class MusicLstm(MusicModel):
 if __name__ == '__main__':
     model = MusicLstm(128)
 
-    model.train_on_files(list(Path('./data').glob("*.mid")),
-                         10, lambda epoch, loss: None)
+    model.train_on_files(
+        list(Path('./data').glob("*.mid")), 10, lambda x: None)

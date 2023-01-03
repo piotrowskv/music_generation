@@ -1,4 +1,11 @@
+from __future__ import annotations
+
 from enum import Enum
+
+from models import MusicModel
+from models.gan import GAN as MusicGan
+from models.lstm import MusicLstm
+from models.markov_chain import MarkovChain as MusicMarkov
 
 from app.dto.models import ModelVariant
 
@@ -16,3 +23,20 @@ class SupportedModels(Enum):
         id='eafdabd3-fe56-474d-91be-7a9eeeed2124',
         name='GAN',
         description='Generative model generating the whole song at once.')
+
+    @staticmethod
+    def from_model_id(id: str) -> SupportedModels | None:
+        for model in SupportedModels:
+            if model.value.id == id:
+                return model
+
+        return None
+
+    def get_model(self) -> MusicModel:
+        match self:
+            case self.LSTM:
+                return MusicLstm()
+            case self.GAN:
+                return MusicGan()
+            case self.MARKOV:
+                return MusicMarkov()

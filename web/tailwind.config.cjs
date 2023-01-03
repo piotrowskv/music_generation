@@ -20,6 +20,10 @@ module.exports = {
                     '0%, 100%': { transform: 'rotate(-1deg)' },
                     '50%': { transform: 'rotate(1deg)' },
                 },
+                'wiggle-xl': {
+                    '0%, 100%': { transform: 'rotate(-5deg)' },
+                    '50%': { transform: 'rotate(5deg)' },
+                },
             },
             blur: {
                 xs: '1px',

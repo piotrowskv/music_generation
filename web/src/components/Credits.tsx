@@ -1,11 +1,11 @@
 import { FC } from 'react'
-import Link from './Link'
+import A from './A'
 
 const Credits: FC = () => (
     <div className="text-end text-xs">
         <div>
-            Bachelor project @{' '}
-            <Link href="https://ww2.mini.pw.edu.pl">MiNI</Link> Computer Science
+            Bachelor project @ <A href="https://ww2.mini.pw.edu.pl">MiNI</A>{' '}
+            Computer Science
         </div>
         <div>by Weronika Piotrowska & Szymon Górski & Marcin Wojnarowski</div>
     </div>
