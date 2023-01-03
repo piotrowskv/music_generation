@@ -1,7 +1,11 @@
 import { FC } from 'react'
 
-const LoadingIndicator: FC = () => (
-    <span className="animate-pulse">TODO: cool loading </span>
+type Props = {
+    message: string
+}
+
+const LoadingIndicator: FC<Props> = ({ message }) => (
+    <span className="animate-pulse">{message}</span>
 )
 
 export default LoadingIndicator

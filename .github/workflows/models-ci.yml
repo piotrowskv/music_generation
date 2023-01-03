@@ -44,6 +44,10 @@ jobs:
         run: |
           pipenv run python -m py_compile models/**/*.py
 
+      - name: Check formatting
+        run: |
+          pipenv run autopep8 --diff --recursive --exit-code .
+
       - name: Type check
         run: |
           pipenv run mypy models/ --disallow-untyped-defs --ignore-missing-imports

@@ -1,44 +1,39 @@
-from enum import Enum
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.db import create_database
 from app.dto import models as m
+from app.supported_models import SupportedModels
 
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
     allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-class SupportedModels(Enum):
-    LSTM = m.ModelVariant(
-        id='0f5e5af5-9ede-4cc8-814d-f7a0dfb8a6d6',
-        name='LSTM',
-        description='Sequential model generating each timestep one by one.')
-    MARKOV = m.ModelVariant(
-        id='e5893ba5-1cd1-4153-ac56-6b5898897503',
-        name='Markov Chain',
-        description='Statistical model generating most probable notes.')
-    GAN = m.ModelVariant(
-        id='eafdabd3-fe56-474d-91be-7a9eeeed2124',
-        name='GAN',
-        description='Generative model generating the whole song at once.')
+(training_sessions,) = create_database(Path('.'))
 
 
-@app.get("/models", response_model=m.ModelVariants)
+@app.get("/models", response_model=m.ModelVariants, description="Returns a list of all supported models")
 def get_models() -> m.ModelVariants:
     models = [e.value for e in SupportedModels]
 
     return m.ModelVariants(models)
 
 
-@app.post("/training/session", response_model=None)
-def start_training_session() -> None:
-    # TODO
+@app.post("/training/register", response_model=m.TrainingSessionCreated, description="Registers a new training session and returns the token for it")
+async def register_training(files: list[UploadFile], model_id: str = Form()) -> m.TrainingSessionCreated:
+    for file in files:
+        if file.content_type != "audio/midi":
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded files have to be of mimetype audio/midi")
 
-    return None
+    token = await training_sessions.register_session(model_id, files)
+
+    return m.TrainingSessionCreated(token)
