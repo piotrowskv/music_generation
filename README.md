@@ -42,6 +42,8 @@ Stack:
 
 - [Python](https://www.python.org/)
 - [FastAPI](https://fastapi.tiangolo.com/)
+- [SQLite](https://www.sqlite.org/index.html)
+- [redis](https://redis.io/)
 
 Deployed at [https://vps.shilangyu.dev](https://vps.shilangyu.dev/models)
 
@@ -56,7 +58,7 @@ docker run --rm -p 3000:80 music_generation-back # create container
 
 #### development
 
-You will need [Python 3.10](https://nodejs.org/en/download/current/) and [Pipenv](https://pipenv.pypa.io). Then cd into `backend/`, install dependencies with `pipenv install`, and run the project with `pipenv run python main.py`.
+You will need [Python 3.10](https://nodejs.org/en/download/current/) and [Pipenv](https://pipenv.pypa.io). You will also need a local instance of a redis server (controlled by the env variables `REDIS_{HOSTNAME,PORT}`), you can also spin up a quick redis instance with docker: `docker run -p 6379:6379 -it redis/redis-stack:latest`. Then cd into `backend/`, install dependencies with `pipenv install`, and run the project with `pipenv run python main.py`.
 
 - run tests with `pipenv run pytest`
 - check types with `pipenv run mypy main.py --disallow-untyped-defs`
