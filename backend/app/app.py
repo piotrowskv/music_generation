@@ -102,7 +102,7 @@ async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
             status_code=400,
             detail=f"Model with an ID {training_data.model_id} is not supported")
 
-    meta = model.get_model().get_progress_metadata()
+    meta = model.get_model_type().get_progress_metadata()
 
     try:
         async for a in training_progress.subscribe(session_id):

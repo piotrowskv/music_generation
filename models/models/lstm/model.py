@@ -98,7 +98,8 @@ class MusicLstm(MusicModel):
         # data = np.array([x[1] for x in midi_input])
         # return data[:data.shape[0]-1, :], data[1:, :]
 
-    def get_progress_metadata(self) -> ProgressMetadata:
+    @staticmethod
+    def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Epoch', y_label='Training loss', legends=['LSTM model'])
 
     def model_summary(self) -> str:

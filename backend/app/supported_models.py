@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Type
 
 from models import MusicModel
 from models.gan import GAN as MusicGan
@@ -33,10 +34,13 @@ class SupportedModels(Enum):
         return None
 
     def get_model(self) -> MusicModel:
+        return self.get_model_type()()
+
+    def get_model_type(self) -> Type[MusicModel]:
         match self:
             case self.LSTM:
-                return MusicLstm()
+                return MusicLstm
             case self.GAN:
-                return MusicGan()
+                return MusicGan
             case self.MARKOV:
-                return MusicMarkov()
+                return MusicMarkov
