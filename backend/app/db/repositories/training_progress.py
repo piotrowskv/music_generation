@@ -29,7 +29,8 @@ class TrainingProgressRepository:
         self._ar = ar
 
     def publish_progress(self, session_id: str, progress: TrainingProgress) -> None:
-        serialized = _TrainingProgress.from_dict(asdict(progress)).to_json()
+        serialized = _TrainingProgress.from_dict(  # type: ignore
+            asdict(progress)).to_json()
         self._sr.xadd(session_id, {self._DATA_KEY: serialized})
 
     async def subscribe(self, session_id: str) -> AsyncIterable[TrainingProgress]:
@@ -43,7 +44,8 @@ class TrainingProgressRepository:
                 _, messages = response[0]
                 last_id, data = messages[0]
 
-                progress = _TrainingProgress.from_json(data[self._DATA_KEY])
+                progress = _TrainingProgress.from_json(  # type: ignore
+                    data[self._DATA_KEY])
                 progress = TrainingProgress(progress.finished, progress.series)
 
                 yield progress

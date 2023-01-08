@@ -20,8 +20,8 @@ def create_database(directory: Path) -> tuple[TrainingSessionsRepository, Traini
 
     sr = SyncRedis(host=Env.redis_hostname,
                    port=Env.redis_port, retry_on_timeout=True, decode_responses=True)
-    ar = AsyncRedis(host=Env.redis_hostname,
-                    port=Env.redis_port, retry_on_timeout=True, decode_responses=True)
+    ar: AsyncRedis = AsyncRedis(host=Env.redis_hostname,
+                                port=Env.redis_port, retry_on_timeout=True, decode_responses=True)
 
     training_progress = TrainingProgressRepository(sr, ar)
 

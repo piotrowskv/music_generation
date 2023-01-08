@@ -44,3 +44,4 @@ class SupportedModels(Enum):
                 return MusicGan
             case self.MARKOV:
                 return MusicMarkov
+        raise NotImplementedError

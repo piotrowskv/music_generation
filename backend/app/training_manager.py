@@ -2,7 +2,7 @@ import shutil
 import tempfile
 import uuid
 from pathlib import Path
-from typing import AsyncIterator
+from typing import AsyncIterable
 
 from models.music_model import MusicModel, TrainingProgress
 
@@ -36,5 +36,5 @@ class TrainingManager:
 
         shutil.rmtree(dir)
 
-    async def subscribe(self, session_id: str) -> AsyncIterator[TrainingProgress]:
+    async def subscribe(self, session_id: str) -> AsyncIterable[TrainingProgress]:
         return self._progress_repo.subscribe(session_id)
