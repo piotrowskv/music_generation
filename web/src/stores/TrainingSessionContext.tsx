@@ -53,13 +53,16 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
                 finished: msg.finished,
                 x_label: msg.x_label,
                 y_label: msg.y_label,
-                chart_series: msg.chart_series.map((e, i) => ({
-                    legend: e.legend,
-                    points: [
-                        ...(state.chart_series[i]?.points ?? []),
-                        ...e.points,
-                    ],
-                })),
+                chart_series:
+                    msg.chart_series.length === 0
+                        ? state.chart_series
+                        : msg.chart_series.map((e, i) => ({
+                              legend: e.legend,
+                              points: [
+                                  ...(state.chart_series[i]?.points ?? []),
+                                  ...e.points,
+                              ],
+                          })),
             }))
         )
     }
