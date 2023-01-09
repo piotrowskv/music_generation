@@ -105,6 +105,14 @@ async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
     meta = model.get_model_type().get_progress_metadata()
 
     try:
+        await websocket.send_json(
+            m.TrainingProgress(
+                finished=False,
+                x_label=meta.x_label,
+                y_label=meta.y_label,
+                legends=meta.legends,
+                chart_series_points=[]).dict())
+
         async for points in training_progress.subscribe(session_id):
             await websocket.send_json(
                 m.TrainingProgress(
