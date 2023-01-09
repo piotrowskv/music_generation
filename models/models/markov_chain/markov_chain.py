@@ -10,17 +10,18 @@ from midi.encode import get_file_from_standard_features
 
 from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 
-N_GRAM = 10
-
 
 class MarkovChain(MusicModel):
-    def __init__(self) -> None:
+    n_gram_size: int
+
+    def __init__(self, n_gram_size=3) -> None:
         self.data: list = []
         self.tokens: set = set()
         self.n_grams: set = set()
         self.tokens_list: list[tuple] = []
         self.n_grams_list: list[tuple] = []
         self.probabilities: np.ndarray
+        self.n_gram_size = n_gram_size
 
     def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
         # count probabilities
@@ -66,7 +67,7 @@ class MarkovChain(MusicModel):
     def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
 
         self.generate_tokens()
-        self.generate_n_grams(N_GRAM)
+        self.generate_n_grams(self.n_gram_size)
         return (0, 0)
 
     def generate_tokens(self) -> None:
@@ -105,7 +106,7 @@ class MarkovChain(MusicModel):
 
     def model_summary(self) -> str:
         return (
-            "Markov chain basing on " + str(N_GRAM) + "-grams:\n" + str(len(self.tokens_list)) + " tokens\n" +
+            "Markov chain basing on " + str(self.n_gram_size) + "-grams:\n" + str(len(self.tokens_list)) + " tokens\n" +
             str(len(self.n_grams_list)) + " n_grams\n" +
             str(len(self.data)) + " files"
         )
