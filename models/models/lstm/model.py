@@ -113,6 +113,9 @@ class MusicLstm(MusicModel):
     def load(self, path: Path) -> None:
         self.model = load_model(path)
 
+    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+        raise NotImplementedError
+
 
 if __name__ == '__main__':
     model = MusicLstm(128)
