@@ -36,14 +36,9 @@ class ChartPoint(BaseModel):
 
 
 @dataclass(frozen=True)
-class ChartSeries(BaseModel):
-    legend: str
-    points: list[ChartPoint]
-
-
-@dataclass(frozen=True)
 class TrainingProgress(BaseModel):
     finished: bool
     x_label: str
     y_label: str
-    chart_series: list[ChartSeries]
+    legends: list[str]
+    chart_series_points: list[list[ChartPoint]]

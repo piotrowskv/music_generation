@@ -10,7 +10,7 @@ from midi.encode import get_file_from_standard_features
 
 from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 
-N_GRAM = 3
+N_GRAM = 10
 
 
 class MarkovChain(MusicModel):
@@ -31,7 +31,6 @@ class MarkovChain(MusicModel):
             n_gram_next[i] = []
 
         for i in range(len(self.data)):
-            print(str(i) + "/" + str(len(self.data)))
             for j in range(len(self.data[i])-n-1):
                 curr_n_gram = tuple(self.data[i][j:j+n])
                 next_note = self.data[i][j+n+1]
@@ -46,10 +45,12 @@ class MarkovChain(MusicModel):
         start = time.time()
         time.perf_counter()
 
-        for i in range(len(n_gram_next)):
+        len_n_gram_next = len(n_gram_next)
 
-            elapsed = time.time() - start
-            progress_callback([(elapsed, 100*i/len(n_gram_next))])
+        for i in range(len_n_gram_next):
+            if len_n_gram_next < 100 or i % (len_n_gram_next // 100) == 0:
+                elapsed = time.time() - start
+                progress_callback([(elapsed, 100*i/len_n_gram_next)])
 
             for j in range(len(n_gram_next[i])):
                 if len(n_gram_next[i]) <= 1:
@@ -58,6 +59,9 @@ class MarkovChain(MusicModel):
                     if self.probabilities[i].get(n_gram_next[i][j]) is None:
                         self.probabilities[i][n_gram_next[i][j]] = float(
                             n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
+
+        elapsed = time.time() - start
+        progress_callback([(elapsed, 100)])
 
     def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
 

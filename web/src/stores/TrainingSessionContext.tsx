@@ -4,7 +4,6 @@ import { PathParamsFor } from 'ts-routes'
 import { apiClient } from '../api'
 import {
     ChartPoint,
-    ChartSeries,
     TrainingProgress,
     TrainingSession,
 } from '../api/dto/models'
@@ -33,7 +32,8 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
         finished: false,
         x_label: '',
         y_label: '',
-        chart_series: [],
+        legends: [],
+        chart_series_points: [],
     })
 
     const {
@@ -53,29 +53,22 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
                 finished: msg.finished,
                 x_label: msg.x_label,
                 y_label: msg.y_label,
-                chart_series:
-                    msg.chart_series.length === 0
-                        ? state.chart_series
-                        : msg.chart_series.map((e, i) => ({
-                              legend: e.legend,
-                              points: [
-                                  ...(state.chart_series[i]?.points ?? []),
-                                  ...e.points,
-                              ],
-                          })),
+                legends: msg.legends,
+                chart_series_points: [
+                    ...state.chart_series_points,
+                    ...msg.chart_series_points,
+                ],
             }))
         )
     }
-
-    const dataPoints = transformChartSeries(trainingData.chart_series)
 
     return (
         <TrainingSessionContext.Provider
             value={{
                 xLabel: trainingData.x_label,
                 yLabel: trainingData.y_label,
-                legends: trainingData.chart_series.map(e => e.legend),
-                dataPoints,
+                legends: trainingData.legends,
+                dataPoints: trainingData.chart_series_points,
                 trainingFinished: trainingData.finished,
                 init,
                 initialLoading,
@@ -90,13 +83,3 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
 
 export const useTrainingSessionContext = () =>
     useContext(TrainingSessionContext)
-
-function transformChartSeries(series: ChartSeries[]): ChartPoint[][] {
-    const dataPoints = []
-    const longest = Math.max(...series.map(e => e.points.length))
-    for (let i = 0; i < longest; i++) {
-        dataPoints.push(series.map(e => e.points[i]))
-    }
-
-    return dataPoints
-}

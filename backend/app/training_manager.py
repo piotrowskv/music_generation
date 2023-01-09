@@ -4,9 +4,10 @@ import uuid
 from pathlib import Path
 from typing import AsyncIterable
 
-from models.music_model import MusicModel, TrainingProgress
+from models.music_model import MusicModel
 
 from app.db import TrainingProgressRepository
+from app.db.repositories.training_progress import ProgressList
 
 
 class TrainingManager:
@@ -36,5 +37,5 @@ class TrainingManager:
 
         shutil.rmtree(dir)
 
-    async def subscribe(self, session_id: str) -> AsyncIterable[TrainingProgress]:
+    async def subscribe(self, session_id: str) -> AsyncIterable[ProgressList]:
         return self._progress_repo.subscribe(session_id)

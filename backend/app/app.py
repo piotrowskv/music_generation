@@ -105,17 +105,24 @@ async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
     meta = model.get_model_type().get_progress_metadata()
 
     try:
-        async for a in training_progress.subscribe(session_id):
+        async for points in training_progress.subscribe(session_id):
             await websocket.send_json(
                 m.TrainingProgress(
-                    finished=a.finished,
+                    finished=False,
                     x_label=meta.x_label,
                     y_label=meta.y_label,
-                    chart_series=[
-                        m.ChartSeries(
-                            legend=meta.legends[i],
-                            points=[m.ChartPoint(x, y)]) for (i, (x, y)) in enumerate(a.series)
+                    legends=meta.legends,
+                    chart_series_points=[
+                        [m.ChartPoint(x, y) for (x, y) in series] for series in points
                     ]).dict())
+
+        await websocket.send_json(
+            m.TrainingProgress(
+                finished=True,
+                x_label=meta.x_label,
+                y_label=meta.y_label,
+                legends=meta.legends,
+                chart_series_points=[]).dict())
 
     except WebSocketDisconnect:
         await websocket.close()
