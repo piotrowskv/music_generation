@@ -1,4 +1,5 @@
 import random
+import time
 from pathlib import Path
 from typing import Any, cast
 
@@ -7,21 +8,20 @@ from midi.bach import download_bach_dataset
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
 
-import time
-
-from models.music_model import MusicModel, ProgressCallback, ProgressMetadata, SeriesProgress
-
-N_GRAM = 3
+from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 
 class MarkovChain(MusicModel):
-    def __init__(self) -> None:
+    n_gram_size: int
+
+    def __init__(self, n_gram_size=3) -> None:
         self.data: list = []
         self.tokens: set = set()
         self.n_grams: set = set()
         self.tokens_list: list[tuple] = []
         self.n_grams_list: list[tuple] = []
         self.probabilities: np.ndarray
+        self.n_gram_size = n_gram_size
 
     def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
         # count probabilities
@@ -32,7 +32,6 @@ class MarkovChain(MusicModel):
             n_gram_next[i] = []
 
         for i in range(len(self.data)):
-            print(str(i) + "/" + str(len(self.data)))
             for j in range(len(self.data[i])-n-1):
                 curr_n_gram = tuple(self.data[i][j:j+n])
                 next_note = self.data[i][j+n+1]
@@ -44,15 +43,16 @@ class MarkovChain(MusicModel):
         for i in range(n_gram_next.shape[0]):
             self.probabilities[i] = {}
 
-
         start = time.time()
         time.perf_counter()
 
-        for i in range(len(n_gram_next)):
+        len_n_gram_next = len(n_gram_next)
 
-            elapsed = time.time() - start
-            progress_callback([(elapsed, 100*i/len(n_gram_next))])
-            
+        for i in range(len_n_gram_next):
+            if len_n_gram_next < 100 or i % (len_n_gram_next // 100) == 0:
+                elapsed = time.time() - start
+                progress_callback([(elapsed, 100*i/len_n_gram_next)])
+
             for j in range(len(n_gram_next[i])):
                 if len(n_gram_next[i]) <= 1:
                     self.probabilities[n_gram_next[i]][j] = 1
@@ -61,10 +61,13 @@ class MarkovChain(MusicModel):
                         self.probabilities[i][n_gram_next[i][j]] = float(
                             n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
 
+        elapsed = time.time() - start
+        progress_callback([(elapsed, 100)])
+
     def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
 
         self.generate_tokens()
-        self.generate_n_grams(N_GRAM)
+        self.generate_n_grams(self.n_gram_size)
         return (0, 0)
 
     def generate_tokens(self) -> None:
@@ -103,7 +106,7 @@ class MarkovChain(MusicModel):
 
     def model_summary(self) -> str:
         return (
-            "Markov chain basing on " + str(N_GRAM) + "-grams:\n" + str(len(self.tokens_list)) + " tokens\n" +
+            "Markov chain basing on " + str(self.n_gram_size) + "-grams:\n" + str(len(self.tokens_list)) + " tokens\n" +
             str(len(self.n_grams_list)) + " n_grams\n" +
             str(len(self.data)) + " files"
         )
@@ -186,7 +189,8 @@ class MarkovChain(MusicModel):
 
         return result
 
-    def get_progress_metadata(self) -> ProgressMetadata:
+    @staticmethod
+    def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
 
 

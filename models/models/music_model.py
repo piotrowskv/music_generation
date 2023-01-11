@@ -58,8 +58,9 @@ class MusicModel(ABC):
 
         progress_callback(TrainingProgress(finished=True, series=[]))
 
+    @staticmethod
     @abstractmethod
-    def get_progress_metadata(self) -> ProgressMetadata:
+    def get_progress_metadata() -> ProgressMetadata:
         """
         Returns information needed to describe the progress data.
         """

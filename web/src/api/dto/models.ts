@@ -17,16 +17,12 @@ export type ChartPoint = {
     y: number
 }
 
-export type ChartSeries = {
-    legend: string
-    points: ChartPoint[]
-}
-
 export type TrainingProgress = {
     finished: boolean
     x_label: string
     y_label: string
-    chart_series: ChartSeries[]
+    legends: string[]
+    chart_series_points: ChartPoint[][]
 }
 
 export type TrainingSession = {

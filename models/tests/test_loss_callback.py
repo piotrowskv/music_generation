@@ -26,4 +26,4 @@ def test_calls_back_with_epoch():
 
     callback.on_epoch_end(1, {'loss': 12.0})
 
-    assert called_epoch == 1
+    assert called_epoch == 2

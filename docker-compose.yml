@@ -1,9 +1,22 @@
 version: "3.9"
 
 services:
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
+    expose:
+      - "6379"
+
   backend:
     build:
       dockerfile: backend.Dockerfile
+      args:
+        REDIS_HOSTNAME: localhost
+        REDIS_PORT: 6379
+
+    depends_on:
+      - redis
 
     ports:
       - 127.0.0.1:3000:80

@@ -32,7 +32,7 @@ const TrainingChart: FC<Props> = () => {
                 <Legend align="right" />
                 <Tooltip contentStyle={{ color: '#292929' }} />
                 {[...new Array(dataPoints[0]?.length ?? 0)].map((_, i) => (
-                    <XAxis dataKey={obj => obj[i].x} key={i} type="number">
+                    <XAxis dataKey={obj => obj[i]?.x} key={i} type="number">
                         <Label offset={-2} position="insideBottom">
                             {xLabel}
                         </Label>
@@ -51,7 +51,7 @@ const TrainingChart: FC<Props> = () => {
                 {[...new Array(dataPoints[0]?.length ?? 0)].map((_, i) => (
                     <Line
                         type="monotone"
-                        dataKey={obj => obj[i].y}
+                        dataKey={obj => obj[i]?.y}
                         stroke={getSeriesColor(i)}
                         name={legends[i]}
                         key={i}

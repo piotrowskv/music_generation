@@ -10,12 +10,16 @@ models = {editable = true, path = "./../models"}
 midi = {editable = true, path = "./../midi"}
 python-multipart = "*"
 websockets = "*"
+redis = "*"
+python-dotenv = "*"
+dataclasses-json = "*"
 
 [dev-packages]
 autopep8 = "*"
 pytest = "*"
 httpx = "*"
 mypy = "*"
+types-redis = "*"
 
 [requires]
 python_version = "3.10"

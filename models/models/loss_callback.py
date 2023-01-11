@@ -19,4 +19,4 @@ class LossCallback(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch: int, logs: dict[str, Any] | None = None) -> None:
         if logs is not None:
-            self.callback([(epoch, logs['loss'])])
+            self.callback([(epoch+1, logs['loss'])])

@@ -13,6 +13,12 @@ class TrainingSessionData:
     training_file_names: list[str]
 
 
+@dataclass(frozen=True)
+class TrainingData:
+    model_id: str
+    midi: list[bytes]
+
+
 class TrainingSessionsRepository:
     SESSIONS_TABLE_NAME = "training_sessions"
     FILES_TABLE_NAME = "training_session_files"
@@ -85,3 +91,25 @@ class TrainingSessionsRepository:
             return None
 
         return TrainingSessionData(model_id, create_date, filenames)
+
+    async def get_training_data(self, session_id: str) -> TrainingData | None:
+        """
+        Finds a training session and returns training data for it.
+        Returns None if the session was not found.
+        """
+
+        model_id: str
+        midi: list[bytes] = []
+
+        for r in self._conn.execute(f"""
+            SELECT s.model_id, f.midi_file FROM {self.SESSIONS_TABLE_NAME} AS s
+            INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
+            WHERE s.session_id=?
+            """, (session_id,)):
+            model_id = r[0]
+            midi.append(r[1])
+
+        if len(midi) == 0:
+            return None
+
+        return TrainingData(model_id, midi)
