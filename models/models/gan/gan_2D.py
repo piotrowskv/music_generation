@@ -229,7 +229,7 @@ class GAN(MusicModel):
             disc_loss_real /= n_batch
             disc_loss_fake /= n_batch
             disc_accuracy = (disc_data_real[1] + disc_data_fake[1]) / 2
-            
+
             big_x_gan = self.generate_latent_points(latent_dim, n_batch)
             y_gan = np.zeros((n_batch, 1)) * real_samples_multiplier
             g_data = self.model.train_on_batch(big_x_gan, y_gan)
