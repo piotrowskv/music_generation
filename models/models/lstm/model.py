@@ -45,7 +45,12 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
+    def train(self,
+              epochs: int,
+              xtrain: Any,
+              ytrain: Any,
+              progress_callback: ProgressCallback,
+              checkpoint_path: Path | None = None) -> None:
         loss_callback = LossCallback(progress_callback)
         callbacks = [loss_callback] if checkpoint_path is None else [ModelCheckpoint(
             checkpoint_path,
@@ -63,7 +68,8 @@ class MusicLstm(MusicModel):
             callbacks=callbacks
         )
 
-    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
+    def create_dataset(self,
+                       dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
         notes_input = []
         notes_output = []
 
@@ -74,7 +80,8 @@ class MusicLstm(MusicModel):
         return np.asarray(notes_input), np.asarray(notes_output)
         # return [x for (x, y) in dataset], [y for (x, y) in dataset]
 
-    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
+    def prepare_data(self,
+                     midi_file: Path) -> tuple[Any, Any]:
         midi_input = get_sequence_of_notes(str(midi_file), True, True, False)
 
         notes_sequences = []
@@ -86,8 +93,6 @@ class MusicLstm(MusicModel):
             notes_sequences.append(notes_sequence)
             notes_predictions.append(midi_input[i+SEQUENCE_LENGTH][1])
 
-        return np.array(notes_sequences), np.array(notes_predictions)
-
         """
         TODO: ideally, data should be as below. LSTM is supposed to predict
         sequences, where a single sequence is the whole song. SEQUENCE_LENGTH
@@ -98,7 +103,8 @@ class MusicLstm(MusicModel):
         # data = np.array([x[1] for x in midi_input])
         # return data[:data.shape[0]-1, :], data[1:, :]
 
-    @staticmethod
+        return np.array(notes_sequences), np.array(notes_predictions)
+
     def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Epoch', y_label='Training loss', legends=['LSTM model'])
 
@@ -107,10 +113,12 @@ class MusicLstm(MusicModel):
         self.model.summary(print_fn=lambda x: stringlist.append(x))
         return "\n".join(stringlist)
 
-    def save(self, path: Path) -> None:
+    def save(self,
+             path: Path) -> None:
         self.model.save(path)
 
-    def load(self, path: Path) -> None:
+    def load(self,
+             path: Path) -> None:
         self.model = load_model(path)
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:

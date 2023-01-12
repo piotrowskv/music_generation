@@ -33,14 +33,23 @@ class MusicModel(ABC):
     """
 
     @abstractmethod
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
+    def train(self,
+              epochs: int,
+              xtrain: Any,
+              ytrain: Any,
+              progress_callback: ProgressCallback,
+              checkpoint_path: Path | None = None) -> None:
         """
         Trains the model with processed by `prepare_data` x/y train data. When `checkpoint_path` is provided, model
         should save progress to the pointed path. 
         """
         raise NotImplementedError
 
-    def train_on_files(self, midi_files: list[Path], epochs: int, progress_callback: CompleteProgressCallback, checkpoint_path: Path | None = None) -> None:
+    def train_on_files(self,
+                       midi_files: list[Path],
+                       epochs: int,
+                       progress_callback: CompleteProgressCallback,
+                       checkpoint_path: Path | None = None) -> None:
         """
         Trains the model on a given set of files.
         """
@@ -67,14 +76,16 @@ class MusicModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
+    def create_dataset(self,
+                       dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
         """
         Merges results of multiple `prepare_data` into model's input/output.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
+    def prepare_data(self,
+                     midi_file: Path) -> tuple[Any, Any]:
         """
         Given a path to a midi file returns prepared input/output.
         """
@@ -88,21 +99,24 @@ class MusicModel(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def save(self, path: Path) -> None:
+    def save(self,
+             path: Path) -> None:
         """
         Saves the current model into `path`.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def load(self, path: Path) -> None:
+    def load(self,
+             path: Path) -> None:
         """
         Loads the model from `path`.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+    def generate(self,
+                 path: Path, seed: int | list[int] | None = None) -> None:
         """
         Generates a sample and saves it as a .mid file as `path`.
         """

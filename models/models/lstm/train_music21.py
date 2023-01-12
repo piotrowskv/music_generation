@@ -9,7 +9,9 @@ from keras.models import Sequential
 SEQUENCE_LENGTH = 100
 
 
-def train_music21_network(lstm_model: Sequential, lstm_input: Any, lstm_output: Any) -> None:
+def train_music21_network(lstm_model: Sequential,
+                          lstm_input: Any,
+                          lstm_output: Any) -> None:
     filepath = 'weights.hdf5'
     checkpoint = ModelCheckpoint(
         filepath,
@@ -93,7 +95,7 @@ def run_music21_features() -> None:
     features_input = []
     features_output = []
 
-    for name in os.listdir('../../../sequences'):  # or '../../../data'
+    for name in os.listdir('../../../sequences'):
         path = os.path.join('../../../sequences', name)
 
         try:
@@ -102,11 +104,11 @@ def run_music21_features() -> None:
             features_input.extend(sequences)
             features_output.extend(predictions)
 
-        except Exception as ex:
+        except Exception:
             print(f'failed to load {name}')
 
-    ni = np.asarray(sequences)
-    no = np.asarray(predictions)
+    ni = np.asarray(features_input)
+    no = np.asarray(features_output)
 
     model = get_music21_network(ni.shape)
     train_music21_network(model, ni, no)
