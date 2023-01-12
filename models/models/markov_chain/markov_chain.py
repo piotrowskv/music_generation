@@ -56,7 +56,7 @@ class MarkovChain(MusicModel):
         for i in range(len_n_gram_next):
             if len_n_gram_next < 100 or i % (len_n_gram_next // 100) == 0:
                 elapsed = time.time() - start
-                progress_callback([(elapsed, 100*i/len_n_gram_next)])
+                progress_callback([(elapsed, 100 * i / len_n_gram_next)])
 
             for j in range(len(n_gram_next[i])):
                 if len(n_gram_next[i]) <= 1:
@@ -114,13 +114,11 @@ class MarkovChain(MusicModel):
         print(str(len(self.n_grams_list)) + " " + str(n) + "-grams generated!")
 
     def model_summary(self) -> str:
-        return (
-                "Markov chain basing on " + 
+        return ("Markov chain basing on " +
                 str(self.n_gram_size) + "-grams:\n" +
                 str(len(self.tokens_list)) + " tokens\n" +
                 str(len(self.n_grams_list)) + " n_grams\n" +
-                str(len(self.data)) + " files"
-        )
+                str(len(self.data)) + " files")
 
     def generate(self,
                  path: Path,
