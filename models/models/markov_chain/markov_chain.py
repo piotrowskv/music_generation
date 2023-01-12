@@ -23,16 +23,14 @@ class MarkovChain(MusicModel):
         self.probabilities: np.ndarray
         self.n_gram_size = n_gram_size
 
-    def train(self,
-              epochs: int,
-              xtrain: Any,
-              ytrain: Any,
-              progress_callback: ProgressCallback,
+    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
+
         # count probabilities
         n = len(self.n_grams_list[0])
         n_gram_next: np.ndarray = np.ndarray(
             (len(self.n_grams_list, )), dtype=object)
+
         for i in range(n_gram_next.shape[0]):
             n_gram_next[i] = []
 
@@ -87,23 +85,19 @@ class MarkovChain(MusicModel):
                 self.data[i][j] = tuple(notes)
                 self.tokens.add(tuple(notes))
 
-    def prepare_data(self,
-                     midi_file: Path) -> tuple[Any, Any]:  # TODO: determine the correct return
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:  # TODO: determine the correct return
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
         return data_lines
 
-    def save(self,
-             path: Path) -> None:
+    def save(self, path: Path) -> None:
         np.save(path, np.asarray(self.probabilities))
 
-    def load(self,
-             path: Path) -> None:
+    def load(self, path: Path) -> None:
         self.probabilities = np.load(path, allow_pickle=True)
 
-    def generate_n_grams(self,
-                         n: int) -> None:
+    def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
         for i in range(len(self.data)):
             for j in range(len(self.data[i]) - n + 1):
@@ -120,51 +114,39 @@ class MarkovChain(MusicModel):
                 str(len(self.n_grams_list)) + " n_grams\n" +
                 str(len(self.data)) + " files")
 
-    def generate(self,
-                 path: Path,
-                 seed: int | list[int] | None = None) -> None:
+    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
 
         assert len(self.tokens) > 0, "Model was not initiated with data"
 
         if seed is None:
             result = self.predict(self.tokens_list[0], 512, True, 0, path)
-            get_file_from_standard_features(
-                result, 500000, path, False, False, False)
+            get_file_from_standard_features(result, 500000, path, False, False, False)
 
         elif isinstance(seed, int):
             # seed decides on length of the sequence
 
             cast(int, seed)
             result = self.predict(self.tokens_list[0], seed, True, 0, path)
-            get_file_from_standard_features(
-                result, 500000, path, False, False, False)
+            get_file_from_standard_features(result, 500000, path, False, False, False)
 
         elif isinstance(seed, list):
             cast(list, seed)
             if len(seed) == 2:
                 # seed decides on length and deterministic
 
-                result = self.predict(
-                    self.tokens_list[0], seed[0], bool(seed[1]), 0, path)
-                get_file_from_standard_features(
-                    result, 500000, path, False, False, False)
+                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), 0, path)
+                get_file_from_standard_features(result, 500000, path, False, False, False)
 
             elif len(seed) == 3:
                 # seed decides on length, deterministic and random chance
 
-                result = self.predict(
-                    self.tokens_list[0], seed[0], bool(seed[1]), seed[2], path)
-                get_file_from_standard_features(
-                    result, 500000, path, False, False, False)
+                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), seed[2], path)
+                get_file_from_standard_features(result, 500000, path, False, False, False)
 
             else:
                 raise Exception("Incorrect parameters.")
 
-    def predict(self,
-                initial_notes: tuple,
-                length: int,
-                deterministic: bool,
-                rand: int,
+    def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int,
                 save_path: Path) -> np.ndarray:
 
         # deterministic - if True, next note will be always note with maximum probability
@@ -173,14 +155,17 @@ class MarkovChain(MusicModel):
 
         prediction = []
         previous_n_gram = initial_notes
+
         for i in range(len(initial_notes)):
             prediction.append(initial_notes[i])
+
         for i in range(length):
             idx = None
             if previous_n_gram in self.n_grams:
                 idx = self.n_grams_list.index(previous_n_gram)
             else:
                 idx = random.randrange(len(self.probabilities))
+
             probs = self.probabilities[idx]
             while len(probs) == 0:
                 idx = random.randrange(len(self.probabilities))
@@ -194,6 +179,7 @@ class MarkovChain(MusicModel):
             else:
                 next_note = random.choices(
                     list(probs.keys()), weights=probs.values(), k=1)[0]
+
             previous_n_gram = previous_n_gram[1:] + (next_note,)
             prediction.append(next_note)
 

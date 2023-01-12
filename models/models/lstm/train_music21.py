@@ -9,9 +9,7 @@ from keras.models import Sequential
 SEQUENCE_LENGTH = 100
 
 
-def train_music21_network(lstm_model: Sequential,
-                          lstm_input: Any,
-                          lstm_output: Any) -> None:
+def train_music21_network(lstm_model: Sequential, lstm_input: Any, lstm_output: Any) -> None:
     filepath = 'weights.hdf5'
     checkpoint = ModelCheckpoint(
         filepath,

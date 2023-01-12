@@ -162,7 +162,7 @@ def prepare_meta_file(tempos: list[int],
                       ticks_per_beat: int = TICKS_PER_BEAT) -> Tuple[list[int], float, MidiFile]:
     """
     generates a MIDI file with MetaMessages tempo track from the tempos' array
-    
+
     :param tempos:
     :param grid_accuracy:
     :param event_lengths:

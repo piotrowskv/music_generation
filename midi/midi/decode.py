@@ -31,9 +31,9 @@ class EventNote:
     def __eq__(self,
                other: Any) -> bool:
         return self.velocity == other.velocity and \
-               self.height == other.height and \
-               self.tone == other.tone and \
-               self.octave == other.octave
+            self.height == other.height and \
+            self.tone == other.tone and \
+            self.octave == other.octave
 
     def __repr__(self) -> str:
         return f'EventNote({self.velocity}, {self.height})'
@@ -76,8 +76,8 @@ class ActiveElement:
     def __eq__(self,
                other: Any) -> bool:
         return self.height == other.height and \
-               self.value == other.value and \
-               self.use_velocities == other.use_velocities
+            self.value == other.value and \
+            self.use_velocities == other.use_velocities
 
     def __repr__(self) -> str:
         return f'ActiveElement({self.height}, {self.value}, {self.use_velocities})'
@@ -126,13 +126,13 @@ class Event:
     def __eq__(self,
                other: Any) -> bool:
         return self.time == other.time and \
-               self.length == other.length and \
-               self.offset == other.offset and \
-               self.track == other.track and \
-               self.tempo == other.tempo and \
-               self.active_notes == other.active_notes and \
-               self.all_notes == other.all_notes and \
-               self.use_velocities == other.use_velocities
+            self.length == other.length and \
+            self.offset == other.offset and \
+            self.track == other.track and \
+            self.tempo == other.tempo and \
+            self.active_notes == other.active_notes and \
+            self.all_notes == other.all_notes and \
+            self.use_velocities == other.use_velocities
 
     def __repr__(self) -> str:
         out_str = f'Event({self.time}, {self.length}, {self.offset}, {self.track}, {self.tempo}, '

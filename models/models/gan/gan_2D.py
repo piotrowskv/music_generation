@@ -1,15 +1,15 @@
-from pathlib import Path
 import os
 import numpy as np
 from typing import Any
+from pathlib import Path
+
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU, Conv1D, Conv1DTranspose, Activation
 from tensorflow.keras import activations
-from models.music_model import MusicModel, ProgressCallback
+
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
-
 from models.music_model import MusicModel, ProgressCallback, ProgressMetadata, SeriesProgress
 
 DATA_PATH = 'data'
@@ -18,7 +18,6 @@ AVG = 512  # length of generated array
 
 LATENT_DIM = 512  # dimension of latent space
 # higher LATENT_DIM -> samples produced by generator converge more to dataset
-
 
 REAL_MULTIPLIER = 1.0  # multiplier of real samples [0; 1];
 # if it's closer to 0, discriminator will struggle to distinguish real and fake samples more
@@ -29,6 +28,7 @@ THRESHOLD = 0.7  # threshold of probability while generating a midi file
 # GAN generates probabilities that note is on during specific time unit
 
 N_BATCH = 10  # number of batches the dataset is divided into
+
 
 # physical_devices = tf.config.experimental.list_physical_devices('GPU')
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -92,9 +92,9 @@ class GAN(MusicModel):
     def load(self, path: Path) -> None:
         # path to GAN defined exactly like in define_gan
         self.model = load_model(path)
-        assert len(self.model.layers) == 3 \
-               and self.model.layers[0].name == 'sequential_1' \
-               and self.model.layers[1].name == 'sequential', "Incorrect model."
+        assert len(self.model.layers) == 3
+        assert self.model.layers[0].name == 'sequential_1'
+        assert self.model.layers[1].name == 'sequential', "Incorrect model."
 
         self.generator = self.model.get_layer('sequential')
         self.discriminator = self.model.get_layer('sequential_1')
@@ -197,13 +197,13 @@ class GAN(MusicModel):
                 os.makedirs(save_gan_path)
             gan.save(save_gan_path + f'/gan_model' + str(step) + '.h5')
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
         latent_dim = LATENT_DIM
         real_samples_multiplier = REAL_MULTIPLIER
         n_batch = N_BATCH
         save_step = SAVE_STEP
-        batch_per_epoch = len(xtrain) // n_batch
+        batch_per_epoch = len(x_train) // n_batch
         half_batch = n_batch // 2
         seed = self.generate_latent_points(latent_dim, 128)
         n_steps = batch_per_epoch * epochs
@@ -218,7 +218,7 @@ class GAN(MusicModel):
             disc_accuracy = 0.0
 
             for disc_batch in range(n_batch):
-                big_x_real, y_real = self.generate_real_samples(xtrain, half_batch)
+                big_x_real, y_real = self.generate_real_samples(x_train, half_batch)
                 disc_data_real = self.discriminator.train_on_batch(big_x_real, y_real)
                 disc_loss_real += disc_data_real[0]
 
@@ -229,13 +229,13 @@ class GAN(MusicModel):
             disc_loss_real /= n_batch
             disc_loss_fake /= n_batch
             disc_accuracy = (disc_data_real[1] + disc_data_fake[1]) / 2
+            
             big_x_gan = self.generate_latent_points(latent_dim, n_batch)
             y_gan = np.zeros((n_batch, 1)) * real_samples_multiplier
             g_data = self.model.train_on_batch(big_x_gan, y_gan)
             g_loss = g_data[0]
 
-            progress_callback(
-                [((disc_loss_real + disc_loss_fake) / 2, step), (g_loss, step)])
+            progress_callback([((disc_loss_real + disc_loss_fake) / 2, step), (g_loss, step)])
 
             history['discriminator_real_loss'].append(disc_loss_real)
             history['discriminator_fake_loss'].append(disc_loss_fake)
@@ -264,11 +264,11 @@ if __name__ == '__main__':
     '''
     g = GAN()
     midi_paths = []
-    for dirpath, dirs, files in os.walk(DATA_PATH): 
+    for dir_path, dirs, files in os.walk(DATA_PATH): 
         for filename in files:
-            fname = os.path.join(dirpath,filename)
-            if fname.endswith('.mid'):
-                midi_paths.append(fname)
+            f_name = os.path.join(dir_path,filename)
+            if f_name.endswith('.mid'):
+                midi_paths.append(f_name)
     print(len(g.data))
     g.train_on_files(midi_paths, 16, lambda epoch, loss : None, checkpoint_path='idk')
     '''

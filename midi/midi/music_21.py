@@ -26,7 +26,7 @@ def check_number_of_tracks(array: list[list[Tuple[int, list[int]]]],
 def get_event_lists(array: list[list[Tuple[int, list[int]]]]) -> Tuple[list[list[list[int]]], list[int]]:
     """
     translates a multi-track array representing notes into a list of events with active notes
-    
+
     :param array: 
     :return: 
     """
@@ -84,7 +84,7 @@ def insert_meta_features(partial_features: list[list[float]],
     """
     processes arrays of tempos and events' lengths,
     then adds two rows of respective features to already existing list of features
-    
+
     :param partial_features:
     :param event_lengths: 
     :param tempos: 
@@ -130,7 +130,6 @@ def preprocess_features(filepath: str,
 def get_list_of_tonal_features(events: list[list[list[int]]],
                                lengths: list[int],
                                tempos: list[int]) -> list[list[float]]:
-
     """
     calculates the most significant note in each track for every event,
     translates a list of events and tempos into an array of normalised tonal features of notes (octave and tone)

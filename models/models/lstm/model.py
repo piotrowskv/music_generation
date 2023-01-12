@@ -1,14 +1,14 @@
-from pathlib import Path
-from typing import Any
-
 import numpy as np
+
+from typing import Any
+from pathlib import Path
+
 from keras.callbacks import ModelCheckpoint
 from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
 from keras.models import Sequential, load_model
+
 from midi.decode import get_sequence_of_notes
-
 from models.loss_callback import LossCallback
-
 from ..music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 SEQUENCE_LENGTH = 100
@@ -45,11 +45,7 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self,
-              epochs: int,
-              xtrain: Any,
-              ytrain: Any,
-              progress_callback: ProgressCallback,
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
         loss_callback = LossCallback(progress_callback)
         callbacks = [loss_callback] if checkpoint_path is None else [ModelCheckpoint(
@@ -68,8 +64,7 @@ class MusicLstm(MusicModel):
             callbacks=callbacks
         )
 
-    def create_dataset(self,
-                       dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
+    def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
         notes_input = []
         notes_output = []
 
@@ -80,8 +75,7 @@ class MusicLstm(MusicModel):
         return np.asarray(notes_input), np.asarray(notes_output)
         # return [x for (x, y) in dataset], [y for (x, y) in dataset]
 
-    def prepare_data(self,
-                     midi_file: Path) -> tuple[Any, Any]:
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
         midi_input = get_sequence_of_notes(str(midi_file), True, True, False)
 
         notes_sequences = []
@@ -113,12 +107,10 @@ class MusicLstm(MusicModel):
         self.model.summary(print_fn=lambda x: stringlist.append(x))
         return "\n".join(stringlist)
 
-    def save(self,
-             path: Path) -> None:
+    def save(self, path: Path) -> None:
         self.model.save(path)
 
-    def load(self,
-             path: Path) -> None:
+    def load(self, path: Path) -> None:
         self.model = load_model(path)
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
