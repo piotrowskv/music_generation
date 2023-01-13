@@ -99,6 +99,7 @@ class MusicLstm(MusicModel):
 
         return np.array(notes_sequences), np.array(notes_predictions)
 
+    @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Epoch', y_label='Training loss', legends=['LSTM model'])
 

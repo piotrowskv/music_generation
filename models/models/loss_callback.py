@@ -1,4 +1,4 @@
-import keras.callbacks
+import keras
 
 # TODO: check if imports below are necessary
 from dataclasses import dataclass
