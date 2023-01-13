@@ -6,7 +6,8 @@ import requests
 from tqdm.auto import tqdm
 
 
-def download_bach_dataset(path: Path, force=False) -> None:
+def download_bach_dataset(path: Path,
+                          force: bool = False) -> None:
     """
     Downloads the Bach midi dataset into a given directory. The directory
     is created if it does not exist.
@@ -22,8 +23,8 @@ def download_bach_dataset(path: Path, force=False) -> None:
     assert not path.exists() or path.is_dir(
     ), "Given path has to be a directory or should not exist"
 
-    bach_filename = "bach.zip"
-    bach_url = f"https://www.bachcentral.com/{bach_filename}"
+    bach_filename = 'bach.zip'
+    bach_url = f'https://www.bachcentral.com/{bach_filename}'
     zip_path = path.joinpath(bach_filename)
 
     path.mkdir(parents=True, exist_ok=True)
@@ -34,7 +35,11 @@ def download_bach_dataset(path: Path, force=False) -> None:
 
     # download the dataset with a progress bar
     with requests.get(bach_url, stream=True) as r:
-        content_length = int(r.headers.get("Content-Length"))
+        content_string = r.headers.get('Content-Length')
+        if content_string:
+            content_length = int(content_string)
+        else:
+            content_length = 0
 
         with tqdm.wrapattr(r.raw, 'read', total=content_length, desc='Downloading Bach dataset') as raw:
             with open(zip_path, 'wb') as f:
@@ -50,4 +55,4 @@ def download_bach_dataset(path: Path, force=False) -> None:
 
 
 if __name__ == '__main__':
-    print(download_bach_dataset(Path('out'), force=True))
+    download_bach_dataset(Path('out'), force=True)

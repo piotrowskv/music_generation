@@ -93,7 +93,7 @@ def run_music21_features() -> None:
     features_input = []
     features_output = []
 
-    for name in os.listdir('../../../sequences'):  # or '../../../data'
+    for name in os.listdir('../../../sequences'):
         path = os.path.join('../../../sequences', name)
 
         try:
@@ -102,11 +102,11 @@ def run_music21_features() -> None:
             features_input.extend(sequences)
             features_output.extend(predictions)
 
-        except Exception as ex:
+        except Exception:
             print(f'failed to load {name}')
 
-    ni = np.asarray(sequences)
-    no = np.asarray(predictions)
+    ni = np.asarray(features_input)
+    no = np.asarray(features_output)
 
     model = get_music21_network(ni.shape)
     train_music21_network(model, ni, no)

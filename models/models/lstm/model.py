@@ -1,14 +1,14 @@
-from pathlib import Path
-from typing import Any
-
 import numpy as np
+
+from typing import Any
+from pathlib import Path
+
 from keras.callbacks import ModelCheckpoint
 from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
 from keras.models import Sequential, load_model
+
 from midi.decode import get_sequence_of_notes
-
 from models.loss_callback import LossCallback
-
 from ..music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 SEQUENCE_LENGTH = 100
@@ -45,7 +45,8 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
+    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
+              checkpoint_path: Path | None = None) -> None:
         loss_callback = LossCallback(progress_callback)
         callbacks = [loss_callback] if checkpoint_path is None else [ModelCheckpoint(
             checkpoint_path,
@@ -86,8 +87,6 @@ class MusicLstm(MusicModel):
             notes_sequences.append(notes_sequence)
             notes_predictions.append(midi_input[i+SEQUENCE_LENGTH][1])
 
-        return np.array(notes_sequences), np.array(notes_predictions)
-
         """
         TODO: ideally, data should be as below. LSTM is supposed to predict
         sequences, where a single sequence is the whole song. SEQUENCE_LENGTH
@@ -97,6 +96,8 @@ class MusicLstm(MusicModel):
         """
         # data = np.array([x[1] for x in midi_input])
         # return data[:data.shape[0]-1, :], data[1:, :]
+
+        return np.array(notes_sequences), np.array(notes_predictions)
 
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:

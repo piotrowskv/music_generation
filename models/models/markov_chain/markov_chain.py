@@ -23,23 +23,26 @@ class MarkovChain(MusicModel):
         self.probabilities: np.ndarray
         self.n_gram_size = n_gram_size
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback, checkpoint_path: Path | None = None) -> None:
+    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
+              checkpoint_path: Path | None = None) -> None:
+
         # count probabilities
         n = len(self.n_grams_list[0])
         n_gram_next: np.ndarray = np.ndarray(
-            (len(self.n_grams_list,)), dtype=object)
+            (len(self.n_grams_list, )), dtype=object)
+
         for i in range(n_gram_next.shape[0]):
             n_gram_next[i] = []
 
         for i in range(len(self.data)):
-            for j in range(len(self.data[i])-n-1):
-                curr_n_gram = tuple(self.data[i][j:j+n])
-                next_note = self.data[i][j+n+1]
+            for j in range(len(self.data[i]) - n - 1):
+                curr_n_gram = tuple(self.data[i][j:j + n])
+                next_note = self.data[i][j + n + 1]
                 n_gram_next[self.n_grams_list.index(
                     curr_n_gram)].append(next_note)
 
         self.probabilities = np.ndarray(
-            (len(self.n_grams_list,)), dtype=object)
+            (len(self.n_grams_list, )), dtype=object)
         for i in range(n_gram_next.shape[0]):
             self.probabilities[i] = {}
 
@@ -51,7 +54,7 @@ class MarkovChain(MusicModel):
         for i in range(len_n_gram_next):
             if len_n_gram_next < 100 or i % (len_n_gram_next // 100) == 0:
                 elapsed = time.time() - start
-                progress_callback([(elapsed, 100*i/len_n_gram_next)])
+                progress_callback([(elapsed, 100 * i / len_n_gram_next)])
 
             for j in range(len(n_gram_next[i])):
                 if len(n_gram_next[i]) <= 1:
@@ -68,7 +71,7 @@ class MarkovChain(MusicModel):
 
         self.generate_tokens()
         self.generate_n_grams(self.n_gram_size)
-        return (0, 0)
+        return 0, 0
 
     def generate_tokens(self) -> None:
 
@@ -76,13 +79,13 @@ class MarkovChain(MusicModel):
             for j in range(len(self.data[i])):
                 notes = []
                 for k in range(128):
-                    if self.data[i][j][k] == True:
+                    if self.data[i][j][k]:
                         notes.append(k)
 
                 self.data[i][j] = tuple(notes)
                 self.tokens.add(tuple(notes))
 
-    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:  # TODO: determine the correct return
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
@@ -97,19 +100,19 @@ class MarkovChain(MusicModel):
     def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
         for i in range(len(self.data)):
-            for j in range(len(self.data[i])-n+1):
-                self.n_grams.add(tuple(self.data[i][j:j+n]))
+            for j in range(len(self.data[i]) - n + 1):
+                self.n_grams.add(tuple(self.data[i][j:j + n]))
 
         self.tokens_list = list(self.tokens)
         self.n_grams_list = list(self.n_grams)
         print(str(len(self.n_grams_list)) + " " + str(n) + "-grams generated!")
 
     def model_summary(self) -> str:
-        return (
-            "Markov chain basing on " + str(self.n_gram_size) + "-grams:\n" + str(len(self.tokens_list)) + " tokens\n" +
-            str(len(self.n_grams_list)) + " n_grams\n" +
-            str(len(self.data)) + " files"
-        )
+        return ("Markov chain basing on " +
+                str(self.n_gram_size) + "-grams:\n" +
+                str(len(self.tokens_list)) + " tokens\n" +
+                str(len(self.n_grams_list)) + " n_grams\n" +
+                str(len(self.data)) + " files")
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
 
@@ -117,54 +120,52 @@ class MarkovChain(MusicModel):
 
         if seed is None:
             result = self.predict(self.tokens_list[0], 512, True, 0, path)
-            get_file_from_standard_features(
-                result, 500000, path, False, False, False)
+            get_file_from_standard_features(result, 500000, path, False, False, False)
 
         elif isinstance(seed, int):
             # seed decides on length of the sequence
 
             cast(int, seed)
             result = self.predict(self.tokens_list[0], seed, True, 0, path)
-            get_file_from_standard_features(
-                result, 500000, path, False, False, False)
+            get_file_from_standard_features(result, 500000, path, False, False, False)
 
         elif isinstance(seed, list):
             cast(list, seed)
             if len(seed) == 2:
-                # seed decides on length and determinisrtic
+                # seed decides on length and deterministic
 
-                result = self.predict(
-                    self.tokens_list[0], seed[0], bool(seed[1]), 0, path)
-                get_file_from_standard_features(
-                    result, 500000, path, False, False, False)
+                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), 0, path)
+                get_file_from_standard_features(result, 500000, path, False, False, False)
 
             elif len(seed) == 3:
                 # seed decides on length, deterministic and random chance
 
-                result = self.predict(
-                    self.tokens_list[0], seed[0], bool(seed[1]), seed[2], path)
-                get_file_from_standard_features(
-                    result, 500000, path, False, False, False)
+                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), seed[2], path)
+                get_file_from_standard_features(result, 500000, path, False, False, False)
 
             else:
                 raise Exception("Incorrect parameters.")
 
-    def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int, save_path: Path) -> np.ndarray:
+    def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int,
+                save_path: Path) -> np.ndarray:
 
         # deterministic - if True, next note will be always note with maximum probability
         #               - if False, next note will be sampled according to all notes probability
-        # rand - % chance of selecting compeletly ranodm token next (int [0;100])
+        # rand - % chance of selecting completely random token next (int [0;100])
 
         prediction = []
         previous_n_gram = initial_notes
+
         for i in range(len(initial_notes)):
             prediction.append(initial_notes[i])
+
         for i in range(length):
             idx = None
             if previous_n_gram in self.n_grams:
                 idx = self.n_grams_list.index(previous_n_gram)
             else:
                 idx = random.randrange(len(self.probabilities))
+
             probs = self.probabilities[idx]
             while len(probs) == 0:
                 idx = random.randrange(len(self.probabilities))
@@ -178,6 +179,7 @@ class MarkovChain(MusicModel):
             else:
                 next_note = random.choices(
                     list(probs.keys()), weights=probs.values(), k=1)[0]
+
             previous_n_gram = previous_n_gram[1:] + (next_note,)
             prediction.append(next_note)
 

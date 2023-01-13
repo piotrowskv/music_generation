@@ -739,14 +739,14 @@ def test_get_file_from_standard_features_3d_input():
 def test_get_file_from_music21_features_midi_mode():
     input_array = np.load(input_array_midi_path, allow_pickle=True)
     get_file_from_music21_features(input_array, encode_file_path, False, True)
-    
+
     assert os.path.exists(encode_file_path)
     assert filecmp.cmp(encode_file_path, 'test_files/test_encoder/test_music21_midi.mid')
-    
+
     os.remove(encode_file_path)
     os.rmdir(encode_file_folder)
-    
-    
+
+
 def test_get_file_from_music21_features_tonal_mode():
     input_array = np.load(input_array_tonal_path, allow_pickle=True)
     get_file_from_music21_features(input_array, encode_file_path, True, True)

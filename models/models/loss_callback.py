@@ -1,8 +1,8 @@
-from dataclasses import dataclass
-from typing import Any, Callable, TypeAlias
-
 import keras
 
+# TODO: check if imports below are necessary
+from dataclasses import dataclass
+from typing import Any, Callable, TypeAlias
 from models.music_model import ProgressCallback
 
 
