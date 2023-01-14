@@ -3,7 +3,7 @@ import { useModelConfigContext } from '../../stores/ModelConfigContext'
 import ErrorMessage from '../ErrorMessage'
 import LoadingIndicator from '../LoadingIndicator'
 
-interface Props {}
+type Props = {}
 
 const PickExistingTrainingSession: FC<Props> = () => {
     const {

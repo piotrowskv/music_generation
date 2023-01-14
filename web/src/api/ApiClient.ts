@@ -112,9 +112,11 @@ export class ApiClient {
         return res
     }
 
-    getAllTrainingSessions = async (): Promise<AllTrainingSessions> => {
+    getAllTrainingSessions = async (
+        modelId: string
+    ): Promise<AllTrainingSessions> => {
         const res = await this.baseRequest<AllTrainingSessions>(
-            `training`,
+            `training?model_id=${modelId}`,
             {
                 method: 'GET',
             },

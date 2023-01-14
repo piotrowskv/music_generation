@@ -100,9 +100,10 @@ class TrainingSessionsRepository:
 
         return TrainingSessionData(model_id, create_date, filenames)
 
-    async def get_all_sessions(self) -> list[TrainingSessionSummary]:
+    async def get_all_sessions(self, model_id: str | None) -> list[TrainingSessionSummary]:
         """
         Finds all training sessions and returns some information about them.
+        If model_id is provided, will filter by it
         """
 
         sessions: list[TrainingSessionSummary] = []
@@ -110,8 +111,9 @@ class TrainingSessionsRepository:
         for r in self._conn.execute(f"""
             SELECT s.session_id, s.model_id, s.create_date, COUNT(s.session_id) FROM {self.SESSIONS_TABLE_NAME} AS s
             INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
+            {'WHERE s.model_id=?' if model_id is not None else ''}
             GROUP BY s.session_id
-            """):
+            """, (model_id,) * (1 if model_id is not None else 0)):
             create_date = datetime.datetime.strptime(r[2], '%Y-%m-%d %H:%M:%S')
             # TODO: check training completion
             sessions.append(TrainingSessionSummary(r[0], r[1], create_date, r[3], False))

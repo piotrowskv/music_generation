@@ -40,7 +40,7 @@ const ModelConfigContext = createContext<{
     allSessionsLoading: boolean
     allSessionsError: {} | undefined
     allSessions: TrainingSessionSummary[] | undefined
-    fetchAllSessions: () => void
+    fetchAllSessions: (() => void) | undefined
 }>(null!)
 
 export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
@@ -86,11 +86,15 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
     }, [trainingSessionId])
 
     useEffect(() => {
-        if (modelTraining === ModelTraining.pretrained && !allSessionsLoading) {
+        if (
+            chosenModelId !== undefined &&
+            modelTraining === ModelTraining.pretrained &&
+            !allSessionsLoading
+        ) {
             // pretrained option was selected, fetch all sessions if not doing it already
-            fetchAllSessions()
+            fetchAllSessions(chosenModelId)
         }
-    }, [modelTraining])
+    }, [modelTraining, chosenModelId])
 
     return (
         <ModelConfigContext.Provider
@@ -125,7 +129,9 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                 allSessionsLoading,
                 allSessions: allSessions?.sessions,
                 allSessionsError,
-                fetchAllSessions,
+                fetchAllSessions: chosenModelId
+                    ? () => fetchAllSessions(chosenModelId)
+                    : undefined,
                 models,
                 init,
             }}

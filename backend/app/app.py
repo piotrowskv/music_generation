@@ -110,9 +110,19 @@ async def get_training_session(session_id: str) -> m.TrainingSession:
 
 @app.get("/training",
          response_model=m.AllTrainingSessions,
-         description="Returns all existing training sessions, except those that used a no longer supported model.")
-async def get_training_sessions() -> m.AllTrainingSessions:
-    sessions = await training_sessions.get_all_sessions()
+         description="Returns all existing training sessions, except those that used a no longer supported model. Results can be filtered by a specific model.",
+         responses={
+             410: {"description": "Provided model_id filter is a no longer supported model", "model": EndpointError},
+         })
+async def get_training_sessions(model_id: str | None = None) -> m.AllTrainingSessions:
+    if model_id is not None:
+        model = SupportedModels.from_model_id(model_id)
+        if model is None:
+            raise HTTPException(
+                status_code=410,
+                detail=f"model_id points to a no longer supported model")
+
+    sessions = await training_sessions.get_all_sessions(model_id)
 
     mapped_sessions: list[m.TrainingSessionSummary] = []
 
