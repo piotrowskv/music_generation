@@ -54,8 +54,8 @@ class GAN(MusicModel):
 
         # trim or extend data to shape (AVG x 128)
         if (data_lines.shape[0]) > AVG:
-                data_processed[0] = np.delete(
-                    data_lines, slice(AVG, data_lines.shape[0]), 0)
+            data_processed[0] = np.delete(
+                data_lines, slice(AVG, data_lines.shape[0]), 0)
         else:
             data_processed[0][0:data_lines.shape[0]] = data_lines
 
@@ -91,7 +91,8 @@ class GAN(MusicModel):
     def load(self, path: Path) -> None:
         # path to GAN defined exactly like in define_gan
         self.model = load_model(path)
-        assert len(self.model.layers)==3 and self.model.layers[0].name =='generator' and self.model.layers[1].name =='discriminator', "Incorrect model."
+        assert len(
+            self.model.layers) == 3 and self.model.layers[0].name == 'generator' and self.model.layers[1].name == 'discriminator', "Incorrect model."
 
         self.generator = self.model.get_layer('generator')
         self.discriminator = self.model.get_layer('discriminator')
@@ -104,7 +105,7 @@ class GAN(MusicModel):
         start_width = AVG // 8
         filters = 128*AVG // 4
 
-        model.add(Conv1D(64, 3, padding='same', input_shape=(128,AVG)))
+        model.add(Conv1D(64, 3, padding='same', input_shape=(128, AVG)))
         model.add(LeakyReLU(alpha=0.2))
 
         model.add(Conv1D(32, 3, padding='same'))
@@ -118,7 +119,6 @@ class GAN(MusicModel):
         model.compile(loss='mae', optimizer=opt, metrics=['Accuracy'])
 
         return model
-
 
     def define_generator(self, latent_dim: int) -> Sequential:
         start_height = 128 // 8
@@ -136,7 +136,7 @@ class GAN(MusicModel):
 
         model.add(Conv1DTranspose(filters, 3, strides=4, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
-        
+
         model.add(Conv1DTranspose(filters//2, 3, strides=4, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
 
@@ -185,12 +185,12 @@ class GAN(MusicModel):
             -> tuple[np.ndarray, np.ndarray]:
         x_input = self.generate_latent_points(latent_dim, n_samples, seed)
         x = generator.predict(x_input)
-        out =  (x - np.min(x)) / (np.max(x) - np.min(x))
+        out = (x - np.min(x)) / (np.max(x) - np.min(x))
 
-        x[out<THRESHOLD] = 0
-        x[out>=THRESHOLD] = 1
+        x[out < THRESHOLD] = 0
+        x[out >= THRESHOLD] = 1
 
-        y = np.zeros((n_samples, 1)) 
+        y = np.zeros((n_samples, 1))
 
         return x, y
 
@@ -218,14 +218,14 @@ class GAN(MusicModel):
             x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, half_batch, GLOBAL_SEED)
 
             d_loss1 = self.discriminator.train_on_batch(x_real, y_real)
-            d_loss2 = self.discriminator.train_on_batch(x_fake, y_fake) 
+            d_loss2 = self.discriminator.train_on_batch(x_fake, y_fake)
 
             z_input = self.generate_latent_points(LATENT_DIM, N_BATCH, GLOBAL_SEED)
             y_real2 = np.ones((N_BATCH, 1))
             g_loss = self.model.train_on_batch(z_input, y_real2)
 
             x, y = self.generate_fake_samples(self.generator, LATENT_DIM, 25, GLOBAL_SEED)
-            
+
             progress_callback((((d_loss1[0] + d_loss2[0])/2, step), (g_loss[0], step)))
 
             history['discriminator_real_loss'].append(d_loss1)
@@ -242,7 +242,7 @@ class GAN(MusicModel):
                 self.save_models(checkpoint_path, self.model, step)
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
-        if(isinstance(seed, int)):
+        if (isinstance(seed, int)):
             x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1, seed)
         else:
             x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1, GLOBAL_SEED)
@@ -256,7 +256,7 @@ class GAN(MusicModel):
 
 
 if __name__ == '__main__':
-
+'''
     g = GAN()
     midi_paths = []
     for dirpath, dirs, files in os.walk(DATA_PATH): 
@@ -265,4 +265,4 @@ if __name__ == '__main__':
             if fname.endswith('.mid'):
                 midi_paths.append(fname)
     g.train_on_files(midi_paths, 2000, lambda epoch : None, checkpoint_path='xd')
-
+'''
