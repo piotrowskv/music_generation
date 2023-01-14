@@ -1,8 +1,8 @@
 import asyncio
 from pathlib import Path
 
-from fastapi import (BackgroundTasks, FastAPI, Form, HTTPException, UploadFile,
-                     WebSocket, WebSocketDisconnect)
+from fastapi import (BackgroundTasks, FastAPI, Form, Header, HTTPException,
+                     UploadFile, WebSocket, WebSocketDisconnect)
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import create_database
@@ -31,8 +31,12 @@ def get_models() -> m.ModelVariants:
     return m.ModelVariants(models)
 
 
-@app.post("/training/register", response_model=m.TrainingSessionCreated, description="Registers a new training session and returns the session ID for it")
-async def register_training(background_tasks: BackgroundTasks, files: list[UploadFile], model_id: str = Form()) -> m.TrainingSessionCreated:
+async def register_training(background_tasks: BackgroundTasks, files: list[UploadFile], model_id: str = Form(), content_length: int = Header()) -> m.TrainingSessionCreated:
+    if content_length > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="Uploaded MIDI files can be at most 10MB")
+
     if len(files) == 0:
         raise HTTPException(
             status_code=400,
