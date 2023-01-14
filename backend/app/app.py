@@ -35,7 +35,14 @@ def get_models() -> m.ModelVariants:
 
 @app.post("/training/register",
           response_model=m.TrainingSessionCreated,
-          description="Registers a new training session and returns the session ID for it")
+          description="Registers a new training session and returns the session ID for it",
+          responses={
+              400: {"description": "No training files passed"},
+              410: {"description": "Model is no longer supported"},
+              413: {"description": "Uploaded files are too large"},
+              415: {"description": "Incorrect mimetype of uploaded files"},
+              500: {"description": "Failed to create training session"},
+          })
 async def register_training(background_tasks: BackgroundTasks, files: list[UploadFile], model_id: str = Form(), content_length: int = Header()) -> m.TrainingSessionCreated:
     if content_length > 10 * 1024 * 1024:
         raise HTTPException(
@@ -56,7 +63,7 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
     model = SupportedModels.from_model_id(model_id)
     if model is None:
         raise HTTPException(
-            status_code=400,
+            status_code=410,
             detail=f"Model with an ID {model_id} is not supported")
 
     session_id = await training_sessions.register_session(model_id, files)
@@ -75,7 +82,11 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
 
 @app.get("/training/{session_id}",
          response_model=m.TrainingSession,
-         description="Returns information about a training session")
+         description="Returns information about a training session",
+         responses={
+             404: {"description": "Session does not exist"},
+             410: {"description": "Session used a no longer supported model"},
+         })
 async def get_training_session(session_id: str) -> m.TrainingSession:
     session = await training_sessions.get_session(session_id)
 
