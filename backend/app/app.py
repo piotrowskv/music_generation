@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import create_database
 from app.dto import models as m
+from app.dto.error import EndpointError
 from app.supported_models import SupportedModels
 from app.training_manager import TrainingManager
 
@@ -37,11 +38,11 @@ def get_models() -> m.ModelVariants:
           response_model=m.TrainingSessionCreated,
           description="Registers a new training session and returns the session ID for it",
           responses={
-              400: {"description": "No training files passed"},
-              410: {"description": "Model is no longer supported"},
-              413: {"description": "Uploaded files are too large"},
-              415: {"description": "Incorrect mimetype of uploaded files"},
-              500: {"description": "Failed to create training session"},
+              400: {"description": "No training files passed", "model": EndpointError},
+              410: {"description": "Model is no longer supported", "model": EndpointError},
+              413: {"description": "Uploaded files are too large", "model": EndpointError},
+              415: {"description": "Incorrect mimetype of uploaded files", "model": EndpointError},
+              500: {"description": "Failed to create training session", "model": EndpointError},
           })
 async def register_training(background_tasks: BackgroundTasks, files: list[UploadFile], model_id: str = Form(), content_length: int = Header()) -> m.TrainingSessionCreated:
     if content_length > 10 * 1024 * 1024:
@@ -84,8 +85,8 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
          response_model=m.TrainingSession,
          description="Returns information about a training session",
          responses={
-             404: {"description": "Session does not exist"},
-             410: {"description": "Session used a no longer supported model"},
+             404: {"description": "Session does not exist", "model": EndpointError},
+             410: {"description": "Session used a no longer supported model", "model": EndpointError},
          })
 async def get_training_session(session_id: str) -> m.TrainingSession:
     session = await training_sessions.get_session(session_id)
