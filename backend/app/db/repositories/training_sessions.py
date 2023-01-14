@@ -14,6 +14,15 @@ class TrainingSessionData:
 
 
 @dataclass(frozen=True)
+class TrainingSessionSummary:
+    session_id: str
+    model_id: str
+    created_at: datetime.datetime
+    file_count: int
+    training_completed: bool
+
+
+@dataclass(frozen=True)
 class TrainingData:
     model_id: str
     midi: list[bytes]
@@ -83,14 +92,31 @@ class TrainingSessionsRepository:
             WHERE s.session_id=?
             """, (session_id,)):
             model_id = r[0]
-            create_date = datetime.datetime.strptime(
-                r[1], '%Y-%m-%d %H:%M:%S')
+            create_date = datetime.datetime.strptime(r[1], '%Y-%m-%d %H:%M:%S')
             filenames.append(r[2])
 
         if len(filenames) == 0:
             return None
 
         return TrainingSessionData(model_id, create_date, filenames)
+
+    async def get_all_sessions(self) -> list[TrainingSessionSummary]:
+        """
+        Finds all training sessions and returns some information about them.
+        """
+
+        sessions: list[TrainingSessionSummary] = []
+
+        for r in self._conn.execute(f"""
+            SELECT s.session_id, s.model_id, s.create_date, COUNT(s.session_id) FROM {self.SESSIONS_TABLE_NAME} AS s
+            INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
+            GROUP BY s.session_id
+            """):
+            create_date = datetime.datetime.strptime(r[2], '%Y-%m-%d %H:%M:%S')
+            # TODO: check training completion
+            sessions.append(TrainingSessionSummary(r[0], r[1], create_date, r[3], False))
+
+        return sessions
 
     async def get_training_data(self, session_id: str) -> TrainingData | None:
         """

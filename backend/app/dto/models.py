@@ -42,3 +42,17 @@ class TrainingProgress(BaseModel):
     y_label: str
     legends: list[str]
     chart_series_points: list[list[ChartPoint]]
+
+
+@dataclass(frozen=True)
+class TrainingSessionSummary(BaseModel):
+    session_id: str
+    model_name: str
+    created_at: datetime.datetime
+    file_count: int
+    training_completed: bool
+
+
+@dataclass(frozen=True)
+class AllTrainingSessions(BaseModel):
+    sessions: list[TrainingSessionSummary]
