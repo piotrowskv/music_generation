@@ -14,7 +14,7 @@ from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 class MarkovChain(MusicModel):
     n_gram_size: int
 
-    def __init__(self, n_gram_size=3) -> None:
+    def __init__(self, n_gram_size: int = 3) -> None:
         self.data: list = []
         self.tokens: set = set()
         self.n_grams: set = set()
