@@ -1,4 +1,6 @@
 import { FC, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { routes } from '../../routes'
 import {
     ModelTraining,
     useModelConfigContext,
@@ -7,6 +9,7 @@ import Button from '../Button'
 import ErrorMessage from '../ErrorMessage'
 import LoadingIndicator from '../LoadingIndicator'
 import StepCard from '../StepCard'
+import PickExistingTrainingSession from './PickExistingTrainingSession'
 import PickModel from './PickModel'
 import PickTraining from './PickTraining'
 import UploadFiles, { midiMimeType } from './UploadFiles'
@@ -26,7 +29,9 @@ const ModelConfig: FC = () => {
         sessionRegisterLoading,
         registerTrainingSession,
         sessionRegisterError,
+        selectedSession,
     } = useModelConfigContext()
+    const navigate = useNavigate()
 
     useEffect(() => {
         init()
@@ -80,6 +85,14 @@ const ModelConfig: FC = () => {
                             />
                         </StepCard>
                     )}
+                    {modelTraining === ModelTraining.pretrained && (
+                        <StepCard
+                            completed={selectedSession !== undefined}
+                            disabled={false}
+                        >
+                            <PickExistingTrainingSession />
+                        </StepCard>
+                    )}
                     {midiFiles.length > 0 &&
                         modelTraining === ModelTraining.trainMyself && (
                             <>
@@ -103,6 +116,23 @@ const ModelConfig: FC = () => {
                                         Failed to create a new training session.
                                     </ErrorMessage>
                                 )}
+                            </>
+                        )}
+                    {selectedSession !== undefined &&
+                        modelTraining === ModelTraining.pretrained && (
+                            <>
+                                <Button
+                                    onClick={() =>
+                                        navigate(
+                                            routes.trainingSession({
+                                                sessionId:
+                                                    selectedSession.session_id,
+                                            })
+                                        )
+                                    }
+                                >
+                                    See session
+                                </Button>
                             </>
                         )}
                 </>

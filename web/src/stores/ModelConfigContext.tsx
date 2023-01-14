@@ -28,7 +28,7 @@ const ModelConfigContext = createContext<{
     pickModel: (id: string | undefined) => void
     modelTraining: ModelTraining | undefined
     setModelTraining: (id: ModelTraining | undefined) => void
-    selectedSessionId: string | undefined
+    selectedSession: TrainingSessionSummary | undefined
     setSessionId: (id: string | undefined) => void
     midiFiles: File[]
     setMidiFiles: (files: File[]) => void
@@ -40,6 +40,7 @@ const ModelConfigContext = createContext<{
     allSessionsLoading: boolean
     allSessionsError: {} | undefined
     allSessions: TrainingSessionSummary[] | undefined
+    fetchAllSessions: () => void
 }>(null!)
 
 export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
@@ -98,7 +99,9 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                     e => e.id === chosenModelId
                 ),
                 pickModel: setChosenModelId,
-                selectedSessionId,
+                selectedSession: allSessions?.sessions.find(
+                    e => e.session_id === selectedSessionId
+                ),
                 setSessionId(id) {
                     if (id) {
                         setMidiFiles([])
@@ -122,6 +125,7 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                 allSessionsLoading,
                 allSessions: allSessions?.sessions,
                 allSessionsError,
+                fetchAllSessions,
                 models,
                 init,
             }}
