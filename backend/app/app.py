@@ -126,7 +126,7 @@ async def get_training_sessions() -> m.AllTrainingSessions:
                 session_id=s.session_id,
                 created_at=s.created_at,
                 file_count=s.file_count,
-                model_name=model.name,
+                model_name=model.value.name,
                 training_completed=s.training_completed))
 
     return m.AllTrainingSessions(mapped_sessions)
