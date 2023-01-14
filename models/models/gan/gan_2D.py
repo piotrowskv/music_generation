@@ -256,7 +256,8 @@ class GAN(MusicModel):
         x_array = self.postprocess_array(x_fake[0])
         get_file_from_standard_features(x_array, 500000, path, True, False, False)
 
-    def get_progress_metadata(self) -> ProgressMetadata:
+    @staticmethod
+    def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
 
 
