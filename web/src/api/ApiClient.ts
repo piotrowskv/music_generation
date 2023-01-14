@@ -19,7 +19,10 @@ export class ApiClient {
     }
 
     #secureProtocol(protocolName: string): string {
-        const s = import.meta.env.DEV ? '' : 's'
+        const s =
+            import.meta.env.DEV || this.baseUrl?.startsWith('localhost')
+                ? ''
+                : 's'
 
         return `${protocolName}${s}://`
     }
