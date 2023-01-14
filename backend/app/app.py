@@ -24,13 +24,18 @@ app.add_middleware(
 training_manager = TrainingManager(training_progress)
 
 
-@app.get("/models", response_model=m.ModelVariants, description="Returns a list of all supported models")
+@app.get("/models",
+         response_model=m.ModelVariants,
+         description="Returns a list of all supported models")
 def get_models() -> m.ModelVariants:
     models = [e.value for e in SupportedModels]
 
     return m.ModelVariants(models)
 
 
+@app.post("/training/register",
+          response_model=m.TrainingSessionCreated,
+          description="Registers a new training session and returns the session ID for it")
 async def register_training(background_tasks: BackgroundTasks, files: list[UploadFile], model_id: str = Form(), content_length: int = Header()) -> m.TrainingSessionCreated:
     if content_length > 10 * 1024 * 1024:
         raise HTTPException(
@@ -68,7 +73,9 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
     return m.TrainingSessionCreated(session_id)
 
 
-@app.get("/training/{session_id}", response_model=m.TrainingSession, description="Returns information about a training session")
+@app.get("/training/{session_id}",
+         response_model=m.TrainingSession,
+         description="Returns information about a training session")
 async def get_training_session(session_id: str) -> m.TrainingSession:
     session = await training_sessions.get_session(session_id)
 

@@ -3,3 +3,4 @@ max_line_length = 120
 exit_code = true
 recursive = true
 diff = true
+aggressive = 3
