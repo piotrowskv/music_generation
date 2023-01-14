@@ -31,3 +31,15 @@ export type TrainingSession = {
     created_at: string
     training_file_names: string[]
 }
+
+export type TrainingSessionSummary = {
+    session_id: string
+    model_name: string
+    created_at: string
+    file_count: number
+    training_completed: boolean
+}
+
+export type AllTrainingSessions = {
+    sessions: TrainingSessionSummary[]
+}

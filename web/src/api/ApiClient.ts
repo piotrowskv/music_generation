@@ -1,4 +1,5 @@
 import {
+    AllTrainingSessions,
     ModelVariants,
     TrainingProgress,
     TrainingSession,
@@ -106,6 +107,35 @@ export class ApiClient {
                 body: formData,
             },
             { session_id: '123123123' }
+        )
+
+        return res
+    }
+
+    getAllTrainingSessions = async (): Promise<AllTrainingSessions> => {
+        const res = await this.baseRequest<AllTrainingSessions>(
+            `training`,
+            {
+                method: 'GET',
+            },
+            {
+                sessions: [
+                    {
+                        session_id: '123',
+                        model_name: 'LSTM',
+                        created_at: '2023-01-03T11:11:13.238Z',
+                        file_count: 12,
+                        training_completed: false,
+                    },
+                    {
+                        session_id: '123',
+                        model_name: 'Markov Chain',
+                        created_at: '2022-12-03T11:11:13.238Z',
+                        file_count: 45,
+                        training_completed: true,
+                    },
+                ],
+            }
         )
 
         return res
