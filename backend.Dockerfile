@@ -16,4 +16,5 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 EXPOSE 80
 
+ENV PIPENV_DONT_LOAD_ENV 1
 CMD ["pipenv", "run", "hypercorn", "app.app", "--bind", "0.0.0.0:80"]
