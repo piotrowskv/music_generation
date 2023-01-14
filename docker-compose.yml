@@ -12,23 +12,23 @@ services:
     build:
       dockerfile: backend.Dockerfile
       args:
-        REDIS_HOSTNAME: localhost
+        REDIS_HOSTNAME: redis
         REDIS_PORT: 6379
 
     depends_on:
       - redis
 
     ports:
-      - 127.0.0.1:3000:80
+      - 127.0.0.1:3001:80
 
   web:
     build:
       context: web
       args:
-        VITE_API_URL: localhost:3000
+        VITE_API_URL: localhost:3001
 
     depends_on:
       - backend
 
     ports:
-      - 127.0.0.1:3001:80
+      - 127.0.0.1:3000:80
