@@ -255,8 +255,9 @@ class GAN(MusicModel):
         return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
 
 
-if __name__ == '__main__':
 '''
+if __name__ == '__main__':
+
     g = GAN()
     midi_paths = []
     for dirpath, dirs, files in os.walk(DATA_PATH): 
