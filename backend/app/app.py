@@ -161,6 +161,19 @@ async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
     meta = model.get_model_type().get_progress_metadata()
 
     try:
+        if training_data.full_progress_list is not None:
+            # training is already finished, send all results
+            await websocket.send_json(
+                m.TrainingProgress(
+                    finished=True,
+                    x_label=meta.x_label,
+                    y_label=meta.y_label,
+                    legends=meta.legends,
+                    chart_series_points=[
+                        [m.ChartPoint(x, y) for (x, y) in series] for series in training_data.full_progress_list
+                    ]).dict())
+            return
+
         await websocket.send_json(
             m.TrainingProgress(
                 finished=False,

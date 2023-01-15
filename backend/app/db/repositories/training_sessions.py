@@ -29,6 +29,7 @@ class TrainingSessionSummary:
 class TrainingData:
     model_id: str
     midi: list[bytes]
+    full_progress_list: ProgressList | None
 
 
 class TrainingSessionsRepository:
@@ -132,19 +133,21 @@ class TrainingSessionsRepository:
 
         model_id: str
         midi: list[bytes] = []
+        progress_list_json: str | None
 
         for r in self._conn.execute(f"""
-            SELECT s.model_id, f.midi_file FROM {self.SESSIONS_TABLE_NAME} AS s
+            SELECT s.model_id, s.progress_json, f.midi_file FROM {self.SESSIONS_TABLE_NAME} AS s
             INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
             WHERE s.session_id=?
             """, (session_id,)):
             model_id = r[0]
-            midi.append(r[1])
+            progress_list_json = r[1]
+            midi.append(r[2])
 
         if len(midi) == 0:
             return None
 
-        return TrainingData(model_id, midi)
+        return TrainingData(model_id, midi, None if progress_list_json is None else json.loads(progress_list_json))
 
     def save_training_progress(self, session_id: str, progresses: ProgressList) -> None:
         """
