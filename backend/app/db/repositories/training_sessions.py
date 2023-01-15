@@ -113,7 +113,7 @@ class TrainingSessionsRepository:
             INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
             {'WHERE s.model_id=?' if model_id is not None else ''}
             GROUP BY s.session_id
-            """, (model_id,) * (1 if model_id is not None else 0)):
+            """, (model_id,) if model_id is not None else ()):
             create_date = datetime.datetime.strptime(r[2], '%Y-%m-%d %H:%M:%S')
             # TODO: check training completion
             sessions.append(TrainingSessionSummary(r[0], r[1], create_date, r[3], False))
