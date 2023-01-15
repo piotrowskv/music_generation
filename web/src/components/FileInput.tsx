@@ -3,7 +3,7 @@ import Button from './Button'
 
 interface Props {
     onChange: (files: File[]) => void
-    accept: string
+    accept: Set<string>
     children: ReactNode
 }
 
@@ -19,7 +19,7 @@ const FileInput: FC<Props> = ({ onChange, accept, children }) => {
             <input
                 ref={fileInputRef}
                 type="file"
-                accept={accept}
+                accept={[...accept].join(', ')}
                 onChange={e => onChange([...e.target.files!])}
                 className="hidden"
                 multiple
