@@ -128,14 +128,14 @@ class TrainingSessionsRepository:
         sessions: list[TrainingSessionSummary] = []
 
         for r in self._conn.execute(f"""
-            SELECT s.session_id, s.model_id, s.create_date, COUNT(s.session_id) FROM {self.SESSIONS_TABLE_NAME} AS s
+            SELECT s.session_id, s.model_id, s.create_date, COUNT(s.session_id), s.progress_json IS NOT NULL
+            FROM {self.SESSIONS_TABLE_NAME} AS s
             INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
             {'WHERE s.model_id=?' if model_id is not None else ''}
             GROUP BY s.session_id
             """, (model_id,) if model_id is not None else ()):
             create_date = datetime.datetime.strptime(r[2], '%Y-%m-%d %H:%M:%S')
-            # TODO: check training completion
-            sessions.append(TrainingSessionSummary(r[0], r[1], create_date, r[3], False))
+            sessions.append(TrainingSessionSummary(r[0], r[1], create_date, r[3], bool(r[4])))
 
         return sessions
 
