@@ -105,7 +105,8 @@ async def get_training_session(session_id: str) -> m.TrainingSession:
         session_id,
         model.value,
         session.created_at,
-        session.training_file_names)
+        session.training_file_names,
+        session.error_message)
 
 
 @app.get("/training",

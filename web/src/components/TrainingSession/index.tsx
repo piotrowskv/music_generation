@@ -26,10 +26,16 @@ const TrainingSession: FC = () => {
                         {trainingSession.model.name} training on{' '}
                         {trainingSession.training_file_names.length} MIDI files
                     </h3>
-                    <div className="italic text-gray-400">
-                        {trainingFinished ? 'Ready!' : 'In progress...'}
-                    </div>
-                    <TrainingChart />
+                    {trainingSession.error_message ? (
+                        <ErrorMessage error={trainingSession.error_message}>
+                            Failed to train the model:
+                        </ErrorMessage>
+                    ) : (
+                        <div className="italic text-gray-400">
+                            {trainingFinished ? 'Ready!' : 'In progress...'}
+                        </div>
+                    )}
+                    {!trainingSession.error_message && <TrainingChart />}
                 </>
             )}
             {initialError && (

@@ -30,6 +30,7 @@ export type TrainingSession = {
     model: ModelVariant
     created_at: string
     training_file_names: string[]
+    error_message: string | undefined
 }
 
 export type TrainingSessionSummary = {
