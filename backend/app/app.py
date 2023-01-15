@@ -1,12 +1,12 @@
-import asyncio
 from pathlib import Path
 
-from fastapi import (BackgroundTasks, FastAPI, Form, HTTPException, UploadFile,
-                     WebSocket, WebSocketDisconnect)
+from fastapi import (BackgroundTasks, FastAPI, Form, Header, HTTPException,
+                     UploadFile, WebSocket, WebSocketDisconnect)
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import create_database
 from app.dto import models as m
+from app.dto.error import EndpointError
 from app.supported_models import SupportedModels
 from app.training_manager import TrainingManager
 
@@ -24,15 +24,31 @@ app.add_middleware(
 training_manager = TrainingManager(training_progress)
 
 
-@app.get("/models", response_model=m.ModelVariants, description="Returns a list of all supported models")
+@app.get("/models",
+         response_model=m.ModelVariants,
+         description="Returns a list of all supported models")
 def get_models() -> m.ModelVariants:
     models = [e.value for e in SupportedModels]
 
     return m.ModelVariants(models)
 
 
-@app.post("/training/register", response_model=m.TrainingSessionCreated, description="Registers a new training session and returns the session ID for it")
-async def register_training(background_tasks: BackgroundTasks, files: list[UploadFile], model_id: str = Form()) -> m.TrainingSessionCreated:
+@app.post("/training/register",
+          response_model=m.TrainingSessionCreated,
+          description="Registers a new training session and returns the session ID for it",
+          responses={
+              400: {"description": "No training files passed", "model": EndpointError},
+              410: {"description": "Model is no longer supported", "model": EndpointError},
+              413: {"description": "Uploaded files are too large", "model": EndpointError},
+              415: {"description": "Incorrect mimetype of uploaded files", "model": EndpointError},
+              500: {"description": "Failed to create training session", "model": EndpointError},
+          })
+async def register_training(background_tasks: BackgroundTasks, files: list[UploadFile], model_id: str = Form(), content_length: int = Header()) -> m.TrainingSessionCreated:
+    if content_length > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="Uploaded MIDI files can be at most 10MB")
+
     if len(files) == 0:
         raise HTTPException(
             status_code=400,
@@ -47,7 +63,7 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
     model = SupportedModels.from_model_id(model_id)
     if model is None:
         raise HTTPException(
-            status_code=400,
+            status_code=410,
             detail=f"Model with an ID {model_id} is not supported")
 
     session_id = await training_sessions.register_session(model_id, files)
@@ -64,7 +80,13 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
     return m.TrainingSessionCreated(session_id)
 
 
-@app.get("/training/{session_id}", response_model=m.TrainingSession, description="Returns information about a training session")
+@app.get("/training/{session_id}",
+         response_model=m.TrainingSession,
+         description="Returns information about a training session",
+         responses={
+             404: {"description": "Session does not exist", "model": EndpointError},
+             410: {"description": "Session used a no longer supported model", "model": EndpointError},
+         })
 async def get_training_session(session_id: str) -> m.TrainingSession:
     session = await training_sessions.get_session(session_id)
 
