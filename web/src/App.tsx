@@ -17,8 +17,11 @@ function App() {
         <div className={clsx(mode === ResolvedTheme.dark && 'dark')}>
             <div className="min-w-screen flex min-h-screen flex-col bg-white p-4 text-black dark:bg-black dark:text-white">
                 <div className="flex">
-                    <Link className="text-3xl font-bold" to={routes.root()}>
-                        Music generation
+                    <Link to={routes.root()}>
+                        <div className="text-3xl font-bold">
+                            Project of Application for Piano Music Generation
+                        </div>
+                        <div>by Artificial Intelligence Algorithms</div>
                     </Link>
                     <MusicNote className="h-9 w-9 hover:animate-[wiggle-xl_0.7s_ease-in-out_infinite] dark:fill-white" />
                     <div className="flex-1"></div>
