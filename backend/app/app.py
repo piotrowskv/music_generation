@@ -68,7 +68,7 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
 
     session_id = await training_sessions.register_session(model_id, files)
 
-    training_data = await training_sessions.get_training_data(session_id)
+    training_data = training_sessions.get_training_data(session_id)
     if training_data is None:
         raise HTTPException(
             status_code=500,
@@ -88,7 +88,7 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
              410: {"description": "Session used a no longer supported model", "model": EndpointError},
          })
 async def get_training_session(session_id: str) -> m.TrainingSession:
-    session = await training_sessions.get_session(session_id)
+    session = training_sessions.get_session(session_id)
 
     if session is None:
         raise HTTPException(
@@ -122,7 +122,7 @@ async def get_training_sessions(model_id: str | None = None) -> m.AllTrainingSes
                 status_code=410,
                 detail=f"model_id points to a no longer supported model")
 
-    sessions = await training_sessions.get_all_sessions(model_id)
+    sessions = training_sessions.get_all_sessions(model_id)
 
     mapped_sessions: list[m.TrainingSessionSummary] = []
 
@@ -146,7 +146,7 @@ async def get_training_sessions(model_id: str | None = None) -> m.AllTrainingSes
 async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
     await websocket.accept()
 
-    training_data = await training_sessions.get_training_data(session_id)
+    training_data = training_sessions.get_training_data(session_id)
     if training_data is None:
         raise HTTPException(
             status_code=404,

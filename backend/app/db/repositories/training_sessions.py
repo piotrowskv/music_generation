@@ -76,7 +76,7 @@ class TrainingSessionsRepository:
 
         return session_id
 
-    async def get_session(self, session_id: str) -> TrainingSessionData | None:
+    def get_session(self, session_id: str) -> TrainingSessionData | None:
         """
         Finds a training session and returns some information about it.
         Returns None if the session was not found.
@@ -100,7 +100,7 @@ class TrainingSessionsRepository:
 
         return TrainingSessionData(model_id, create_date, filenames)
 
-    async def get_all_sessions(self, model_id: str | None) -> list[TrainingSessionSummary]:
+    def get_all_sessions(self, model_id: str | None) -> list[TrainingSessionSummary]:
         """
         Finds all training sessions and returns some information about them.
         If model_id is provided, will filter by it
@@ -120,7 +120,7 @@ class TrainingSessionsRepository:
 
         return sessions
 
-    async def get_training_data(self, session_id: str) -> TrainingData | None:
+    def get_training_data(self, session_id: str) -> TrainingData | None:
         """
         Finds a training session and returns training data for it.
         Returns None if the session was not found.
