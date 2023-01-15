@@ -14,7 +14,7 @@ def create_database(directory: Path) -> tuple[TrainingSessionsRepository, Traini
     ), "Database path has to be a folder or not exist"
 
     directory.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(directory.joinpath("db.sqlite"))
+    conn = sqlite3.connect(directory.joinpath("db.sqlite"), check_same_thread=False)
 
     training_sessions = TrainingSessionsRepository(conn)
 

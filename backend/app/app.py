@@ -21,7 +21,7 @@ app.add_middleware(
 
 
 (training_sessions, training_progress) = create_database(Path('.'))
-training_manager = TrainingManager(training_progress)
+training_manager = TrainingManager(training_progress, training_sessions)
 
 
 @app.get("/models",

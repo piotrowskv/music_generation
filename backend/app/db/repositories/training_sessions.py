@@ -1,9 +1,12 @@
 import datetime
+import json
 import uuid
 from dataclasses import dataclass
 from sqlite3 import Connection
 
 from fastapi import UploadFile
+
+from app.db.repositories.training_progress import ProgressList
 
 
 @dataclass(frozen=True)
@@ -41,6 +44,7 @@ class TrainingSessionsRepository:
             CREATE TABLE IF NOT EXISTS {self.SESSIONS_TABLE_NAME}(
                 session_id TEXT NOT NULL PRIMARY KEY,
                 model_id TEXT NOT NULL,
+                progress_json TEXT,
                 create_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
             )""")
         self._conn.execute(f"""
@@ -141,3 +145,15 @@ class TrainingSessionsRepository:
             return None
 
         return TrainingData(model_id, midi)
+
+    def save_training_progress(self, session_id: str, progresses: ProgressList) -> None:
+        """
+        Saves finished progress list of a training session.
+        """
+        self._conn.execute(f"""
+            UPDATE {self.SESSIONS_TABLE_NAME}
+            SET progress_json=?
+            WHERE session_id=?
+            """, (json.dumps(progresses), session_id))
+
+        self._conn.commit()
