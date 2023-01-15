@@ -46,6 +46,7 @@ class TrainingSessionsRepository:
                 session_id TEXT NOT NULL PRIMARY KEY,
                 model_id TEXT NOT NULL,
                 progress_json TEXT,
+                error_message TEXT,
                 create_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
             )""")
         self._conn.execute(f"""
@@ -80,6 +81,19 @@ class TrainingSessionsRepository:
         self._conn.commit()
 
         return session_id
+
+    def mark_training_as_failed(self, session_id: str, error_message: str) -> None:
+        """
+        Marks some existing session as failed by saving it's error message.
+        """
+
+        self._conn.execute(f"""
+            UPDATE {self.SESSIONS_TABLE_NAME}
+            SET error_message=?
+            WHERE session_id=?
+            """, (error_message, session_id))
+
+        self._conn.commit()
 
     def get_session(self, session_id: str) -> TrainingSessionData | None:
         """
