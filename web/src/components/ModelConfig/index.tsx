@@ -9,7 +9,7 @@ import LoadingIndicator from '../LoadingIndicator'
 import StepCard from '../StepCard'
 import PickModel from './PickModel'
 import PickTraining from './PickTraining'
-import UploadFiles, { midiMimeType } from './UploadFiles'
+import UploadFiles, { midiMimeTypes } from './UploadFiles'
 
 const ModelConfig: FC = () => {
     const {
@@ -70,7 +70,7 @@ const ModelConfig: FC = () => {
                             disabled={sessionRegisterLoading}
                             onDrop={files =>
                                 setMidiFiles(
-                                    files.filter(e => e.type === midiMimeType)
+                                    files.filter(e => midiMimeTypes.has(e.type))
                                 )
                             }
                         >

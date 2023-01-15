@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import FileInput from '../FileInput'
 
-export const midiMimeType = 'audio/midi'
+export const midiMimeTypes = new Set(['audio/midi', 'audio/mid'])
 
 interface Props {
     files: File[]
@@ -19,7 +19,7 @@ const UploadFiles: FC<Props> = ({ files, onChange }) => {
                     Upload using the button or drag&drop files onto the tile
                 </div>
             </div>
-            <FileInput onChange={onChange} accept={midiMimeType}>
+            <FileInput onChange={onChange} accept={midiMimeTypes}>
                 {files.length === 0
                     ? 'Choose files'
                     : `${files.length} file${

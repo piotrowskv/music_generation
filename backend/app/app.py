@@ -39,7 +39,7 @@ async def register_training(background_tasks: BackgroundTasks, files: list[Uploa
             detail="At least one training file has to be uploaded")
 
     for file in files:
-        if file.content_type != "audio/midi":
+        if file.content_type not in {"audio/midi", "audio/mid"}:
             raise HTTPException(
                 status_code=415,
                 detail="Uploaded files have to be of mimetype audio/midi")
