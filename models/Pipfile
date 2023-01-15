@@ -10,6 +10,7 @@ tensorflow = {version = "==2.10.0", markers = "sys_platform == 'linux' or sys_pl
 tensorflow-macos = {version = "==2.10.0", sys_platform = "== 'darwin'"}
 tensorflow-metal = {version = "==0.6.0", sys_platform = "== 'darwin'"}
 midi = {editable = true, path = "./../midi"}
+dataclasses-json = "*"
 
 [dev-packages]
 autopep8 = "*"

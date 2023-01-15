@@ -1,19 +1,11 @@
 from dataclasses import asdict, dataclass
 from typing import AsyncIterable, TypeAlias
 
-from dataclasses_json import dataclass_json
 from models.music_model import SeriesProgress, TrainingProgress
 from redis import Redis as SyncRedis
 from redis.asyncio import Redis as AsyncRedis
 
 ProgressList: TypeAlias = list[SeriesProgress]
-
-
-@dataclass_json
-@dataclass(frozen=True)
-class _TrainingProgress:
-    finished: bool
-    series: SeriesProgress
 
 
 class TrainingProgressRepository:
@@ -31,8 +23,7 @@ class TrainingProgressRepository:
         self._ar = ar
 
     def publish_progress(self, session_id: str, progress: TrainingProgress) -> None:
-        serialized = _TrainingProgress.from_dict(  # type: ignore
-            asdict(progress)).to_json()
+        serialized = progress.to_json()
         self._sr.xadd(session_id, {self._DATA_KEY: serialized})
 
     async def subscribe(self, session_id: str) -> AsyncIterable[ProgressList]:
@@ -51,8 +42,7 @@ class TrainingProgressRepository:
                 for msg in messages:
                     last_id, data = msg
 
-                    progress = _TrainingProgress.from_json(  # type: ignore
-                        data[self._DATA_KEY])
+                    progress = TrainingProgress.from_json(data[self._DATA_KEY])
 
                     out.append(progress.series)
                     finished |= progress.finished
