@@ -11,5 +11,5 @@ setup(
     name='models',
     version='1.0',
     packages=['models'],
-    install_requires=list(['numpy==1.23.5', 'keras==2.10.0', *extra_deps]),
+    install_requires=list(['numpy==1.23.5', 'keras==2.10.0', 'dataclasses-json==0.5.7', *extra_deps]),
 )
