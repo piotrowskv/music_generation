@@ -204,3 +204,6 @@ async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
 
     except WebSocketDisconnect:
         await websocket.close()
+
+    except Exception as ex:
+        await websocket.close(code=1011, reason=str(ex))

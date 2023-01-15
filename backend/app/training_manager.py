@@ -46,7 +46,9 @@ class TrainingManager:
 
             self._sessions_repo.save_training_progress(session_id, progress)
         except Exception as ex:
-            self._sessions_repo.mark_training_as_failed(session_id, str(ex))
+            msg = str(ex)
+            self._progress_repo.publish_error(session_id, msg)
+            self._sessions_repo.mark_training_as_failed(session_id, msg)
         finally:
             shutil.rmtree(dir)
 
