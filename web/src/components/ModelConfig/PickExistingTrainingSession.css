@@ -1,0 +1,19 @@
+.fixed-table-head {
+    overflow-y: auto;
+    max-height: theme('height.72');
+    display: block;
+}
+
+.fixed-table-head thead th {
+    position: sticky;
+    top: 0px;
+    @apply bg-white dark:bg-black;
+    background-clip: padding-box;
+}
+th,
+td {
+    padding: 8px 16px;
+    border: 1px solid;
+
+    @apply border-black dark:border-white;
+}

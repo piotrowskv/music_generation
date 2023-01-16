@@ -20,7 +20,7 @@ const PickTraining: FC<Props> = ({ modelTraining, onChange }) => {
                         {(() => {
                             switch (modelTraining) {
                                 case ModelTraining.pretrained:
-                                    return 'Use a model that was previously trained on a large amount of data'
+                                    return 'Use a model that was previously trained'
                                 case ModelTraining.trainMyself:
                                     return 'Train a vanilla model by providing MIDI files to train on'
                             }

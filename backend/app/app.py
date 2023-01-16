@@ -108,6 +108,40 @@ async def get_training_session(session_id: str) -> m.TrainingSession:
         session.training_file_names)
 
 
+@app.get("/training",
+         response_model=m.AllTrainingSessions,
+         description="Returns all existing training sessions, except those that used a no longer supported model. Results can be filtered by a specific model.",
+         responses={
+             410: {"description": "Provided model_id filter is a no longer supported model", "model": EndpointError},
+         })
+async def get_training_sessions(model_id: str | None = None) -> m.AllTrainingSessions:
+    if model_id is not None:
+        model = SupportedModels.from_model_id(model_id)
+        if model is None:
+            raise HTTPException(
+                status_code=410,
+                detail=f"model_id points to a no longer supported model")
+
+    sessions = await training_sessions.get_all_sessions(model_id)
+
+    mapped_sessions: list[m.TrainingSessionSummary] = []
+
+    for s in sessions:
+        model = SupportedModels.from_model_id(s.model_id)
+        if model is None:
+            # ignore no longer supported models
+            continue
+        mapped_sessions.append(
+            m.TrainingSessionSummary(
+                session_id=s.session_id,
+                created_at=s.created_at,
+                file_count=s.file_count,
+                model_name=model.value.name,
+                training_completed=s.training_completed))
+
+    return m.AllTrainingSessions(mapped_sessions)
+
+
 @app.websocket("/training/{session_id}/progress/ws")
 async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
     await websocket.accept()

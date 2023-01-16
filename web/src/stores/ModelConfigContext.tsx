@@ -8,7 +8,11 @@ import {
 } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../api'
-import { ModelVariant, ModelVariants } from '../api/dto/models'
+import {
+    ModelVariant,
+    ModelVariants,
+    TrainingSessionSummary,
+} from '../api/dto/models'
 import { routes } from '../routes'
 import { useAsync } from '../utils/useAsync'
 
@@ -24,6 +28,8 @@ const ModelConfigContext = createContext<{
     pickModel: (id: string | undefined) => void
     modelTraining: ModelTraining | undefined
     setModelTraining: (id: ModelTraining | undefined) => void
+    selectedSession: TrainingSessionSummary | undefined
+    setSessionId: (id: string | undefined) => void
     midiFiles: File[]
     setMidiFiles: (files: File[]) => void
     models: ModelVariants | undefined
@@ -31,6 +37,10 @@ const ModelConfigContext = createContext<{
     initialError: {} | undefined
     sessionRegisterLoading: boolean
     sessionRegisterError: {} | undefined
+    allSessionsLoading: boolean
+    allSessionsError: {} | undefined
+    allSessions: TrainingSessionSummary[] | undefined
+    fetchAllSessions: (() => void) | undefined
 }>(null!)
 
 export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
@@ -48,12 +58,21 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
         result: trainingSessionId,
         error: sessionRegisterError,
     } = useAsync(apiClient.registerTraining)
+    const {
+        loading: allSessionsLoading,
+        call: fetchAllSessions,
+        result: allSessions,
+        error: allSessionsError,
+    } = useAsync(apiClient.getAllTrainingSessions)
 
     const [chosenModelId, setChosenModelId] = useState<string | undefined>(
         undefined
     )
     const [modelTraining, setModelTraining] = useState<
         ModelTraining | undefined
+    >(undefined)
+    const [selectedSessionId, setSelectedSessionId] = useState<
+        string | undefined
     >(undefined)
     const [midiFiles, setMidiFiles] = useState<File[]>([])
     const navigate = useNavigate()
@@ -66,6 +85,17 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
         }
     }, [trainingSessionId])
 
+    useEffect(() => {
+        if (
+            chosenModelId !== undefined &&
+            modelTraining === ModelTraining.pretrained &&
+            !allSessionsLoading
+        ) {
+            // pretrained option was selected, fetch all sessions if not doing it already
+            fetchAllSessions(chosenModelId)
+        }
+    }, [modelTraining, chosenModelId])
+
     return (
         <ModelConfigContext.Provider
             value={{
@@ -73,15 +103,35 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                     e => e.id === chosenModelId
                 ),
                 pickModel: setChosenModelId,
+                selectedSession: allSessions?.sessions.find(
+                    e => e.session_id === selectedSessionId
+                ),
+                setSessionId(id) {
+                    if (id) {
+                        setMidiFiles([])
+                    }
+                    setSelectedSessionId(id)
+                },
                 modelTraining,
                 setModelTraining,
                 midiFiles,
-                setMidiFiles,
+                setMidiFiles(files) {
+                    if (files.length !== 0) {
+                        setSelectedSessionId(undefined)
+                    }
+                    setMidiFiles(files)
+                },
                 initialLoading,
                 initialError,
                 sessionRegisterLoading,
                 sessionRegisterError,
                 registerTrainingSession,
+                allSessionsLoading,
+                allSessions: allSessions?.sessions,
+                allSessionsError,
+                fetchAllSessions: chosenModelId
+                    ? () => fetchAllSessions(chosenModelId)
+                    : undefined,
                 models,
                 init,
             }}
