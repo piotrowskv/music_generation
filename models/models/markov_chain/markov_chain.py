@@ -122,7 +122,7 @@ class MarkovChain(MusicModel):
         assert len(self.tokens) > 0, "Model was not initiated with data"
 
         if seed is None:
-            result = self.predict(self.tokens_list[0], 512, True, 0, path)
+            result = self.predict(self.tokens_list[0], 512, True, 0, None, path)
             get_file_from_standard_features(result, 500000, path, False, False, False)
 
         elif isinstance(seed, int):
@@ -133,7 +133,7 @@ class MarkovChain(MusicModel):
             get_file_from_standard_features(result, 500000, path, False, False, False)
 
     def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int,
-                seed: int, save_path: Path) -> np.ndarray:
+                seed: int | None, save_path: Path) -> np.ndarray:
 
         # deterministic - if True, next note will be always note with maximum probability
         #               - if False, next note will be sampled according to all notes probability
@@ -163,7 +163,8 @@ class MarkovChain(MusicModel):
             elif deterministic:
                 next_note = max(probs, key=probs.get)
             else:
-                random.seed(seed)
+                if seed is not None:
+                    random.seed(seed)
                 next_note = random.choices(
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
