@@ -12,7 +12,6 @@ python-multipart = "*"
 websockets = "*"
 redis = "*"
 python-dotenv = "*"
-dataclasses-json = "*"
 
 [dev-packages]
 autopep8 = "*"

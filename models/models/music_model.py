@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, TypeAlias
 
+from dataclasses_json import dataclass_json
+
 
 @dataclass(frozen=True)
 class ProgressMetadata:
@@ -14,6 +16,7 @@ class ProgressMetadata:
 SeriesProgress: TypeAlias = list[tuple[float, float]]
 
 
+@dataclass_json
 @dataclass(frozen=True)
 class TrainingProgress:
     finished: bool
