@@ -69,7 +69,6 @@ class MarkovChain(MusicModel):
                     if self.probabilities[i].get(n_gram_next[i][j]) is None:
                         self.probabilities[i][n_gram_next[i][j]] = float(
                             n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
-                        expected_val += self.probabilities[i][n_gram_next[i][j]] * j
 
     def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
 
@@ -184,6 +183,7 @@ class MarkovChain(MusicModel):
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
 
 
+'''
 if __name__ == '__main__':
     midi_paths = []
     for dirpath, dirs, files in os.walk(DATA_PATH):
@@ -194,3 +194,4 @@ if __name__ == '__main__':
 
     model = MarkovChain()
     model.train_on_files(midi_paths, 0, lambda x: None)
+'''
