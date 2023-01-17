@@ -50,7 +50,7 @@ class MarkovChain(MusicModel):
                     curr_n_gram)].append(next_note)
 
         elapsed = time.time() - start
-        progress_callback([(elapsed, len(self.data))])
+        progress_callback([(elapsed, 100)])
 
         self.probabilities = np.ndarray(
             (len(self.n_grams_list, )), dtype=object)
