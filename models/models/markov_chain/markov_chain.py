@@ -11,6 +11,7 @@ from midi.encode import get_file_from_standard_features
 
 from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 
+
 class MarkovChain(MusicModel):
     n_gram_size: int
 
