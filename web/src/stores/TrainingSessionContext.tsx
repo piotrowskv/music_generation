@@ -21,6 +21,7 @@ const TrainingSessionContext = createContext<{
     initialLoading: boolean
     initialError: {} | undefined
     trainingSession: TrainingSession | undefined
+    trainingError: string | undefined
 }>(null!)
 
 export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
@@ -36,6 +37,10 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
         chart_series_points: [],
     })
 
+    const [trainingError, setTrainingError] = useState<string | undefined>(
+        undefined
+    )
+
     const {
         loading: initialLoading,
         call: getTrainingSession,
@@ -48,17 +53,20 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
 
         getTrainingSession(id)
 
-        return apiClient.trainingProgress(id, msg =>
-            setTrainingData(state => ({
-                finished: msg.finished,
-                x_label: msg.x_label,
-                y_label: msg.y_label,
-                legends: msg.legends,
-                chart_series_points: [
-                    ...state.chart_series_points,
-                    ...msg.chart_series_points,
-                ],
-            }))
+        return apiClient.trainingProgress(
+            id,
+            msg =>
+                setTrainingData(state => ({
+                    finished: msg.finished,
+                    x_label: msg.x_label,
+                    y_label: msg.y_label,
+                    legends: msg.legends,
+                    chart_series_points: [
+                        ...state.chart_series_points,
+                        ...msg.chart_series_points,
+                    ],
+                })),
+            errorMessage => setTrainingError(errorMessage)
         )
     }
 
@@ -74,6 +82,7 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
                 initialLoading,
                 initialError,
                 trainingSession,
+                trainingError: trainingSession?.error_message ?? trainingError,
             }}
         >
             {children}

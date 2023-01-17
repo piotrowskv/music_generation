@@ -102,7 +102,10 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                 selectedModel: models?.variants.find(
                     e => e.id === chosenModelId
                 ),
-                pickModel: setChosenModelId,
+                pickModel(id) {
+                    setSelectedSessionId(undefined)
+                    setChosenModelId(id)
+                },
                 selectedSession: allSessions?.sessions.find(
                     e => e.session_id === selectedSessionId
                 ),
@@ -113,7 +116,11 @@ export const ModelConfigProvider: FC<{ children: ReactNode }> = ({
                     setSelectedSessionId(id)
                 },
                 modelTraining,
-                setModelTraining,
+                setModelTraining(id) {
+                    setMidiFiles([])
+                    setSelectedSessionId(undefined)
+                    setModelTraining(id)
+                },
                 midiFiles,
                 setMidiFiles(files) {
                     if (files.length !== 0) {

@@ -65,6 +65,13 @@ const PickExistingTrainingSession: FC<Props> = () => {
                                 <td>{e.training_completed ? 'yes' : 'no'}</td>
                             </tr>
                         ))}
+                        {allSessions.length === 0 && (
+                            <tr>
+                                <td colSpan={3} className="text-center">
+                                    No previously trained models
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             )}

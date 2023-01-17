@@ -27,6 +27,7 @@ class TrainingSession(BaseModel):
     model: ModelVariant
     created_at: datetime.datetime
     training_file_names: list[str]
+    error_message: str | None
 
 
 @dataclass(frozen=True)

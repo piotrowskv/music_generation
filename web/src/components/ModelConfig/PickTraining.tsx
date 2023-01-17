@@ -5,10 +5,16 @@ import './PickTraining.css'
 
 interface Props {
     modelTraining: ModelTraining | undefined
-    onChange: (id: ModelTraining | undefined) => void
+    onChange: (mode: ModelTraining) => void
 }
 
 const PickTraining: FC<Props> = ({ modelTraining, onChange }) => {
+    const handleChange = (mode: ModelTraining) => {
+        if (modelTraining !== mode) {
+            onChange(mode)
+        }
+    }
+
     return (
         <div className="flex">
             <div className="w-3/5">
@@ -32,7 +38,7 @@ const PickTraining: FC<Props> = ({ modelTraining, onChange }) => {
             <div className="relative min-h-[40px] w-2/5">
                 <Toggle
                     className="absolute right-0 bg-black text-white dark:bg-white dark:text-black"
-                    onClick={onChange}
+                    onClick={handleChange}
                 />
                 <Toggle
                     className={clsx(
@@ -42,7 +48,7 @@ const PickTraining: FC<Props> = ({ modelTraining, onChange }) => {
                         modelTraining === ModelTraining.trainMyself &&
                             'toggle-overlay-right'
                     )}
-                    onClick={onChange}
+                    onClick={handleChange}
                 />
             </div>
         </div>
