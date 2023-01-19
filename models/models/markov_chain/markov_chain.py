@@ -2,6 +2,7 @@ import random
 import time
 from pathlib import Path
 from typing import Any, cast
+import os
 
 import numpy as np
 from midi.bach import download_bach_dataset
@@ -34,28 +35,31 @@ class MarkovChain(MusicModel):
         for i in range(n_gram_next.shape[0]):
             n_gram_next[i] = []
 
+        start = time.time()
+        time.perf_counter()
+
         for i in range(len(self.data)):
+
+            elapsed = time.time() - start
+            progress_callback([(elapsed, 100 * i / len(self.data))])
+
             for j in range(len(self.data[i]) - n - 1):
                 curr_n_gram = tuple(self.data[i][j:j + n])
                 next_note = self.data[i][j + n + 1]
                 n_gram_next[self.n_grams_list.index(
                     curr_n_gram)].append(next_note)
 
+        elapsed = time.time() - start
+        progress_callback([(elapsed, 100)])
+
         self.probabilities = np.ndarray(
             (len(self.n_grams_list, )), dtype=object)
         for i in range(n_gram_next.shape[0]):
             self.probabilities[i] = {}
 
-        start = time.time()
-        time.perf_counter()
-
         len_n_gram_next = len(n_gram_next)
 
         for i in range(len_n_gram_next):
-            if len_n_gram_next < 100 or i % (len_n_gram_next // 100) == 0:
-                elapsed = time.time() - start
-                progress_callback([(elapsed, 100 * i / len_n_gram_next)])
-
             for j in range(len(n_gram_next[i])):
                 if len(n_gram_next[i]) <= 1:
                     self.probabilities[n_gram_next[i]][j] = 1
@@ -63,9 +67,6 @@ class MarkovChain(MusicModel):
                     if self.probabilities[i].get(n_gram_next[i][j]) is None:
                         self.probabilities[i][n_gram_next[i][j]] = float(
                             n_gram_next[i].count(n_gram_next[i][j]) / len(n_gram_next[i]))
-
-        elapsed = time.time() - start
-        progress_callback([(elapsed, 100)])
 
     def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
 
@@ -85,11 +86,11 @@ class MarkovChain(MusicModel):
                 self.data[i][j] = tuple(notes)
                 self.tokens.add(tuple(notes))
 
-    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:  # TODO: determine the correct return
+    def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
-        return data_lines
+        return 0, 0
 
     def save(self, path: Path) -> None:
         np.save(path, np.asarray(self.probabilities))
@@ -119,39 +120,22 @@ class MarkovChain(MusicModel):
         assert len(self.tokens) > 0, "Model was not initiated with data"
 
         if seed is None:
-            result = self.predict(self.tokens_list[0], 512, True, 0, path)
+            result = self.predict(self.tokens_list[0], 512, True, 0, None, path)
             get_file_from_standard_features(result, 500000, path, False, False, False)
 
         elif isinstance(seed, int):
-            # seed decides on length of the sequence
+            # seed of random.randrange
 
             cast(int, seed)
-            result = self.predict(self.tokens_list[0], seed, True, 0, path)
+            result = self.predict(self.tokens_list[0], 512, False, 0, seed, path)
             get_file_from_standard_features(result, 500000, path, False, False, False)
 
-        elif isinstance(seed, list):
-            cast(list, seed)
-            if len(seed) == 2:
-                # seed decides on length and deterministic
-
-                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), 0, path)
-                get_file_from_standard_features(result, 500000, path, False, False, False)
-
-            elif len(seed) == 3:
-                # seed decides on length, deterministic and random chance
-
-                result = self.predict(self.tokens_list[0], seed[0], bool(seed[1]), seed[2], path)
-                get_file_from_standard_features(result, 500000, path, False, False, False)
-
-            else:
-                raise Exception("Incorrect parameters.")
-
     def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int,
-                save_path: Path) -> np.ndarray:
+                seed: int | None, save_path: Path) -> np.ndarray:
 
         # deterministic - if True, next note will be always note with maximum probability
         #               - if False, next note will be sampled according to all notes probability
-        # rand - % chance of selecting completely random token next (int [0;100])
+        # rand - % chance of selecting random token next (int [0;100])
 
         prediction = []
         previous_n_gram = initial_notes
@@ -177,6 +161,8 @@ class MarkovChain(MusicModel):
             elif deterministic:
                 next_note = max(probs, key=probs.get)
             else:
+                if seed is not None:
+                    random.seed(seed)
                 next_note = random.choices(
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
@@ -196,11 +182,15 @@ class MarkovChain(MusicModel):
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
 
 
+'''
 if __name__ == '__main__':
-    dl_path = Path('data')
-    download_bach_dataset(dl_path)
-
-    midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
+    midi_paths = []
+    for dirpath, dirs, files in os.walk(DATA_PATH):
+        for filename in files:
+            fname = os.path.join(dirpath, filename)
+            if fname.endswith('.mid'):
+                midi_paths.append(fname)
 
     model = MarkovChain()
-    model.train_on_files(midi_paths, 10, lambda x: None)
+    model.train_on_files(midi_paths, 0, lambda x: None)
+'''
