@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from models.markov_chain.markov_chain import MarkovChain
 
@@ -56,7 +57,11 @@ def test_multiple_tracks():
 
 
 def test_model_saving_and_loading(tmpdir):
-    path = Path(tmpdir).joinpath('markov_saved.npy')
+
+    if not os.path.exists(tmpdir):
+        os.makedirs(tmpdir, exist_ok=True)
+
+    path = Path(tmpdir).joinpath('markov_saved.npz')
 
     model = MarkovChain()
     model.train_on_files(sample_file, 10, lambda epoch: None)
