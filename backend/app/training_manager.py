@@ -44,7 +44,7 @@ class TrainingManager:
                     f.write(b)
                 files.append(p)
 
-            model.train_on_files(files, 10, on_progress)
+            model.train_on_files(files, None, on_progress)
 
             model.save(self._weights_path_for(session_id))
             self._sessions_repo.save_training_progress(session_id, progress)

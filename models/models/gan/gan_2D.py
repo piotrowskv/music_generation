@@ -201,8 +201,9 @@ class GAN(MusicModel):
                 os.makedirs(save_gan_path)
             gan.save(save_gan_path + f'/gan_model' + str(step) + '.h5')
 
-    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
+        epochs = epochs or 200
 
         batch_per_epoch = len(x_train) // N_BATCH
         half_batch = N_BATCH // 2

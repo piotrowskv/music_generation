@@ -46,8 +46,9 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
+        epochs = epochs or 10
         loss_callback = LossCallback(progress_callback)
         callbacks = [loss_callback] if checkpoint_path is None else [ModelCheckpoint(
             checkpoint_path,

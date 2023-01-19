@@ -23,7 +23,7 @@ class MarkovChain(MusicModel):
         self.probabilities: np.ndarray
         self.n_gram_size = n_gram_size
 
-    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
 
         # count probabilities
