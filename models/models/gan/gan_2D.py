@@ -264,6 +264,7 @@ class GAN(MusicModel):
         return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
 
 
+'''
 if __name__ == '__main__':
 
     g = GAN()
@@ -274,3 +275,4 @@ if __name__ == '__main__':
             if fname.endswith('.mid'):
                 midi_paths.append(fname)
     g.train_on_files(midi_paths, 2000, lambda epoch: None, checkpoint_path='xd')
+'''
