@@ -93,10 +93,13 @@ class MarkovChain(MusicModel):
         return 0, 0
 
     def save(self, path: Path) -> None:
-        np.save(path, np.asarray(self.probabilities))
+        np.savez(path, probabilities=np.asarray(self.probabilities, dtype=object),
+                 tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
-        self.probabilities = np.load(path, allow_pickle=True)
+        data = np.load(path, allow_pickle=True)
+        self.probabilities = data['probabilities']
+        self.tokens_list = data['tokens']
 
     def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
@@ -117,7 +120,7 @@ class MarkovChain(MusicModel):
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
 
-        assert len(self.tokens) > 0, "Model was not initiated with data"
+        assert len(self.tokens_list) > 0, "Model was not initiated with data"
 
         if seed is None:
             result = self.predict(self.tokens_list[0], 512, True, 0, None, path)
@@ -141,7 +144,7 @@ class MarkovChain(MusicModel):
         previous_n_gram = initial_notes
 
         for i in range(len(initial_notes)):
-            prediction.append(initial_notes[i])
+            prediction.append((initial_notes[i], ))
 
         for i in range(length):
             idx = None
@@ -182,15 +185,14 @@ class MarkovChain(MusicModel):
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
 
 
-'''
 if __name__ == '__main__':
-    midi_paths = []
-    for dirpath, dirs, files in os.walk(DATA_PATH):
-        for filename in files:
-            fname = os.path.join(dirpath, filename)
-            if fname.endswith('.mid'):
-                midi_paths.append(fname)
+    dl_path = Path('data')
+    download_bach_dataset(dl_path)
+    midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
 
     model = MarkovChain()
-    model.train_on_files(midi_paths, 0, lambda x: None)
-'''
+    model.train_on_files(midi_paths, 10, lambda x: None)
+    model.save('markov.npz')
+    model2 = MarkovChain()
+    model2.load('markov.npz')
+    model2.generate('dupa', 2)
