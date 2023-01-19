@@ -15,6 +15,7 @@ class TrainingSessionData:
     created_at: datetime.datetime
     training_file_names: list[str]
     error_message: str | None
+    training_completed: bool
 
 
 @dataclass(frozen=True)
@@ -106,9 +107,10 @@ class TrainingSessionsRepository:
         create_date: datetime.datetime
         filenames: list[str] = []
         error_message: str | None
+        training_completed: bool
 
         for r in self._conn.execute(f"""
-            SELECT s.model_id, s.create_date, f.file_name, s.error_message
+            SELECT s.model_id, s.create_date, f.file_name, s.error_message, s.progress_json IS NOT NULL
             FROM {self.SESSIONS_TABLE_NAME} AS s
             INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
             WHERE s.session_id=?
@@ -117,11 +119,12 @@ class TrainingSessionsRepository:
             create_date = datetime.datetime.strptime(r[1], '%Y-%m-%d %H:%M:%S')
             filenames.append(r[2])
             error_message = r[3]
+            training_completed = bool(r[4])
 
         if len(filenames) == 0:
             return None
 
-        return TrainingSessionData(model_id, create_date, filenames, error_message)
+        return TrainingSessionData(model_id, create_date, filenames, error_message, training_completed)
 
     def get_all_sessions(self, model_id: str | None) -> list[TrainingSessionSummary]:
         """

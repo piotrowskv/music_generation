@@ -1,14 +1,17 @@
 from pathlib import Path
+from typing import Any
 
 from fastapi import (BackgroundTasks, FastAPI, Form, Header, HTTPException,
                      UploadFile, WebSocket, WebSocketDisconnect)
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from app.db import create_database
 from app.dto import models as m
 from app.dto.error import EndpointError
 from app.supported_models import SupportedModels
 from app.training_manager import TrainingManager
+from app.utils import chunked
 
 app = FastAPI()
 app.add_middleware(
@@ -207,3 +210,35 @@ async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
 
     except Exception as ex:
         await websocket.close(code=1011, reason=str(ex))
+
+
+@app.get("/generate/{session_id}/{seed}",
+         response_class=StreamingResponse,
+         description="Generates a single MIDI sample for an already trained model given some seed.",
+         responses={
+             200: {"content": {"audio/midi": {}}},
+             404: {"description": "Session id does not exist or model has not completed training",
+                   "model": EndpointError},
+             410: {"description": "Model is no longer supported",
+                   "model": EndpointError},
+         })
+async def generate_sample(session_id: str, seed: int) -> Any:
+    session = training_sessions.get_session(session_id)
+    if session is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No session with id {session_id} found")
+    if not session.training_completed:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Selected session did not finish its training")
+
+    model = SupportedModels.from_model_id(session.model_id)
+    if model is None:
+        raise HTTPException(
+            status_code=410,
+            detail=f"Model with an ID {session.model_id} is not supported")
+
+    midi_bytes = training_manager.generate_sample(session_id, model.get_model(), seed)
+
+    return StreamingResponse(chunked(midi_bytes, 512), media_type="audio/midi")
