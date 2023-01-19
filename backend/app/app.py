@@ -105,7 +105,8 @@ async def get_training_session(session_id: str) -> m.TrainingSession:
         session_id,
         model.value,
         session.created_at,
-        session.training_file_names)
+        session.training_file_names,
+        session.error_message)
 
 
 @app.get("/training",
@@ -203,3 +204,6 @@ async def get_training_progress(websocket: WebSocket, session_id: str) -> None:
 
     except WebSocketDisconnect:
         await websocket.close()
+
+    except Exception as ex:
+        await websocket.close(code=1011, reason=str(ex))

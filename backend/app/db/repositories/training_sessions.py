@@ -14,6 +14,7 @@ class TrainingSessionData:
     model_id: str
     created_at: datetime.datetime
     training_file_names: list[str]
+    error_message: str | None
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,7 @@ class TrainingSessionsRepository:
                 session_id TEXT NOT NULL PRIMARY KEY,
                 model_id TEXT NOT NULL,
                 progress_json TEXT,
+                error_message TEXT,
                 create_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
             )""")
         self._conn.execute(f"""
@@ -81,6 +83,19 @@ class TrainingSessionsRepository:
 
         return session_id
 
+    def mark_training_as_failed(self, session_id: str, error_message: str) -> None:
+        """
+        Marks some existing session as failed by saving it's error message.
+        """
+
+        self._conn.execute(f"""
+            UPDATE {self.SESSIONS_TABLE_NAME}
+            SET error_message=?
+            WHERE session_id=?
+            """, (error_message, session_id))
+
+        self._conn.commit()
+
     def get_session(self, session_id: str) -> TrainingSessionData | None:
         """
         Finds a training session and returns some information about it.
@@ -90,20 +105,23 @@ class TrainingSessionsRepository:
         model_id: str
         create_date: datetime.datetime
         filenames: list[str] = []
+        error_message: str | None
 
         for r in self._conn.execute(f"""
-            SELECT s.model_id, s.create_date, f.file_name FROM {self.SESSIONS_TABLE_NAME} AS s
+            SELECT s.model_id, s.create_date, f.file_name, s.error_message
+            FROM {self.SESSIONS_TABLE_NAME} AS s
             INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
             WHERE s.session_id=?
             """, (session_id,)):
             model_id = r[0]
             create_date = datetime.datetime.strptime(r[1], '%Y-%m-%d %H:%M:%S')
             filenames.append(r[2])
+            error_message = r[3]
 
         if len(filenames) == 0:
             return None
 
-        return TrainingSessionData(model_id, create_date, filenames)
+        return TrainingSessionData(model_id, create_date, filenames, error_message)
 
     def get_all_sessions(self, model_id: str | None) -> list[TrainingSessionSummary]:
         """
@@ -114,14 +132,14 @@ class TrainingSessionsRepository:
         sessions: list[TrainingSessionSummary] = []
 
         for r in self._conn.execute(f"""
-            SELECT s.session_id, s.model_id, s.create_date, COUNT(s.session_id) FROM {self.SESSIONS_TABLE_NAME} AS s
+            SELECT s.session_id, s.model_id, s.create_date, COUNT(s.session_id), s.progress_json IS NOT NULL
+            FROM {self.SESSIONS_TABLE_NAME} AS s
             INNER JOIN {self.FILES_TABLE_NAME} AS f ON s.session_id=f.session_id
             {'WHERE s.model_id=?' if model_id is not None else ''}
             GROUP BY s.session_id
             """, (model_id,) if model_id is not None else ()):
             create_date = datetime.datetime.strptime(r[2], '%Y-%m-%d %H:%M:%S')
-            # TODO: check training completion
-            sessions.append(TrainingSessionSummary(r[0], r[1], create_date, r[3], False))
+            sessions.append(TrainingSessionSummary(r[0], r[1], create_date, r[3], bool(r[4])))
 
         return sessions
 

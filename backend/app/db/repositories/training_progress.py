@@ -13,6 +13,7 @@ class TrainingProgressRepository:
     A live Redis Stream connection for training progress tracking.
     """
     _DATA_KEY = 'data'
+    _ERROR_KEY = 'error'
 
     # synchronuous version is used for writes, asynchronuous for reads
     _sr: SyncRedis
@@ -25,6 +26,9 @@ class TrainingProgressRepository:
     def publish_progress(self, session_id: str, progress: TrainingProgress) -> None:
         serialized = progress.to_json()
         self._sr.xadd(session_id, {self._DATA_KEY: serialized})
+
+    def publish_error(self, session_id: str, error_message: str) -> None:
+        self._sr.xadd(session_id, {self._ERROR_KEY: error_message})
 
     async def subscribe(self, session_id: str) -> AsyncIterable[ProgressList]:
         last_id = 0
@@ -42,10 +46,13 @@ class TrainingProgressRepository:
                 for msg in messages:
                     last_id, data = msg
 
-                    progress = TrainingProgress.from_json(data[self._DATA_KEY])
+                    if self._ERROR_KEY in data:
+                        raise Exception(data[self._ERROR_KEY])
+                    else:
+                        progress = TrainingProgress.from_json(data[self._DATA_KEY])
 
-                    out.append(progress.series)
-                    finished |= progress.finished
+                        out.append(progress.series)
+                        finished |= progress.finished
 
                 yield out
 

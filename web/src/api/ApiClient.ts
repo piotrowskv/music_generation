@@ -164,6 +164,7 @@ export class ApiClient {
                 },
                 created_at: '2023-01-03T11:11:13.238Z',
                 training_file_names: ['file.mid', 'otherfile.mid'],
+                error_message: undefined,
             }
         )
 
@@ -173,7 +174,8 @@ export class ApiClient {
     // returns closing function
     trainingProgress = (
         sessionId: string,
-        onMessage: (msg: TrainingProgress) => void
+        onMessage: (msg: TrainingProgress) => void,
+        onError: (errorMessage: string) => void
     ): (() => void) => {
         const ws = new WebSocket(
             `${this.#secureProtocol('ws')}${
@@ -188,6 +190,11 @@ export class ApiClient {
 
             if (msg.finished) {
                 ws.close()
+            }
+        }
+        ws.onclose = event => {
+            if (event.code === 1011) {
+                onError(event.reason)
             }
         }
 

@@ -11,6 +11,7 @@ const TrainingSession: FC = () => {
         trainingSession,
         initialError,
         trainingFinished,
+        trainingError,
     } = useTrainingSessionContext()
 
     useEffect(() => init(), [])
@@ -26,10 +27,16 @@ const TrainingSession: FC = () => {
                         {trainingSession.model.name} training on{' '}
                         {trainingSession.training_file_names.length} MIDI files
                     </h3>
-                    <div className="italic text-gray-400">
-                        {trainingFinished ? 'Ready!' : 'In progress...'}
-                    </div>
-                    <TrainingChart />
+                    {trainingError ? (
+                        <ErrorMessage error={trainingError}>
+                            Failed to train the model:
+                        </ErrorMessage>
+                    ) : (
+                        <div className="italic text-gray-400">
+                            {trainingFinished ? 'Ready!' : 'In progress...'}
+                        </div>
+                    )}
+                    {!trainingError && <TrainingChart />}
                 </>
             )}
             {initialError && (
