@@ -170,7 +170,8 @@ class MarkovChain(MusicModel):
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
             previous_n_gram = previous_n_gram[1:] + (next_note,)
-            prediction.append(next_note)
+            if next_note is not None:
+                prediction.append(next_note)
 
         result = np.full((len(prediction), 128), False)
         for i in range(len(prediction)):
