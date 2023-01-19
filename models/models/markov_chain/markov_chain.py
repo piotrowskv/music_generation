@@ -183,16 +183,3 @@ class MarkovChain(MusicModel):
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
-
-
-if __name__ == '__main__':
-    dl_path = Path('data')
-    download_bach_dataset(dl_path)
-    midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
-
-    model = MarkovChain()
-    model.train_on_files(midi_paths, 10, lambda x: None)
-    model.save('markov.npz')
-    model2 = MarkovChain()
-    model2.load('markov.npz')
-    model2.generate('dupa', 2)
