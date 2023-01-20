@@ -50,10 +50,9 @@ const PickExistingTrainingSession: FC<Props> = () => {
                         {allSessions.map(e => (
                             <tr
                                 className={clsx(
-                                    'hover:bg-gray-400 cursor-pointer transition-none',
+                                    'cursor-pointer transition-none hover:bg-gray',
                                     e.session_id ===
-                                        selectedSession?.session_id &&
-                                        'bg-gray-400'
+                                        selectedSession?.session_id && 'bg-gray'
                                 )}
                                 key={e.session_id}
                                 onClick={() => setSessionId(e.session_id)}
