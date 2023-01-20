@@ -36,7 +36,7 @@ class MusicModel(ABC):
     """
 
     @abstractmethod
-    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
         """
         Trains the model with processed by `prepare_data` x/y train data. When `checkpoint_path` is provided, 
@@ -44,7 +44,7 @@ class MusicModel(ABC):
         """
         raise NotImplementedError
 
-    def train_on_files(self, midi_files: list[Path], epochs: int, progress_callback: CompleteProgressCallback,
+    def train_on_files(self, midi_files: list[Path], epochs: int | None, progress_callback: CompleteProgressCallback,
                        checkpoint_path: Path | None = None) -> None:
         """
         Trains the model on a given set of files.

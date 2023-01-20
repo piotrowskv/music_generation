@@ -96,7 +96,6 @@ class MarkovChain(MusicModel):
                  tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
-
         data = np.load(path, allow_pickle=True)
         self.probabilities = data['probabilities']
         self.tokens_list = data['tokens']
@@ -190,7 +189,6 @@ class MarkovChain(MusicModel):
 
 
 if __name__ == '__main__':
-
     download_bach_dataset(Path('data'))
     model = MarkovChain()
     model.train_on_files(
