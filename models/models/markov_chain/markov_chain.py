@@ -2,7 +2,6 @@ import random
 import time
 from pathlib import Path
 from typing import Any, cast
-import os
 
 import numpy as np
 from midi.bach import download_bach_dataset
@@ -24,7 +23,7 @@ class MarkovChain(MusicModel):
         self.probabilities: np.ndarray
         self.n_gram_size = n_gram_size
 
-    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
 
         # count probabilities
@@ -93,10 +92,14 @@ class MarkovChain(MusicModel):
         return 0, 0
 
     def save(self, path: Path) -> None:
-        np.save(path, np.asarray(self.probabilities))
+        np.savez(path, probabilities=np.asarray(self.probabilities, dtype=object),
+                 tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
-        self.probabilities = np.load(path, allow_pickle=True)
+
+        data = np.load(path, allow_pickle=True)
+        self.probabilities = data['probabilities']
+        self.tokens_list = data['tokens']
 
     def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
@@ -117,7 +120,7 @@ class MarkovChain(MusicModel):
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
 
-        assert len(self.tokens) > 0, "Model was not initiated with data"
+        assert len(self.tokens_list) > 0, "Model was not initiated with data"
 
         if seed is None:
             result = self.predict(self.tokens_list[0], 512, True, 0, None, path)
@@ -167,13 +170,17 @@ class MarkovChain(MusicModel):
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
             previous_n_gram = previous_n_gram[1:] + (next_note,)
-            prediction.append(next_note)
+            if next_note is not None:
+                prediction.append(next_note)
 
         result = np.full((len(prediction), 128), False)
         for i in range(len(prediction)):
-            for j in range(len(prediction[i])):
-                note = prediction[i][j]
-                result[i][note] = True
+            if isinstance(prediction[i], int):
+                result[i][prediction[i]] = True
+            else:
+                for j in range(len(prediction[i])):
+                    note = prediction[i][j]
+                    result[i][note] = True
 
         return result
 
@@ -182,15 +189,9 @@ class MarkovChain(MusicModel):
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
 
 
-'''
 if __name__ == '__main__':
-    midi_paths = []
-    for dirpath, dirs, files in os.walk(DATA_PATH):
-        for filename in files:
-            fname = os.path.join(dirpath, filename)
-            if fname.endswith('.mid'):
-                midi_paths.append(fname)
 
+    download_bach_dataset(Path('data'))
     model = MarkovChain()
-    model.train_on_files(midi_paths, 0, lambda x: None)
-'''
+    model.train_on_files(
+        list(Path('data/bach/chorales').glob("*.mid")), 0, lambda x: None)
