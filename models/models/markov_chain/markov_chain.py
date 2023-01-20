@@ -2,7 +2,6 @@ import random
 import time
 from pathlib import Path
 from typing import Any, cast
-import os
 
 import numpy as np
 from midi.bach import download_bach_dataset
@@ -24,7 +23,7 @@ class MarkovChain(MusicModel):
         self.probabilities: np.ndarray
         self.n_gram_size = n_gram_size
 
-    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
 
         # count probabilities
@@ -97,9 +96,11 @@ class MarkovChain(MusicModel):
                  tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
+    
         data = np.load(path, allow_pickle=True)
         self.probabilities = data['probabilities']
         self.tokens_list = data['tokens']
+
 
     def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
@@ -190,14 +191,8 @@ class MarkovChain(MusicModel):
 
 
 if __name__ == '__main__':
-    dl_path = Path('data')
-    download_bach_dataset(dl_path)
 
-    midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
-
+    download_bach_dataset(Path('data'))
     model = MarkovChain()
-    model.train_on_files(midi_paths, 10, lambda x: None)
-    model.save('markov.npz')
-    model2 = MarkovChain()
-    model2.load('markov.npz')
-    model2.generate('dupa', 2)
+    model.train_on_files(
+        list(Path('data/bach/chorales').glob("*.mid")), 0, lambda x: None)

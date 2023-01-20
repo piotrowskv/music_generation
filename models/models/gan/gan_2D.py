@@ -210,8 +210,9 @@ class GAN(MusicModel):
                 os.makedirs(save_gan_path)
             gan.save(save_gan_path + f'/gan_model' + str(step) + '.h5')
 
-    def train(self, epochs: int, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
+        epochs = epochs or 200
 
         batch_per_epoch = len(x_train) // N_BATCH
         half_batch = N_BATCH // 2
@@ -235,7 +236,6 @@ class GAN(MusicModel):
             g_loss = self.model.train_on_batch(z_input, y_real2)
 
             x, y = self.generate_fake_samples(self.generator, LATENT_DIM, 25, GLOBAL_SEED)
-            progress_callback([(d_loss[0], step), (g_loss[0], step)])
 
             history['discriminator_real_loss'].append(d_loss)
             history['discriminator_fake_loss'].append(d_loss)
@@ -245,6 +245,8 @@ class GAN(MusicModel):
             if step % batch_per_epoch == 0:
                 print('epoch: %d, discriminator_loss=%.3f,  generator_loss=%.3f \n'
                       % (epoch, d_loss[0],  g_loss[0]))
+                progress_callback([(epoch, d_loss[0]), (epoch, g_loss[0])])
+
 
             if step % SAVE_STEP == 0:
                 self.save_npy(self.postprocess_array(x_fake[0]), checkpoint_path, str(step))

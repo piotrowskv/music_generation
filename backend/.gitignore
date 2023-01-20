@@ -88,3 +88,5 @@ dmypy.json
 
 # SQLite database
 db.sqlite
+
+saved_models
