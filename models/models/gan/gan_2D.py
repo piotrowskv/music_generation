@@ -247,7 +247,6 @@ class GAN(MusicModel):
                       % (epoch, d_loss[0],  g_loss[0]))
                 progress_callback([(epoch, d_loss[0]), (epoch, g_loss[0])])
 
-
             if step % SAVE_STEP == 0:
                 self.save_npy(self.postprocess_array(x_fake[0]), checkpoint_path, str(step))
                 # self.save_models(checkpoint_path, self.model, step)
