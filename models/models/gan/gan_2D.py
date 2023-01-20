@@ -236,7 +236,7 @@ class GAN(MusicModel):
             g_loss = self.model.train_on_batch(z_input, y_real2)
 
             x, y = self.generate_fake_samples(self.generator, LATENT_DIM, 25, GLOBAL_SEED)
-            progress_callback([(d_loss[0], epoch), (g_loss[0], epoch)])
+            progress_callback([(d_loss[0], step), (g_loss[0], step)])
 
             history['discriminator_real_loss'].append(d_loss)
             history['discriminator_fake_loss'].append(d_loss)
