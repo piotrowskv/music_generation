@@ -3,10 +3,16 @@ import React, { CSSProperties } from 'react'
 
 interface Props {
     onClick: (key: number) => void
+    disabled: boolean
 }
 
-const PianoKeyboard: React.FC<Props> = ({ onClick }) => (
-    <div className="relative">
+const PianoKeyboard: React.FC<Props> = ({ onClick, disabled }) => (
+    <div
+        className={clsx(
+            'relative',
+            disabled && 'pointer-events-none select-none blur-sm'
+        )}
+    >
         {[1, 3, 5, 7, 9, 11, 13].map(key => (
             <WhiteKey onClick={() => onClick(key)} className="inline-block" />
         ))}
