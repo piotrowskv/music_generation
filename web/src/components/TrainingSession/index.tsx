@@ -2,6 +2,7 @@ import { FC, useEffect } from 'react'
 import { useTrainingSessionContext } from '../../stores/TrainingSessionContext'
 import ErrorMessage from '../ErrorMessage'
 import LoadingIndicator from '../LoadingIndicator'
+import GenerateSample from './GenerateSample'
 import TrainingChart from './TrainingChart'
 
 const TrainingSession: FC = () => {
@@ -37,6 +38,7 @@ const TrainingSession: FC = () => {
                         </div>
                     )}
                     {!trainingError && <TrainingChart />}
+                    {trainingFinished && <GenerateSample />}
                 </>
             )}
             {initialError && (
