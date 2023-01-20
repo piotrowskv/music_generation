@@ -15,7 +15,7 @@ const UploadFiles: FC<Props> = ({ files, onChange }) => {
                 <label htmlFor="model-midi-files" className="text-xl">
                     Upload MIDI files
                 </label>
-                <div className="italic text-gray-400">
+                <div className="italic text-gray">
                     Upload using the button or drag&drop files onto the tile
                 </div>
             </div>

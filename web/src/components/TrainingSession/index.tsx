@@ -32,7 +32,7 @@ const TrainingSession: FC = () => {
                             Failed to train the model:
                         </ErrorMessage>
                     ) : (
-                        <div className="italic text-gray-400">
+                        <div className="italic text-gray">
                             {trainingFinished ? 'Ready!' : 'In progress...'}
                         </div>
                     )}
