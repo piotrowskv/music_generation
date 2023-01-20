@@ -1,14 +1,15 @@
-import numpy as np
-
-from typing import Any
 from pathlib import Path
+from typing import Any
 
+import numpy as np
 from keras.callbacks import ModelCheckpoint
 from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
 from keras.models import Sequential, load_model
-
+from midi.bach import download_bach_dataset
 from midi.decode import get_sequence_of_notes
+
 from models.loss_callback import LossCallback
+
 from ..music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 SEQUENCE_LENGTH = 100
@@ -45,8 +46,9 @@ class MusicLstm(MusicModel):
             optimizer='rmsprop'
         )
 
-    def train(self, epochs: int, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
+    def train(self, epochs: int | None, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
+        epochs = epochs or 10
         loss_callback = LossCallback(progress_callback)
         callbacks = [loss_callback] if checkpoint_path is None else [ModelCheckpoint(
             checkpoint_path,
@@ -109,7 +111,7 @@ class MusicLstm(MusicModel):
         return "\n".join(stringlist)
 
     def save(self, path: Path) -> None:
-        self.model.save(path)
+        self.model.save(path, save_format='h5')
 
     def load(self, path: Path) -> None:
         self.model = load_model(path)
@@ -119,7 +121,9 @@ class MusicLstm(MusicModel):
 
 
 if __name__ == '__main__':
+    download_bach_dataset(Path('data'))
+
     model = MusicLstm(128)
 
     model.train_on_files(
-        list(Path('./data').glob("*.mid")), 10, lambda x: None)
+        list(Path('data/bach/chorales').glob("*.mid")), 10, lambda x: None)
