@@ -200,6 +200,18 @@ export class ApiClient {
 
         return () => ws.close()
     }
+
+    generateSample = async (sessionId: string, seed: number): Promise<{}> => {
+        await this.baseRequest<null>(
+            `generate/${sessionId}/${seed}`,
+            {
+                method: 'GET',
+            },
+            null
+        )
+
+        return {}
+    }
 }
 
 export class FailedRequestError extends Error {
