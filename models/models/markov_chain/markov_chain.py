@@ -144,7 +144,7 @@ class MarkovChain(MusicModel):
         previous_n_gram = initial_notes
 
         for i in range(len(initial_notes)):
-            prediction.append((initial_notes[i], ))
+            prediction.append(initial_notes[i])
 
         for i in range(length):
             idx = None
@@ -175,12 +175,29 @@ class MarkovChain(MusicModel):
 
         result = np.full((len(prediction), 128), False)
         for i in range(len(prediction)):
-            for j in range(len(prediction[i])):
-                note = prediction[i][j]
-                result[i][note] = True
+            if isinstance(prediction[i], int):
+                result[i][prediction[i]] = True
+            else:
+                for j in range(len(prediction[i])):
+                    note = prediction[i][j]
+                    result[i][note] = True
 
         return result
 
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
+
+
+if __name__ == '__main__':
+    dl_path = Path('data')
+    download_bach_dataset(dl_path)
+
+    midi_paths = list(dl_path.joinpath('bach/chorales').glob('*.mid'))
+
+    model = MarkovChain()
+    model.train_on_files(midi_paths, 10, lambda x: None)
+    model.save('markov.npz')
+    model2 = MarkovChain()
+    model2.load('markov.npz')
+    model2.generate('dupa', 2)
