@@ -14,10 +14,15 @@ const PianoKeyboard: React.FC<Props> = ({ onClick, disabled }) => (
         )}
     >
         {[1, 3, 5, 7, 9, 11, 13].map(key => (
-            <WhiteKey onClick={() => onClick(key)} className="inline-block" />
+            <WhiteKey
+                key={key}
+                onClick={() => onClick(key)}
+                className="inline-block"
+            />
         ))}
         {[2, 4, 8, 10, 12].map(key => (
             <BlackKey
+                key={key}
                 style={{ '--mult': key }}
                 onClick={() => onClick(key)}
                 className="absolute left-[calc(theme(spacing.24)*(var(--mult)/2)-theme(spacing.12)/2)] top-0"
