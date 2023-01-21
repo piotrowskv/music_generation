@@ -219,7 +219,7 @@ class GAN(MusicModel):
                          'generator_loss': []}
 
         for step in range(n_steps):
-            epoch = step // batch_per_epoch
+            epoch = (step + 1) // batch_per_epoch
 
             x_real, y_real = self.generate_real_samples(self.data, half_batch)
             x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, half_batch, GLOBAL_SEED)
@@ -237,9 +237,8 @@ class GAN(MusicModel):
             history['discriminator_real_loss'].append(d_loss)
             history['discriminator_fake_loss'].append(d_loss)
             history['generator_loss'].append(g_loss)
-            epoch = step // batch_per_epoch + 1
 
-            if step % batch_per_epoch == 0:
+            if step == 0 or step % batch_per_epoch == batch_per_epoch-1:
                 print('epoch: %d, discriminator_loss=%.3f,  generator_loss=%.3f \n'
                       % (epoch, d_loss[0],  g_loss[0]))
                 progress_callback([(epoch, d_loss[0]), (epoch, g_loss[0])])
@@ -260,7 +259,7 @@ class GAN(MusicModel):
 
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
-        return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
+        return ProgressMetadata(x_label='Epoch', y_label='Loss', legends=['Discriminator loss', 'Generator loss'])
 
 
 '''
