@@ -214,7 +214,7 @@ class GAN(MusicModel):
 
     def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
-        epochs = epochs or 20
+        epochs = epochs or 10
 
         batch_per_epoch = len(x_train) // N_BATCH
         half_batch = N_BATCH // 2
