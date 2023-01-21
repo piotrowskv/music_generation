@@ -201,16 +201,23 @@ export class ApiClient {
         return () => ws.close()
     }
 
-    generateSample = async (sessionId: string, seed: number): Promise<{}> => {
-        await this.baseRequest<null>(
-            `generate/${sessionId}/${seed}`,
+    generateSample = async (sessionId: string, seed: number): Promise<Blob> => {
+        const res = await fetch(
+            `${this.#secureProtocol('http')}${
+                this.baseUrl
+            }/generate/${sessionId}/${seed}`,
             {
                 method: 'GET',
-            },
-            null
+            }
         )
 
-        return {}
+        if (!res.ok) {
+            throw await FailedRequestError.fromResponse(res)
+        }
+
+        const blob = await res.blob()
+
+        return blob
     }
 }
 

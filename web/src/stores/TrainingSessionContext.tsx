@@ -94,7 +94,13 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
                 trainingError: trainingSession?.error_message ?? trainingError,
                 generateSampleLoading,
                 generateSampleError,
-                generateSample: seed => generateSample(sessionId, seed),
+                generateSample: async seed => {
+                    const blob = await generateSample(sessionId, seed)
+                    if (blob) {
+                        const file = URL.createObjectURL(blob)
+                        location.assign(file)
+                    }
+                },
             }}
         >
             {children}
