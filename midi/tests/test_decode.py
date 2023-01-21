@@ -35,7 +35,7 @@ expected_tempos = [500000] * 80
 expected_tempos.extend([555555] * 64)
 expected_tempos.extend([500000] * 49)
 
-expected_trimmed_tempos = [500000] * 33
+expected_trimmed_tempos = [500000] * 49
 
 expected_untrimmed_tempos = [500000] * 65
 
@@ -223,10 +223,18 @@ expected_trimmed_file = MidiFile(type=1, ticks_per_beat=192, tracks=[
         MetaMessage('track_name', name='Tempo Track', time=0),
         MetaMessage('end_of_track', time=768)]),
     MidiTrack([
-        Message('note_on', channel=0, note=60, velocity=100, time=0),
-        Message('note_off', channel=0, note=60, velocity=0, time=192),
+        Message('note_on', channel=0, note=58, velocity=100, time=0),
+        Message('note_off', channel=0, note=58, velocity=0, time=96),
         Message('note_on', channel=0, note=57, velocity=100, time=0),
-        Message('note_off', channel=0, note=57, velocity=0, time=192)])
+        Message('note_off', channel=0, note=57, velocity=0, time=96),
+        Message('note_on', channel=0, note=59, velocity=100, time=0),
+        Message('note_off', channel=0, note=59, velocity=0, time=96),
+        Message('note_on', channel=0, note=58, velocity=100, time=0),
+        Message('note_off', channel=0, note=58, velocity=0, time=96),
+        Message('note_on', channel=0, note=57, velocity=100, time=0),
+        Message('note_off', channel=0, note=57, velocity=0, time=96),
+        Message('note_on', channel=0, note=56, velocity=100, time=0),
+        Message('note_off', channel=0, note=56, velocity=0, time=96)])
 ])
 
 expected_sequence_ff = [
@@ -854,7 +862,7 @@ def test_prepare_file_untrimmed():
     assert repr(file) == repr(expected_trimmed_file)
     assert filename == 'test_type_1_untrimmed'
     assert accuracy == float(12)
-    assert length == 32
+    assert length == 48
     assert tempos == expected_trimmed_tempos
 
 
