@@ -91,7 +91,7 @@ class GAN(MusicModel):
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path: Path) -> None:
-        self.save_models(path, self.model, 0)
+        self.model.save(path, save_format='h5')
 
     def save_npy(self, prediction: np.ndarray, save_path: Path | None, save_name: str) -> None:
 
@@ -202,12 +202,10 @@ class GAN(MusicModel):
 
         return x, y
 
-    def save_models(self, save_path: Path | None, gan: Sequential, step: int) -> None:
-        if save_path is not None:
-            save_gan_path = f'{save_path}/gan_models'
-            if not os.path.exists(save_gan_path):
-                os.makedirs(save_gan_path)
-            gan.save(save_gan_path + f'/gan_model' + str(step) + '.h5')
+    def save_models(self, save_path: Path, gan: Sequential, step: int) -> None:
+        save_gan_path = save_path.joinpath('gan_models')
+        save_gan_path.mkdir(exist_ok=True, parents=True)
+        gan.save(save_gan_path.joinpath(f'gan_model{step}.h5'))
 
     def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
@@ -248,7 +246,8 @@ class GAN(MusicModel):
 
             if step % SAVE_STEP == 0:
                 self.save_npy(self.postprocess_array(x_fake[0]), checkpoint_path, str(step))
-                # self.save_models(checkpoint_path, self.model, step)
+                # if checkpoint_path is not None:
+                #     self.save_models(checkpoint_path, self.model, step)
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
         if (isinstance(seed, int)):
