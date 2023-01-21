@@ -1,17 +1,20 @@
 import os
-import numpy as np
-from typing import Any
 from pathlib import Path
+from typing import Any
 
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU, Conv1D, Conv1DTranspose, Activation
-from tensorflow.keras import activations
-from sklearn.utils import shuffle
-
+import numpy as np
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
-from models.music_model import MusicModel, ProgressCallback, ProgressMetadata, SeriesProgress
+from sklearn.utils import shuffle
+from tensorflow.keras import activations
+from tensorflow.keras.layers import (Activation, Conv1D, Conv1DTranspose,
+                                     Dense, Dropout, Flatten, LeakyReLU,
+                                     Reshape)
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.optimizers import Adam
+
+from models.music_model import (MusicModel, ProgressCallback, ProgressMetadata,
+                                SeriesProgress)
 
 DATA_PATH = 'data'
 
@@ -212,7 +215,7 @@ class GAN(MusicModel):
 
     def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
-        epochs = epochs or 200
+        epochs = epochs or 20
 
         batch_per_epoch = len(x_train) // N_BATCH
         half_batch = N_BATCH // 2

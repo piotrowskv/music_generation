@@ -15,8 +15,8 @@ function App() {
 
     return (
         <div className={clsx(mode === ResolvedTheme.dark && 'dark')}>
-            <div className="min-w-screen flex min-h-screen flex-col bg-white p-4 text-black dark:bg-black dark:text-white">
-                <div className="flex">
+            <div className="min-w-screen flex min-h-screen flex-col bg-white px-4 pb-4 text-black dark:bg-black dark:text-white">
+                <div className="sticky top-0 z-50 flex bg-[inherit] pt-4">
                     <Link to={routes.root()}>
                         <div className="text-3xl font-bold">
                             Project of Application for Piano Music Generation

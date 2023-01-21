@@ -23,7 +23,7 @@ const PickExistingTrainingSession: FC<Props> = () => {
                 <label htmlFor="model-midi-files" className="text-xl">
                     Choose session
                 </label>
-                <div className="italic text-gray-400">
+                <div className="italic text-gray">
                     Choose from the list of all created sessions the one you
                     want to preview
                 </div>
@@ -50,10 +50,9 @@ const PickExistingTrainingSession: FC<Props> = () => {
                         {allSessions.map(e => (
                             <tr
                                 className={clsx(
-                                    'cursor-pointer transition-none hover:bg-gray-400',
+                                    'cursor-pointer transition-none hover:bg-gray',
                                     e.session_id ===
-                                        selectedSession?.session_id &&
-                                        'bg-gray-400'
+                                        selectedSession?.session_id && 'bg-gray'
                                 )}
                                 key={e.session_id}
                                 onClick={() => setSessionId(e.session_id)}

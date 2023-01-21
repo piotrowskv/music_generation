@@ -21,7 +21,7 @@ const PickModel: FC<Props> = ({ models, onChange, selectedModel }) => {
                     Pick model
                 </label>
                 {selectedModel && (
-                    <div className="italic text-gray-400">
+                    <div className="italic text-gray">
                         {selectedModel.description}
                     </div>
                 )}

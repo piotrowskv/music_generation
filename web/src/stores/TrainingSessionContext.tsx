@@ -22,13 +22,18 @@ const TrainingSessionContext = createContext<{
     initialError: {} | undefined
     trainingSession: TrainingSession | undefined
     trainingError: string | undefined
+    generateSampleLoading: boolean
+    generateSample: (seed: number) => void
+    generateSampleError: {} | undefined
 }>(null!)
 
 export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
     children,
 }) => {
-    const { sessionId } =
+    const { sessionId: _sessionId } =
         useParams<PathParamsFor<typeof routes.trainingSession>>()
+    const sessionId = _sessionId!
+
     const [trainingData, setTrainingData] = useState<TrainingProgress>({
         finished: false,
         x_label: '',
@@ -48,13 +53,17 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
         error: initialError,
     } = useAsync(apiClient.getTrainingSession)
 
-    function init() {
-        const id = sessionId!
+    const {
+        loading: generateSampleLoading,
+        call: generateSample,
+        error: generateSampleError,
+    } = useAsync(apiClient.generateSample)
 
-        getTrainingSession(id)
+    function init() {
+        getTrainingSession(sessionId)
 
         return apiClient.trainingProgress(
-            id,
+            sessionId,
             msg =>
                 setTrainingData(state => ({
                     finished: msg.finished,
@@ -83,6 +92,15 @@ export const TrainingSessionProvider: FC<{ children: ReactNode }> = ({
                 initialError,
                 trainingSession,
                 trainingError: trainingSession?.error_message ?? trainingError,
+                generateSampleLoading,
+                generateSampleError,
+                generateSample: async seed => {
+                    const blob = await generateSample(sessionId, seed)
+                    if (blob) {
+                        const file = URL.createObjectURL(blob)
+                        location.assign(file)
+                    }
+                },
             }}
         >
             {children}

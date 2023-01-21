@@ -22,7 +22,7 @@ const PickTraining: FC<Props> = ({ modelTraining, onChange }) => {
                     Pick training
                 </label>
                 {modelTraining !== undefined && (
-                    <div className="italic text-gray-400">
+                    <div className="italic text-gray">
                         {(() => {
                             switch (modelTraining) {
                                 case ModelTraining.pretrained:

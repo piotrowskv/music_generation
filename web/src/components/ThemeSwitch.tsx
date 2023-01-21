@@ -23,7 +23,7 @@ const ThemeSwitch: FC = () => {
                 )
             }
         >
-            <Icon className="h-9 w-9 hover:fill-gray-500 dark:fill-white hover:dark:fill-gray-500" />
+            <Icon className="h-9 w-9 hover:fill-gray dark:fill-white hover:dark:fill-gray" />
         </button>
     )
 }
