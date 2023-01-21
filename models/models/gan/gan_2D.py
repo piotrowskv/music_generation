@@ -3,15 +3,14 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from keras import activations
+from keras.layers import (Activation, Conv1D, Conv1DTranspose, Dense, Dropout,
+                          Flatten, LeakyReLU, Reshape)
+from keras.models import Sequential, load_model
+from keras.optimizers import Adam
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
 from sklearn.utils import shuffle
-from tensorflow.keras import activations
-from tensorflow.keras.layers import (Activation, Conv1D, Conv1DTranspose,
-                                     Dense, Dropout, Flatten, LeakyReLU,
-                                     Reshape)
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.optimizers import Adam
 
 from models.music_model import (MusicModel, ProgressCallback, ProgressMetadata,
                                 SeriesProgress)
@@ -170,7 +169,7 @@ class GAN(MusicModel):
         model.layers[1]._name = 'discriminator'
 
         if not optimizer:
-            optimizer = Adam(lr=0.001)
+            optimizer = Adam(learning_rate=0.001)
         model.compile(loss=loss, optimizer=optimizer, metrics=['Accuracy', 'Precision', 'Recall', 'AUC'])
         model.add(Flatten())
         print(model.summary())
