@@ -114,9 +114,6 @@ class GAN(MusicModel):
 
     def define_discriminator(self) -> Sequential:
         model = Sequential()
-        start_height = 128 // 8
-        start_width = AVG // 8
-        filters = 128*AVG // 4
 
         model.add(Conv1D(16, 3, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
