@@ -92,11 +92,14 @@ class MarkovChain(MusicModel):
         return 0, 0
 
     def save(self, path: Path) -> None:
-        np.save(path, np.asarray(self.probabilities))
+        path = path if path.name.endswith('.npz') else path.with_suffix('.npz')
+        np.savez(path, probabilities=np.asarray(self.probabilities, dtype=object),
+                 tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
-        path = path if path.name.endswith('.npy') else path.with_suffix('.npy')
-        self.probabilities = np.load(path, allow_pickle=True)
+        data = np.load(path, allow_pickle=True)
+        self.probabilities = data['probabilities']
+        self.tokens_list = data['tokens']
 
     def generate_n_grams(self, n: int) -> None:
         print("Generating " + str(n) + "-grams")
@@ -117,7 +120,7 @@ class MarkovChain(MusicModel):
 
     def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
 
-        assert len(self.tokens) > 0, "Model was not initiated with data"
+        assert len(self.tokens_list) > 0, "Model was not initiated with data"
 
         if seed is None:
             result = self.predict(self.tokens_list[0], 512, True, 0, None, path)
@@ -167,13 +170,17 @@ class MarkovChain(MusicModel):
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
             previous_n_gram = previous_n_gram[1:] + (next_note,)
-            prediction.append(next_note)
+            if next_note is not None:
+                prediction.append(next_note)
 
         result = np.full((len(prediction), 128), False)
         for i in range(len(prediction)):
-            for j in range(len(prediction[i])):
-                note = prediction[i][j]
-                result[i][note] = True
+            if isinstance(prediction[i], int):
+                result[i][prediction[i]] = True
+            else:
+                for j in range(len(prediction[i])):
+                    note = prediction[i][j]
+                    result[i][note] = True
 
         return result
 
@@ -184,8 +191,6 @@ class MarkovChain(MusicModel):
 
 if __name__ == '__main__':
     download_bach_dataset(Path('data'))
-
     model = MarkovChain()
-
     model.train_on_files(
         list(Path('data/bach/chorales').glob("*.mid")), 0, lambda x: None)

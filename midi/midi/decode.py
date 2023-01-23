@@ -7,6 +7,7 @@ from mido import MidiTrack, MidiFile
 from mido.messages import Message
 
 GRID_ACCURACY = 64  # sets accuracy to 1 / GRID_ACCURACY of a measure, best if it's a power of 2
+TRACK_LENGTH_THRESHOLD = 10  # number of messages in a standard track above which it is included in output
 
 
 class EventNote:
@@ -469,8 +470,31 @@ def get_max_velocity(tracks: list[MidiTrack]) -> int:
     return max(max_velocities)
 
 
+def remove_empty_tracks(file: MidiFile,
+                        threshold: int = 0) -> MidiFile:
+    """
+    removes tracks from a MIDI file which contain at most the number of messages given by a threshold
+
+    :param file:
+    :param threshold:
+    :return:
+    """
+    file = copy.deepcopy(file)
+    to_remove = list[int]()
+    for i in range(1, len(file.tracks)):
+        if len(file.tracks[i]) <= threshold:
+            to_remove.append(i)
+
+    to_remove.sort(reverse=True)
+    for i in to_remove:
+        file.tracks.pop(i)
+
+    return file
+
+
 def prepare_file(filepath: str,
-                 join_tracks: bool) -> Tuple[MidiFile, str, float, int, list[int]]:
+                 join_tracks: bool,
+                 track_length_threshold: int = TRACK_LENGTH_THRESHOLD) -> Tuple[MidiFile, str, float, int, list[int]]:
     """
     opens MIDI file, calculates accuracy factor, input length and tempo array,
     then cleans, trims and optionally joins tracks;
@@ -478,9 +502,11 @@ def prepare_file(filepath: str,
 
     :param filepath:
     :param join_tracks:
+    :param track_length_threshold:
     :return:
     """
     file, filename, accuracy = open_file(filepath)
+    file = remove_empty_tracks(file, track_length_threshold)
 
     if join_tracks:
         track = combine_and_clean_tracks(file.tracks[1:])
@@ -489,16 +515,7 @@ def prepare_file(filepath: str,
         for i in range(1, len(file.tracks)):
             file.tracks[i] = combine_and_clean_tracks([file.tracks[i]])
 
-    # remove empty tracks
-    to_remove = list[int]()
-    for i in range(1, len(file.tracks)):
-        if len(file.tracks[i]) == 0:
-            to_remove.append(i)
-
-    to_remove.sort(reverse=True)
-    for i in to_remove:
-        file.tracks.pop(i)
-
+    file = remove_empty_tracks(file, 0)
     if len(file.tracks) <= 1:
         raise ValueError('empty file - no note messages found')
 
