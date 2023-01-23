@@ -54,5 +54,50 @@ def download_bach_dataset(path: Path,
     path.joinpath('bach/.DS_Store').unlink()
 
 
+def download_clean_dataset(path: Path,
+                           force: bool = False) -> None:
+    """
+    Downloads the cleaned Bach midi dataset into a given directory. The directory
+    is created if it does not exist.
+
+    Parameters
+    ----------
+    path
+        Directory where the dataset should be saved
+    force
+        Whether to remove `path` contents if already present
+    """
+
+    assert not path.exists() or path.is_dir(
+    ), "Given path has to be a directory or should not exist"
+
+    filename = 'dataset.zip'
+    url = f'https://vps.shilangyu.dev/{filename}'
+    zip_path = path.joinpath(filename)
+
+    path.mkdir(parents=True, exist_ok=True)
+
+    if zip_path.exists() and not force:
+        # dataset was already downloaded
+        return
+
+    # download the dataset with a progress bar
+    with requests.get(url, stream=True) as r:
+        content_string = r.headers.get('Content-Length')
+        if content_string:
+            content_length = int(content_string)
+        else:
+            content_length = 0
+
+        with tqdm.wrapattr(r.raw, 'read', total=content_length, desc='Downloading cleaned Bach dataset') as raw:
+            with open(zip_path, 'wb') as f:
+                shutil.copyfileobj(raw, f)
+
+    # unzip
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        z.extractall(path)
+
+
 if __name__ == '__main__':
-    download_bach_dataset(Path('out'), force=True)
+    download_bach_dataset(Path('data/bach'), force=True)
+    download_clean_dataset(Path('data/clean'), force=True)
