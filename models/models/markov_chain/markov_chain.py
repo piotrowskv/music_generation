@@ -118,7 +118,7 @@ class MarkovChain(MusicModel):
                 str(len(self.n_grams_list)) + " n_grams\n" +
                 str(len(self.data)) + " files")
 
-    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+    def generate(self, path: Path, seed: int | None = None) -> None:
 
         assert len(self.tokens_list) > 0, "Model was not initiated with data"
 

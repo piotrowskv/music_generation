@@ -12,8 +12,7 @@ from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
 from sklearn.utils import shuffle
 
-from models.music_model import (MusicModel, ProgressCallback, ProgressMetadata,
-                                SeriesProgress)
+from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 DATA_PATH = 'data'
 
@@ -247,7 +246,7 @@ class GAN(MusicModel):
                 # if checkpoint_path is not None:
                 #     self.save_models(checkpoint_path, self.model, step)
 
-    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+    def generate(self, path: Path, seed: int | None = None) -> None:
         if (isinstance(seed, int)):
             x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1, seed)
         else:
