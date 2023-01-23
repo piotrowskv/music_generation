@@ -5,24 +5,27 @@ import numpy as np
 from keras.callbacks import ModelCheckpoint
 from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
 from keras.models import Sequential, load_model
-from midi.bach import download_bach_dataset
+from midi.bach import download_clean_dataset
 from midi.decode import get_sequence_of_notes
 
 from models.loss_callback import LossCallback
 
 from ..music_model import MusicModel, ProgressCallback, ProgressMetadata
 
-SEQUENCE_LENGTH = 100
-
 
 class MusicLstm(MusicModel):
     model: Sequential
+    sequence_length: int
 
-    def __init__(self, input_shape: int = 128):
+    _NOTES_SPAN: int = 128
+
+    def __init__(self, sequence_length: int = 100) -> None:
+        self.sequence_length = sequence_length
+
         self.model = Sequential()
         self.model.add(LSTM(
             256,
-            input_shape=(SEQUENCE_LENGTH, input_shape),
+            input_shape=(self.sequence_length, self._NOTES_SPAN),
             return_sequences=True,
             recurrent_activation="sigmoid"
         ))
@@ -38,7 +41,7 @@ class MusicLstm(MusicModel):
         self.model.add(BatchNormalization())
         self.model.add(Dropout(0.02))
 
-        self.model.add(Dense(128))
+        self.model.add(Dense(self._NOTES_SPAN))
         self.model.add(Activation('sigmoid'))
 
         self.model.compile(
@@ -62,7 +65,7 @@ class MusicLstm(MusicModel):
             xtrain,
             ytrain,
             epochs=epochs,
-            batch_size=256,
+            batch_size=64,
             callbacks=callbacks
         )
 
@@ -78,16 +81,13 @@ class MusicLstm(MusicModel):
         # return [x for (x, y) in dataset], [y for (x, y) in dataset]
 
     def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
-        midi_input = get_sequence_of_notes(str(midi_file), True, True, False)
+        midi_input: list[tuple[int, list[bool]]] = get_sequence_of_notes(str(midi_file), False, True, False)
 
-        notes_sequences = []
-        notes_predictions = []
+        notes_matrix = np.array([notes for (_, notes) in midi_input], dtype='float')
 
-        for i in range(len(midi_input) - SEQUENCE_LENGTH):
-            notes_sequence = [x[1] for x in midi_input[i:i+SEQUENCE_LENGTH]]
-
-            notes_sequences.append(notes_sequence)
-            notes_predictions.append(midi_input[i+SEQUENCE_LENGTH][1])
+        notes_sequences = np.lib.stride_tricks.sliding_window_view(
+            notes_matrix[:-1], (self.sequence_length, self._NOTES_SPAN)).squeeze()
+        notes_predictions = notes_matrix[self.sequence_length:]
 
         """
         TODO: ideally, data should be as below. LSTM is supposed to predict
@@ -99,7 +99,7 @@ class MusicLstm(MusicModel):
         # data = np.array([x[1] for x in midi_input])
         # return data[:data.shape[0]-1, :], data[1:, :]
 
-        return np.array(notes_sequences), np.array(notes_predictions)
+        return notes_sequences, notes_predictions
 
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
