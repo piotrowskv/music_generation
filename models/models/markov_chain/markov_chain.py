@@ -92,11 +92,11 @@ class MarkovChain(MusicModel):
         return 0, 0
 
     def save(self, path: Path) -> None:
-        path = path if path.name.endswith('.npz') else path.with_suffix('.npz')
         np.savez(path, probabilities=np.asarray(self.probabilities, dtype=object),
                  tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
+        path = path if path.name.endswith('.npz') else path.with_suffix('.npz')
         data = np.load(path, allow_pickle=True)
         self.probabilities = data['probabilities']
         self.tokens_list = data['tokens']
