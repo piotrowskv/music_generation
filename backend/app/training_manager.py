@@ -46,6 +46,7 @@ class TrainingManager:
 
             model.train_on_files(files, None, on_progress)
 
+            self._ensure_save_path_exists()
             model.save(self._weights_path_for(session_id))
             self._sessions_repo.save_training_progress(session_id, progress)
         except Exception as ex:
@@ -84,3 +85,6 @@ class TrainingManager:
 
     def _weights_path_for(self, session_id: str) -> Path:
         return self._saved_models_path.joinpath(session_id)
+
+    def _ensure_save_path_exists(self) -> None:
+        self._saved_models_path.mkdir(exist_ok=True, parents=True)
