@@ -28,10 +28,16 @@ class TrainingManager:
         """
 
         progress: ProgressList = []
+        last_progress_event: TrainingProgress
 
         def on_progress(event: TrainingProgress) -> None:
             progress.append(event.series)
-            self._progress_repo.publish_progress(session_id, event)
+            # defer last finished=True message to after saving the model
+            if not event.finished:
+                self._progress_repo.publish_progress(session_id, event)
+            else:
+                nonlocal last_progress_event
+                last_progress_event = event
 
         # midi package does not support in-memory midi. Midi has to be
         # materialized into files in the real file system.
@@ -49,6 +55,7 @@ class TrainingManager:
             self._ensure_save_path_exists()
             model.save(self._weights_path_for(session_id))
             self._sessions_repo.save_training_progress(session_id, progress)
+            self._progress_repo.publish_progress(session_id, last_progress_event)
         except Exception as ex:
             msg = str(ex)
             self._progress_repo.publish_error(session_id, msg)
