@@ -12,6 +12,7 @@ tensorflow-metal = {version = "==0.6.0", sys_platform = "== 'darwin'"}
 midi = {editable = true, path = "./../midi"}
 dataclasses-json = "*"
 scikit-learn = "*"
+matplotlib = "*"
 
 [dev-packages]
 autopep8 = "*"
