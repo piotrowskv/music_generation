@@ -2,11 +2,15 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from keras import Model
 from keras.callbacks import ModelCheckpoint
-from keras.layers import LSTM, Activation, BatchNormalization, Dense, Dropout
-from keras.models import Sequential, load_model
+from keras.layers import (LSTM, Activation, BatchNormalization, Dense, Dropout,
+                          Flatten, Input, LeakyReLU, Multiply, Permute,
+                          RepeatVector)
+from keras.models import load_model
 from midi.bach import download_clean_dataset
 from midi.decode import get_sequence_of_notes
+from midi.encode import get_file_from_standard_features
 
 from models.loss_callback import LossCallback
 
@@ -14,40 +18,72 @@ from ..music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 
 class MusicLstm(MusicModel):
-    model: Sequential
+    model: Model
     sequence_length: int
 
     _NOTES_SPAN: int = 128
 
-    def __init__(self, sequence_length: int = 100) -> None:
+    def __init__(self, sequence_length: int = 25, metrics: list[Any] = []) -> None:
         self.sequence_length = sequence_length
 
-        self.model = Sequential()
-        self.model.add(LSTM(
-            256,
-            input_shape=(self.sequence_length, self._NOTES_SPAN),
-            return_sequences=True,
-            recurrent_activation="sigmoid"
-        ))
-        self.model.add(BatchNormalization())
-        self.model.add(Dropout(0.02))
-
-        self.model.add(LSTM(512))
-        self.model.add(BatchNormalization())
-        self.model.add(Dropout(0.02))
-
-        self.model.add(Dense(128))
-        self.model.add(Activation('relu'))
-        self.model.add(BatchNormalization())
-        self.model.add(Dropout(0.02))
-
-        self.model.add(Dense(self._NOTES_SPAN))
-        self.model.add(Activation('sigmoid'))
+        self.model = self._define_model()
 
         self.model.compile(
             loss='mean_squared_error',
-            optimizer='rmsprop'
+            optimizer='rmsprop',
+            metrics=metrics
         )
+
+    def _define_model(self) -> Model:
+        input = Input((self.sequence_length, self._NOTES_SPAN))
+        x = LSTM(1024, return_sequences=True)(input)
+        x = LeakyReLU()(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.3)(x)
+
+        # attention = Dense(1, activation='tanh')(x)
+        # attention = Flatten()(attention)
+        # attention = Activation('softmax')(attention)
+        # attention = RepeatVector(1024)(attention)
+        # attention = Permute((2, 1))(attention)
+
+        # multiplied = Multiply()((x, attention))
+        # sent_representation = Dense(512)(multiplied)
+        sent_representation = Dense(512)(x)
+
+        x = Dense(512)(sent_representation)
+        x = LeakyReLU()(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.22)(x)
+
+        x = LSTM(512, return_sequences=True)(x)
+        x = LeakyReLU()(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.22)(x)
+
+        # attention = Dense(1, activation='tanh')(x)
+        # attention = Flatten()(attention)
+        # attention = Activation('softmax')(attention)
+        # attention = RepeatVector(512)(attention)
+        # attention = Permute((2, 1))(attention)
+
+        sent_representation = Dense(256)(x)
+        # multiplied = Multiply()([x, attention])
+        # sent_representation = Dense(256)(multiplied)
+
+        x = Dense(256)(sent_representation)
+        x = LeakyReLU()(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.22)(x)
+
+        x = LSTM(128)(x)
+        x = LeakyReLU()(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.22)(x)
+
+        x = Dense(self._NOTES_SPAN, activation='sigmoid')(x)
+
+        return Model(input, x)
 
     def train(self, epochs: int | None, xtrain: Any, ytrain: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
@@ -121,9 +157,36 @@ class MusicLstm(MusicModel):
 
 
 if __name__ == '__main__':
-    download_bach_dataset(Path('data'))
+    ds = Path('data')
+    download_clean_dataset(ds)
 
-    model = MusicLstm(128)
+    model = MusicLstm(sequence_length=20)
+    # plot_model(model.model, show_layer_names=False, show_shapes=True, dpi=300)
+    print(model.model_summary())
+    # model.load(Path('saved_models/big_seq20_onetrack_noattention'))
 
-    model.train_on_files(
-        list(Path('data/bach/chorales').glob("*.mid")), 10, lambda x: None)
+    # files = list(ds.joinpath('midi_dataset/3_tracks').glob("bwv???.mid"))
+
+    # print(files[0])
+    # model.prepare_data(files[0])
+    # model.train_on_files([files[0]], 10, lambda x: None)
+    # model.train_on_files(files, 10, lambda x: None)
+
+    # np.random.seed(2)
+    # gen = []
+    # x, y = model.prepare_data(files[0])
+    # x: np.array = x[0:1, :, :]
+
+    # for _ in range(100):
+    #     o = model.model(x)[0]
+    #     thresh = np.random.random(len(o))
+    #     o = o > thresh
+    #     gen.append(o)
+    #     a = np.array(o, dtype='float').reshape((1, 1, 128))
+    #     x = np.concatenate((x[:, 1:, :], a), axis=1)
+
+    # lens = [(8 if i % 2 else 8) for (i, x) in enumerate(gen)]
+    # get_file_from_standard_features(np.array(gen), 1000000, Path(
+    #     'out_midis/big_seq20_onetrack_noattention.mid'), False, True, False, lens)
+
+    # model.save(Path('saved_models/big_seq20_onetrack_noattention'))

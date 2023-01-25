@@ -88,3 +88,5 @@ dmypy.json
 
 # local test data
 data/
+
+evaluation/
