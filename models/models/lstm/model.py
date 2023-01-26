@@ -23,7 +23,7 @@ class MusicLstm(MusicModel):
 
     _NOTES_SPAN: int = 128
 
-    def __init__(self, sequence_length: int = 25, metrics: list[Any] = []) -> None:
+    def __init__(self, sequence_length: int = 50, metrics: list[Any] = []) -> None:
         self.sequence_length = sequence_length
 
         self.model = self._define_model()
@@ -153,40 +153,35 @@ class MusicLstm(MusicModel):
         self.model = load_model(path)
 
     def generate(self, path: Path, seed: int | None = None) -> None:
-        raise NotImplementedError
+        np.random.seed(seed)
+
+        gen = []
+
+        # we need some initial sequence, so we just generate a scale
+        x = np.zeros((1, self.sequence_length, self._NOTES_SPAN))
+        for i in range(self.sequence_length):
+            x[0, i, i % self._NOTES_SPAN] = 1
+
+        for _ in range(100):
+            o = self.model(x)[0]
+            thresh = np.random.random(len(o))
+            o = o > thresh
+            gen.append(o)
+            a = np.array(o, dtype='float').reshape((1, 1, self._NOTES_SPAN))
+            x = np.concatenate((x[:, 1:, :], a), axis=1)
+
+        lens = [8 for _ in gen]
+        get_file_from_standard_features(np.array(gen), 1000000, path, False, True, False, lens)
 
 
 if __name__ == '__main__':
     ds = Path('data')
     download_clean_dataset(ds)
 
-    model = MusicLstm(sequence_length=20)
-    # plot_model(model.model, show_layer_names=False, show_shapes=True, dpi=300)
-    print(model.model_summary())
-    # model.load(Path('saved_models/big_seq20_onetrack_noattention'))
+    model = MusicLstm()
 
-    # files = list(ds.joinpath('midi_dataset/3_tracks').glob("bwv???.mid"))
+    files = list(ds.joinpath('midi_dataset/3_tracks').glob("bwv800.mid"))
 
-    # print(files[0])
-    # model.prepare_data(files[0])
-    # model.train_on_files([files[0]], 10, lambda x: None)
-    # model.train_on_files(files, 10, lambda x: None)
+    model.train_on_files(files, 10, lambda x: None)
 
-    # np.random.seed(2)
-    # gen = []
-    # x, y = model.prepare_data(files[0])
-    # x: np.array = x[0:1, :, :]
-
-    # for _ in range(100):
-    #     o = model.model(x)[0]
-    #     thresh = np.random.random(len(o))
-    #     o = o > thresh
-    #     gen.append(o)
-    #     a = np.array(o, dtype='float').reshape((1, 1, 128))
-    #     x = np.concatenate((x[:, 1:, :], a), axis=1)
-
-    # lens = [(8 if i % 2 else 8) for (i, x) in enumerate(gen)]
-    # get_file_from_standard_features(np.array(gen), 1000000, Path(
-    #     'out_midis/big_seq20_onetrack_noattention.mid'), False, True, False, lens)
-
-    # model.save(Path('saved_models/big_seq20_onetrack_noattention'))
+    model.save(Path('lstm_model'))
