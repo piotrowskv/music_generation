@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from .model import MusicLstm
 
 
-def plot_metrics(metrics: set[str], history: dict[str, list[float]]):
+def plot_metrics(metrics: set[str], history: dict[str, list[float]]) -> None:
     save_dir = Path('evaluation/lstm')
     save_dir.mkdir(exist_ok=True, parents=True)
 
