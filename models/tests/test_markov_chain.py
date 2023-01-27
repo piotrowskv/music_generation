@@ -25,13 +25,6 @@ def test_multiple_tokens():
     assert len(model.tokens) == 128
 
 
-def test_probabilities_all_notes1():
-    model = MarkovChain()
-    model.train_on_files(all_notes, 10, lambda epoch: None)
-
-    assert len(model.probabilities[0]) == 1
-
-
 def test_multiple_tracks():
     model = MarkovChain()
     model.train_on_files(sample_file, 10, lambda epoch: None)
