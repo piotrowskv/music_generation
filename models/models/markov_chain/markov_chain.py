@@ -2,9 +2,8 @@ import random
 import time
 from pathlib import Path
 from typing import Any, cast
-import os
+
 import numpy as np
-from midi.bach import download_bach_dataset
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
 
@@ -41,7 +40,6 @@ class MarkovChain(MusicModel):
 
             elapsed = time.time() - start
             progress_callback([(elapsed, 100 * i / len(self.data))])
-            print(str(i) + "/" + str(len(self.data)))
 
             for j in range(len(self.data[i]) - n - 1 - self.n_gram_size):
                 curr_n_gram = tuple(self.data[i][j:j + n])
@@ -87,18 +85,17 @@ class MarkovChain(MusicModel):
                 self.tokens.add(tuple(notes))
 
     def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
-        print(midi_file)
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
         return 0, 0
 
     def save(self, path: Path) -> None:
-        path = path if path.name.endswith('.npz') else path.with_suffix('.npz')
         np.savez(path, probabilities=np.asarray(self.probabilities, dtype=object),
                  tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
+        path = path if path.name.endswith('.npz') else path.with_suffix('.npz')
         data = np.load(path, allow_pickle=True)
         self.probabilities = data['probabilities']
         self.tokens_list = data['tokens']
@@ -120,7 +117,7 @@ class MarkovChain(MusicModel):
                 str(len(self.n_grams_list)) + " n_grams\n" +
                 str(len(self.data)) + " files")
 
-    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+    def generate(self, path: Path, seed: int | None = None) -> None:
 
         assert len(self.tokens_list) > 0, "Model was not initiated with data"
 
