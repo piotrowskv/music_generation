@@ -2,7 +2,7 @@ import random
 import time
 from pathlib import Path
 from typing import Any, cast
-
+import os
 import numpy as np
 from midi.bach import download_bach_dataset
 from midi.decode import get_array_of_notes
@@ -14,7 +14,7 @@ from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 class MarkovChain(MusicModel):
     n_gram_size: int
 
-    def __init__(self, n_gram_size: int = 3) -> None:
+    def __init__(self, n_gram_size: int = 1) -> None:
         self.data: list = []
         self.tokens: set = set()
         self.n_grams: set = set()
@@ -41,8 +41,9 @@ class MarkovChain(MusicModel):
 
             elapsed = time.time() - start
             progress_callback([(elapsed, 100 * i / len(self.data))])
+            print(str(i) + "/" + str(len(self.data)))
 
-            for j in range(len(self.data[i]) - n - 1):
+            for j in range(len(self.data[i]) - n - 1 - self.n_gram_size):
                 curr_n_gram = tuple(self.data[i][j:j + n])
                 next_note = self.data[i][j + n + 1]
                 n_gram_next[self.n_grams_list.index(
@@ -86,17 +87,18 @@ class MarkovChain(MusicModel):
                 self.tokens.add(tuple(notes))
 
     def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
+        print(midi_file)
         data_lines = get_array_of_notes(midi_file, False, False)
         for i in range(len(data_lines)):  # serialize tracks
             self.data.append(data_lines[i].tolist())
         return 0, 0
 
     def save(self, path: Path) -> None:
+        path = path if path.name.endswith('.npz') else path.with_suffix('.npz')
         np.savez(path, probabilities=np.asarray(self.probabilities, dtype=object),
                  tokens=np.asarray(self.tokens_list, dtype=object))
 
     def load(self, path: Path) -> None:
-        path = path if path.name.endswith('.npz') else path.with_suffix('.npz')
         data = np.load(path, allow_pickle=True)
         self.probabilities = data['probabilities']
         self.tokens_list = data['tokens']
@@ -118,7 +120,7 @@ class MarkovChain(MusicModel):
                 str(len(self.n_grams_list)) + " n_grams\n" +
                 str(len(self.data)) + " files")
 
-    def generate(self, path: Path, seed: int | None = None) -> None:
+    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
 
         assert len(self.tokens_list) > 0, "Model was not initiated with data"
 
@@ -148,7 +150,7 @@ class MarkovChain(MusicModel):
 
         for i in range(length):
             idx = None
-            if previous_n_gram in self.n_grams:
+            if tuple(previous_n_gram) in self.n_grams:
                 idx = self.n_grams_list.index(previous_n_gram)
             else:
                 idx = random.randrange(len(self.probabilities))
@@ -169,9 +171,8 @@ class MarkovChain(MusicModel):
                 next_note = random.choices(
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
-            previous_n_gram = previous_n_gram[1:] + (next_note,)
             if next_note is not None:
-                prediction.append(next_note)
+                previous_n_gram = next_note
 
         result = np.full((len(prediction), 128), False)
         for i in range(len(prediction)):
@@ -187,10 +188,3 @@ class MarkovChain(MusicModel):
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Time [s]', y_label='Progress [%]', legends=['Markov Chain'])
-
-
-if __name__ == '__main__':
-    download_bach_dataset(Path('data'))
-    model = MarkovChain()
-    model.train_on_files(
-        list(Path('data/bach/chorales').glob("*.mid")), 0, lambda x: None)
