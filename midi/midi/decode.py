@@ -457,17 +457,15 @@ def get_max_velocity(tracks: list[MidiTrack]) -> int:
     :param tracks:
     :return:
     """
-    max_velocities = list[int]()
+    max_velocity = 0
 
-    for track_index, track in enumerate(tracks):
-        max_velocity = 0
+    for track in tracks:
         for msg in track:
             if msg.type == 'note_on':
                 if msg.velocity > max_velocity:
                     max_velocity = msg.velocity
-        max_velocities.append(max_velocity)
 
-    return max(max_velocities)
+    return max_velocity
 
 
 def remove_empty_tracks(file: MidiFile,
