@@ -288,15 +288,3 @@ class GAN(MusicModel):
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
         return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
-
-
-if __name__ == '__main__':
-
-    g = GAN()
-    midi_paths = []
-    for dirpath, dirs, files in os.walk("data2"):
-        for filename in files:
-            fname = os.path.join(dirpath, filename)
-            if fname.endswith('.mid'):
-                midi_paths.append(fname)
-    g.train_on_files(midi_paths[:20], 100, lambda epoch: None, checkpoint_path='new_dataset14_ganacc_extend')
