@@ -220,11 +220,9 @@ class GAN(MusicModel):
         return x, y
 
     def save_models(self, save_path: Path | None, gan: Sequential, step: int) -> None:
-        if save_path is not None:
-            save_gan_path = f'{save_path}/gan_models'
-            if not os.path.exists(save_gan_path):
-                os.makedirs(save_gan_path)
-            gan.save(save_gan_path + f'/gan_model' + str(step) + '.h5')
+        save_gan_path = save_path.joinpath('gan_models')
+        save_gan_path.mkdir(exist_ok=True, parents=True)
+        gan.save(save_gan_path.joinpath(f'gan_model{step}.h5'))
 
     def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
