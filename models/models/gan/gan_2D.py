@@ -1,20 +1,20 @@
 import os
-import numpy as np
-from typing import Any
-from pathlib import Path
-import pandas as pd
 import random
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU, Conv1D, Conv1DTranspose, Activation, BatchNormalization, GaussianNoise
-from tensorflow.keras import activations
-from keras import metrics
-from sklearn.utils import shuffle
-from sklearn.metrics import roc_curve, auc
+from pathlib import Path
+from typing import Any
 
+import numpy as np
+from keras import activations
+from keras.layers import (Activation, BatchNormalization, Conv1D,
+                          Conv1DTranspose, Dense, Dropout, Flatten,
+                          GaussianNoise, LeakyReLU, Reshape)
+from keras.models import Sequential, load_model
+from keras.optimizers import Adam
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
-from models.music_model import MusicModel, ProgressCallback, ProgressMetadata, SeriesProgress
+from sklearn.utils import shuffle
+
+from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
 
 AVG = 512  # length of generated array
 
@@ -56,7 +56,6 @@ class GAN(MusicModel):
         self.model = self.define_gan(self.generator, self.discriminator)
 
     def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
-        print(midi_file)
         data_lines = get_array_of_notes(midi_file, False, True)
         assert data_lines.shape[1] == 128, "Incorrect number of notes (expected: 128)"
 
@@ -82,8 +81,8 @@ class GAN(MusicModel):
             array = array[:, ~np.isnan(array).any(axis=0)]
         else:
             return np.zeros(1)
-        if (np.max(array) == np.min(array)):
-            out = (array - np.min(array))
+        if np.max(array) == np.min(array):
+            out = array - np.min(array)
         else:
             out = (array - np.min(array)) / (np.max(array) - np.min(array))
         out[out < THRESHOLD] = 0
@@ -92,15 +91,13 @@ class GAN(MusicModel):
         return out
 
     def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
-        self.data = np.load("new_data_offset256.npy")
-        print(self.data.shape)
         return self.data, np.ones(len(dataset))
 
     def model_summary(self) -> str:
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path: Path) -> None:
-        self.save_models(path, self.model, 0)
+        self.model.save(path, save_format='h5')
 
     def save_npy(self, prediction: np.ndarray, save_path: Path | None, save_name: str) -> None:
 
@@ -120,12 +117,8 @@ class GAN(MusicModel):
         self.generator = self.model.get_layer('generator')
         self.discriminator = self.model.get_layer('discriminator')
 
-        print("Model loaded!")
-
     def define_discriminator(self) -> Sequential:
         model = Sequential()
-        start_height = 128 // 8
-        start_width = AVG // 8
         filters = AVG * 2
         model.add(GaussianNoise(0.1))
 
@@ -183,10 +176,9 @@ class GAN(MusicModel):
         model.layers[1]._name = 'discriminator'
 
         if not optimizer:
-            optimizer = Adam(lr=0.0001, beta_1=0.5)
+            optimizer = Adam(learning_rate=0.0001, beta_1=0.5)
         model.compile(loss=loss, optimizer=optimizer, metrics=['binary_accuracy', 'Precision', 'Recall', 'AUC'])
         model.add(Flatten())
-        print(model.summary())
 
         return model
 
@@ -219,24 +211,18 @@ class GAN(MusicModel):
 
         return x, y
 
-    def save_models(self, save_path: Path | None, gan: Sequential, step: int) -> None:
-        if save_path is not None:
-            save_gan_path = save_path.joinpath('gan_models')
-            save_gan_path.mkdir(exist_ok=True, parents=True)
-            gan.save(save_gan_path.joinpath(f'gan_model{step}.h5'))
+    def save_models(self, save_path: Path, gan: Sequential, step: int) -> None:
+        save_gan_path = save_path.joinpath('gan_models')
+        save_gan_path.mkdir(exist_ok=True, parents=True)
+        gan.save(save_gan_path.joinpath(f'gan_model{step}.h5'))
 
     def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
-
-        epochs = epochs or 100
+        epochs = epochs or 10
         batch_per_epoch = len(x_train) // N_BATCH
-        half_batch = N_BATCH // 2
         n_steps = batch_per_epoch * epochs
-        history: dict = {'discriminator_loss': [],
-                         'generator_loss': []}
+
         for step in range(n_steps):
-            epoch = step // batch_per_epoch
-            print(step)
             for k in range(DISC_BATCH):
                 x_real, y_real = self.generate_real_samples(self.data, N_BATCH)
                 x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, N_BATCH, GLOBAL_SEED)
@@ -250,10 +236,9 @@ class GAN(MusicModel):
 
             x, y = self.generate_fake_samples(self.generator, LATENT_DIM, 25, GLOBAL_SEED)
 
-            epoch = step // batch_per_epoch + 1
+            epoch = (step + 1) // batch_per_epoch
 
-            if step % batch_per_epoch == 0:
-
+            if step == 0 or step % batch_per_epoch == batch_per_epoch-1:
                 x_real, y_real = self.generate_real_samples(self.data, N_BATCH)
                 x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, N_BATCH, GLOBAL_SEED)
                 y_fake = np.ones(y_fake.shape)
@@ -273,7 +258,8 @@ class GAN(MusicModel):
 
             if step % SAVE_STEP == 0:
                 self.save_npy(self.postprocess_array(x_fake[0]), checkpoint_path, str(step))
-                self.save_models(checkpoint_path, self.model, step)
+                # if checkpoint_path is not None:
+                #     self.save_models(checkpoint_path, self.model, step)
 
     def generate(self, path: Path, seed: int | None = None) -> None:
         if (isinstance(seed, int)):
@@ -286,4 +272,4 @@ class GAN(MusicModel):
 
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
-        return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
+        return ProgressMetadata(x_label='Epoch', y_label='Loss', legends=['Discriminator loss', 'Generator loss'])
