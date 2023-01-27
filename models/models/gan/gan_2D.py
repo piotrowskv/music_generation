@@ -276,7 +276,7 @@ class GAN(MusicModel):
                 self.save_npy(self.postprocess_array(x_fake[0]), checkpoint_path, str(step))
                 self.save_models(checkpoint_path, self.model, step)
 
-    def generate(self, path: Path, seed: int | list[int] | None = None) -> None:
+    def generate(self, path: Path, seed: int | None = None) -> None:
         if (isinstance(seed, int)):
             x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, 1, seed)
         else:
