@@ -1,27 +1,29 @@
 import os
-from pathlib import Path
-from typing import Any
-
 import numpy as np
-from keras import activations
-from keras.layers import (Activation, Conv1D, Conv1DTranspose, Dense, Dropout,
-                          Flatten, LeakyReLU, Reshape)
-from keras.models import Sequential, load_model
-from keras.optimizers import Adam
+from typing import Any
+from pathlib import Path
+import pandas as pd
+import random
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, Reshape, Flatten, Dropout, LeakyReLU, Conv1D, Conv1DTranspose, Activation, BatchNormalization, GaussianNoise
+from tensorflow.keras import activations
+from keras import metrics
+from sklearn.utils import shuffle
+from sklearn.metrics import roc_curve, auc
+
 from midi.decode import get_array_of_notes
 from midi.encode import get_file_from_standard_features
-from sklearn.utils import shuffle
-
-from models.music_model import MusicModel, ProgressCallback, ProgressMetadata
-
-DATA_PATH = 'data'
+from models.music_model import MusicModel, ProgressCallback, ProgressMetadata, SeriesProgress
 
 AVG = 512  # length of generated array
 
-LATENT_DIM = 64  # dimension of latent space
+OFFSET = 256
+
+LATENT_DIM = 16  # dimension of latent space
 # higher LATENT_DIM -> samples produced by generator converge more to dataset
 
-REAL_MULTIPLIER = 1.0  # multiplier of real samples [0; 1];
+REAL_MULTIPLIER = 0.85  # multiplier of real samples [0; 1];
 # if it's closer to 0, discriminator will struggle to distinguish real and fake samples more
 
 SAVE_STEP = 100
@@ -29,7 +31,11 @@ SAVE_STEP = 100
 THRESHOLD = 0.7  # threshold of probability while generating a midi file
 # GAN generates probabilities that note is on during specific time unit
 
-N_BATCH = 2  # number of batches the dataset is divided into
+N_BATCH = 256  # number of batches the dataset is divided into
+
+DISC_BATCH = 16
+
+DISC_SAMPLES = 64
 
 GLOBAL_SEED = 2137
 
@@ -50,13 +56,13 @@ class GAN(MusicModel):
         self.model = self.define_gan(self.generator, self.discriminator)
 
     def prepare_data(self, midi_file: Path) -> tuple[Any, Any]:
+        print(midi_file)
         data_lines = get_array_of_notes(midi_file, False, True)
         assert data_lines.shape[1] == 128, "Incorrect number of notes (expected: 128)"
 
-        for i in range(data_lines.shape[0]//AVG - 1):
-
+        for i in range(data_lines.shape[0]//OFFSET - 1):
             # maximum number of samples
-            if (self.data.shape[0] > 1600):
+            if (self.data.shape[0] > 5000):
                 break
             data_processed = np.zeros((1, AVG, 128))
             # divide data into chunks (AVG x 128)
@@ -72,29 +78,34 @@ class GAN(MusicModel):
         if array.shape[1] != 128:
             array = np.swapaxes(array, 0, 1)
 
-        if array.shape == (512, 128):
+        if array.shape == (AVG, 128):
             array = array[:, ~np.isnan(array).any(axis=0)]
         else:
             return np.zeros(1)
-
-        out = (array - np.min(array)) / (np.max(array) - np.min(array))
+        if (np.max(array) == np.min(array)):
+            out = (array - np.min(array))
+        else:
+            out = (array - np.min(array)) / (np.max(array) - np.min(array))
         out[out < THRESHOLD] = 0
         out *= 255
 
         return out
 
     def create_dataset(self, dataset: list[tuple[Any, Any]]) -> tuple[Any, Any]:
+        self.data = np.load("new_data_offset256.npy")
+        print(self.data.shape)
         return self.data, np.ones(len(dataset))
 
     def model_summary(self) -> str:
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path: Path) -> None:
-        self.model.save(path, save_format='h5')
+        self.save_models(path, self.model, 0)
 
     def save_npy(self, prediction: np.ndarray, save_path: Path | None, save_name: str) -> None:
 
-        assert np.sum(prediction) > 0, "You want to save an empty file"
+        if np.sum(prediction) == 0:
+            print("You want to save an empty file")
 
         if save_path is not None:
             os.makedirs(save_path, exist_ok=True)
@@ -113,18 +124,25 @@ class GAN(MusicModel):
 
     def define_discriminator(self) -> Sequential:
         model = Sequential()
+        start_height = 128 // 8
+        start_width = AVG // 8
+        filters = AVG * 2
+        model.add(GaussianNoise(0.1))
 
-        model.add(Conv1D(16, 3, padding='same'))
+        model.add(Conv1D(filters//4, 3, strides=8, padding='same'))
+        model.add(LeakyReLU(alpha=0.2))
+
+        model.add(Conv1D(filters//4, 3, strides=8, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
 
         model.add(Flatten())
         model.add(Dropout(0.4))
+        model.add(BatchNormalization())
+        model.add(Dense(1, activation='sigmoid'))
 
-        model.add(Dense(1, activation='tanh'))
-
-        opt = Adam(learning_rate=0.001)
-        model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['Accuracy', 'Precision', 'Recall', 'AUC'])
-
+        opt = Adam(learning_rate=0.0001, beta_1=0.5)
+        model.compile(loss='binary_crossentropy', optimizer=opt, metrics=[
+                      'binary_accuracy', 'Precision', 'Recall', 'AUC'])
         return model
 
     def define_generator(self, latent_dim: int) -> Sequential:
@@ -135,22 +153,22 @@ class GAN(MusicModel):
 
         n_nodes = start_width * start_height
         model.add(Dense(n_nodes, input_dim=latent_dim))
+
         model.add(LeakyReLU(alpha=0.2))
         model.add(Reshape((4, n_nodes//4)))
 
-        model.add(Conv1DTranspose(filters//2, 3, strides=4, padding='same'))
+        model.add(BatchNormalization())
+
+        model.add(Conv1DTranspose(filters//2, 3, strides=8, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
 
-        model.add(Conv1DTranspose(filters//2, 3, strides=4, padding='same'))
+        model.add(Conv1DTranspose(filters//4, 3, strides=8, padding='same'))
         model.add(LeakyReLU(alpha=0.2))
 
-        model.add(Conv1DTranspose(filters//4, 3, strides=4, padding='same'))
-        model.add(LeakyReLU(alpha=0.2))
-
-        model.add(Dropout(0.2))
+        model.add(Dropout(0.4))
         model.add(Reshape((128, AVG)))
-        model.add(Activation(activations.tanh))
 
+        model.add(Activation(activations.tanh))
         return model
 
     def define_gan(self, g_model: Sequential, d_model: Sequential, loss: str = 'binary_crossentropy',
@@ -165,8 +183,8 @@ class GAN(MusicModel):
         model.layers[1]._name = 'discriminator'
 
         if not optimizer:
-            optimizer = Adam(learning_rate=0.001)
-        model.compile(loss=loss, optimizer=optimizer, metrics=['Accuracy', 'Precision', 'Recall', 'AUC'])
+            optimizer = Adam(lr=0.0001, beta_1=0.5)
+        model.compile(loss=loss, optimizer=optimizer, metrics=['binary_accuracy', 'Precision', 'Recall', 'AUC'])
         model.add(Flatten())
         print(model.summary())
 
@@ -201,50 +219,61 @@ class GAN(MusicModel):
 
         return x, y
 
-    def save_models(self, save_path: Path, gan: Sequential, step: int) -> None:
-        save_gan_path = save_path.joinpath('gan_models')
-        save_gan_path.mkdir(exist_ok=True, parents=True)
-        gan.save(save_gan_path.joinpath(f'gan_model{step}.h5'))
+    def save_models(self, save_path: Path | None, gan: Sequential, step: int) -> None:
+        if save_path is not None:
+            save_gan_path = save_path.joinpath('gan_models')
+            save_gan_path.mkdir(exist_ok=True, parents=True)
+            gan.save(save_gan_path.joinpath(f'gan_model{step}.h5'))
 
     def train(self, epochs: int | None, x_train: Any, y_train: Any, progress_callback: ProgressCallback,
               checkpoint_path: Path | None = None) -> None:
-        epochs = epochs or 10
 
+        epochs = epochs or 100
         batch_per_epoch = len(x_train) // N_BATCH
         half_batch = N_BATCH // 2
         n_steps = batch_per_epoch * epochs
-        history: dict = {'discriminator_real_loss': [],
-                         'discriminator_fake_loss': [],
+        history: dict = {'discriminator_loss': [],
                          'generator_loss': []}
-
         for step in range(n_steps):
-            epoch = (step + 1) // batch_per_epoch
-
-            x_real, y_real = self.generate_real_samples(self.data, half_batch)
-            x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, half_batch, GLOBAL_SEED)
-
-            x, y = np.vstack((x_real, x_fake)), np.vstack((y_real, y_fake))
-            x, y = shuffle(x, y)
-            d_loss = self.discriminator.train_on_batch(x, y)
+            epoch = step // batch_per_epoch
+            print(step)
+            for k in range(DISC_BATCH):
+                x_real, y_real = self.generate_real_samples(self.data, N_BATCH)
+                x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, N_BATCH, GLOBAL_SEED)
+                d_loss1 = self.discriminator.train_on_batch(x_fake, y_fake)
+                d_loss2 = self.discriminator.train_on_batch(x_real, y_real)
+                d_loss = np.asarray((np.asarray(d_loss1) + np.asarray(d_loss2))/2)
 
             z_input = self.generate_latent_points(LATENT_DIM, N_BATCH, GLOBAL_SEED)
-            y_real2 = np.ones((N_BATCH, 1))
+            y_real2 = np.ones((N_BATCH, 1)) * random.uniform(REAL_MULTIPLIER, 1.0)
             g_loss = self.model.train_on_batch(z_input, y_real2)
 
             x, y = self.generate_fake_samples(self.generator, LATENT_DIM, 25, GLOBAL_SEED)
 
-            history['discriminator_real_loss'].append(d_loss)
-            history['discriminator_fake_loss'].append(d_loss)
-            history['generator_loss'].append(g_loss)
+            epoch = step // batch_per_epoch + 1
 
-            if step == 0 or step % batch_per_epoch == batch_per_epoch-1:
+            if step % batch_per_epoch == 0:
+
+                x_real, y_real = self.generate_real_samples(self.data, N_BATCH)
+                x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, N_BATCH, GLOBAL_SEED)
+                y_fake = np.ones(y_fake.shape)
+                acc_y = np.round(self.discriminator.predict(x_fake))
+                acc = np.sum(acc_y) / np.sum(y_fake)
+                print(acc)
+                g_loss = self.discriminator.evaluate(x_fake, y_fake)
+                y_fake = np.zeros(y_fake.shape)
+                y_real = np.ones(y_real.shape)
+                x_fake, y_fake = self.generate_fake_samples(self.generator, LATENT_DIM, N_BATCH, GLOBAL_SEED)
+                x, y = np.vstack((x_real, x_fake)), np.vstack((y_real, y_fake))
+                x, y = shuffle(x, y)
+                d_loss = self.discriminator.evaluate(x, y)
                 print('epoch: %d, discriminator_loss=%.3f,  generator_loss=%.3f \n'
                       % (epoch, d_loss[0],  g_loss[0]))
                 progress_callback([(epoch, d_loss[0]), (epoch, g_loss[0])])
+
             if step % SAVE_STEP == 0:
                 self.save_npy(self.postprocess_array(x_fake[0]), checkpoint_path, str(step))
-                # if checkpoint_path is not None:
-                #     self.save_models(checkpoint_path, self.model, step)
+                self.save_models(checkpoint_path, self.model, step)
 
     def generate(self, path: Path, seed: int | None = None) -> None:
         if (isinstance(seed, int)):
@@ -257,18 +286,4 @@ class GAN(MusicModel):
 
     @staticmethod
     def get_progress_metadata() -> ProgressMetadata:
-        return ProgressMetadata(x_label='Epoch', y_label='Loss', legends=['Discriminator loss', 'Generator loss'])
-
-
-'''
-if __name__ == '__main__':
-
-    g = GAN()
-    midi_paths = []
-    for dirpath, dirs, files in os.walk(DATA_PATH):
-        for filename in files:
-            fname = os.path.join(dirpath, filename)
-            if fname.endswith('.mid'):
-                midi_paths.append(fname)
-    g.train_on_files(midi_paths, 2000, lambda epoch: None, checkpoint_path='xd')
-'''
+        return ProgressMetadata(x_label='Epoch', y_label='loss', legends=['Discriminator loss', 'Generator loss'])
