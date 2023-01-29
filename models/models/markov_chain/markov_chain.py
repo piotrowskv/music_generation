@@ -128,7 +128,8 @@ class MarkovChain(MusicModel):
 
             cast(int, seed)
             random.seed(seed)
-            result = self.predict(self.tokens_list[random.randrange(len(tokens_list)-1)], 512, False, 0, seed, path)
+            result = self.predict(self.tokens_list[random.randrange(
+                len(self.tokens_list)-1)], 512, False, 0, seed, path)
             get_file_from_standard_features(result, 500000, path, False, False, False)
 
     def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int,
