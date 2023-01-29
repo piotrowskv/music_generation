@@ -97,7 +97,7 @@ class GAN(MusicModel):
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path: Path) -> None:
-        self.model.save(Path(str(path) + ".h5"))
+        self.model.save(path, save_format='h5')
 
     def save_npy(self, prediction: np.ndarray, save_path: Path | None, save_name: str) -> None:
 
@@ -110,7 +110,7 @@ class GAN(MusicModel):
 
     def load(self, path: Path) -> None:
         # path to GAN defined exactly like in define_gan
-        self.model = load_model(Path(str(path) + ".h5"))
+        self.model = load_model(path)
         assert len(
             self.model.layers) == 3 and self.model.layers[0].name == 'generator' and self.model.layers[1].name == 'discriminator', "Incorrect model."
 

@@ -16,22 +16,24 @@ def test_dataset_creating():
 
 
 def test_model_loading(tmpdir):
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir, exist_ok=True)
+
+    path = Path(tmpdir)
+    path.mkdir(exist_ok=True)
+    path = path.joinpath('model')
 
     model = GAN()
     model.train_on_files([all_notes, sample_file], 1, lambda loss: None)
-    model.save(tmpdir)
+    model.save(path)
     model2 = GAN()
-    model2.load(tmpdir)
+    model2.load(path)
     assert model.discriminator is not None
     assert model.generator is not None
     assert model.model is not None
 
 
 def test_model_generating_sample(tmpdir):
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir, exist_ok=True)
+    path = Path(tmpdir)
+    path.mkdir(exist_ok=True)
 
     model = GAN()
     model.train_on_files([all_notes, sample_file], 1, lambda loss: None)
@@ -40,13 +42,15 @@ def test_model_generating_sample(tmpdir):
 
 
 def test_loaded_model_generating_sample(tmpdir):
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir, exist_ok=True)
+
+    path = Path(tmpdir)
+    path.mkdir(exist_ok=True)
+    path = path.joinpath('model')
 
     model = GAN()
     model.train_on_files([all_notes, sample_file], 1, lambda loss: None)
-    model.save(tmpdir)
+    model.save(path)
     model2 = GAN()
-    model2.load(tmpdir)
+    model2.load(path)
     model2.generate(tmpdir + "/sample.mid", None)
     assert os.path.exists(tmpdir + "/sample.mid")
