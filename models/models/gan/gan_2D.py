@@ -86,7 +86,7 @@ class GAN(MusicModel):
         else:
             out = (array - np.min(array)) / (np.max(array) - np.min(array))
         out[out < THRESHOLD] = 0
-        out *= 255
+        out *= 128
 
         return out
 
@@ -97,7 +97,7 @@ class GAN(MusicModel):
         return self.model.summary() + self.generator.summary() + self.discriminator.summary()
 
     def save(self, path: Path) -> None:
-        self.model.save(path, save_format='h5')
+        self.model.save(path + ".h5")
 
     def save_npy(self, prediction: np.ndarray, save_path: Path | None, save_name: str) -> None:
 
@@ -110,7 +110,7 @@ class GAN(MusicModel):
 
     def load(self, path: Path) -> None:
         # path to GAN defined exactly like in define_gan
-        self.model = load_model(path)
+        self.model = load_model(path + ".h5")
         assert len(
             self.model.layers) == 3 and self.model.layers[0].name == 'generator' and self.model.layers[1].name == 'discriminator', "Incorrect model."
 
