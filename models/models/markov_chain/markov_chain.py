@@ -37,13 +37,11 @@ class MarkovChain(MusicModel):
         time.perf_counter()
 
         for i in range(len(self.data)):
-
             elapsed = time.time() - start
             progress_callback([(elapsed, 100 * i / len(self.data))])
-
-            for j in range(len(self.data[i]) - n - 1 - self.n_gram_size):
+            for j in range(len(self.data[i]) - 1 - self.n_gram_size):
                 curr_n_gram = tuple(self.data[i][j:j + n])
-                next_note = self.data[i][j + n + 1]
+                next_note = self.data[i][j + n]
                 n_gram_next[self.n_grams_list.index(
                     curr_n_gram)].append(next_note)
 
@@ -129,7 +127,8 @@ class MarkovChain(MusicModel):
             # seed of random.randrange
 
             cast(int, seed)
-            result = self.predict(self.tokens_list[0], 512, False, 0, seed, path)
+            random.seed(seed)
+            result = self.predict(self.tokens_list[random.randrange(len(tokens_list)-1)], 512, False, 0, seed, path)
             get_file_from_standard_features(result, 500000, path, False, False, False)
 
     def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int,
@@ -145,7 +144,8 @@ class MarkovChain(MusicModel):
         for i in range(len(initial_notes)):
             prediction.append(initial_notes[i])
 
-        for i in range(length):
+        # generating length - initial_token
+        for i in range(length - len(self.tokens_list[0])):
             idx = None
             if tuple(previous_n_gram) in self.n_grams:
                 idx = self.n_grams_list.index(previous_n_gram)
@@ -168,6 +168,7 @@ class MarkovChain(MusicModel):
                 next_note = random.choices(
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
+            prediction.append(next_note)
             if next_note is not None:
                 previous_n_gram = next_note
 
