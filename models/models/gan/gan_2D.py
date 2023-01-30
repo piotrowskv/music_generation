@@ -86,7 +86,7 @@ class GAN(MusicModel):
         else:
             out = (array - np.min(array)) / (np.max(array) - np.min(array))
         out[out < THRESHOLD] = 0
-        out *= 255
+        out *= 128
 
         return out
 
