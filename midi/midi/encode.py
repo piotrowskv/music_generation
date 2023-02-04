@@ -1,9 +1,9 @@
 import copy
-import os.path
-import numpy as np
-
+from pathlib import Path
 from typing import *
-from mido import MidiTrack, MidiFile
+
+import numpy as np
+from mido import MidiFile, MidiTrack
 from mido.messages import Message
 from mido.midifiles.meta import MetaMessage
 
@@ -217,7 +217,7 @@ def get_messages_from_standard_2d_input(data: np.ndarray,
 
 def get_file_from_standard_features(data: np.ndarray,
                                     tempos: Union[int, list[int]],
-                                    output_path: str,
+                                    output_path: Path,
                                     join_notes: bool,
                                     use_sequences: bool,
                                     use_velocities: bool,
@@ -277,9 +277,7 @@ def get_file_from_standard_features(data: np.ndarray,
     else:
         raise TypeError('input array must have 2 or 3 dimensions')
 
-    output_dir = os.path.dirname(output_path)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir, exist_ok=True)
+    output_path.parent.mkdir(exist_ok=True, parents=True)
     midi_file.save(output_path)
 
 
