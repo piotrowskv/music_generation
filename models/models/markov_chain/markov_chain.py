@@ -1,7 +1,7 @@
 import random
 import time
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 from midi.decode import get_array_of_notes
@@ -119,21 +119,14 @@ class MarkovChain(MusicModel):
 
         assert len(self.tokens_list) > 0, "Model was not initiated with data"
 
-        if seed is None:
-            result = self.predict(self.tokens_list[0], 512, True, 0, None, path)
-            get_file_from_standard_features(result, 500000, path, False, False, False)
-
-        elif isinstance(seed, int):
-            # seed of random.randrange
-
-            cast(int, seed)
+        if seed is not None:
             random.seed(seed)
-            result = self.predict(self.tokens_list[random.randrange(
-                len(self.tokens_list)-1)], 512, False, 0, seed, path)
-            get_file_from_standard_features(result, 500000, path, False, False, False)
 
-    def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int,
-                seed: int | None, save_path: Path) -> np.ndarray:
+        result = self.predict(random.choice(self.tokens_list), 512, False, 0)
+        get_file_from_standard_features(
+            result, 1000000, path, False, True, False, [8 for _ in result])
+
+    def predict(self, initial_notes: tuple, length: int, deterministic: bool, rand: int) -> np.ndarray:
 
         # deterministic - if True, next note will be always note with maximum probability
         #               - if False, next note will be sampled according to all notes probability
@@ -164,8 +157,6 @@ class MarkovChain(MusicModel):
             elif deterministic:
                 next_note = max(probs, key=probs.get)
             else:
-                if seed is not None:
-                    random.seed(seed)
                 next_note = random.choices(
                     list(probs.keys()), weights=probs.values(), k=1)[0]
 
