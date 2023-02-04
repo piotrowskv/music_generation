@@ -217,12 +217,13 @@ def get_messages_from_standard_2d_input(data: np.ndarray,
 
 def get_file_from_standard_features(data: np.ndarray,
                                     tempos: Union[int, list[int]],
-                                    output_path: Path,
+                                    output_path: Path | str,
                                     join_notes: bool,
                                     use_sequences: bool,
                                     use_velocities: bool,
                                     event_lengths: Union[list[int], None] = None,
                                     grid_accuracy: int = GRID_ACCURACY) -> None:
+    output_path = Path(output_path)
     """
     translates a multi-dimensional array into a MIDI file
 
