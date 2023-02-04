@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 from models.markov_chain.markov_chain import MarkovChain
 
@@ -52,11 +51,10 @@ def test_multiple_tracks():
 
 
 def test_model_saving_and_loading(tmpdir):
+    dir = Path(tmpdir)
+    dir.mkdir(exist_ok=True)
 
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir, exist_ok=True)
-
-    path = Path(tmpdir).joinpath('markov_saved.npz')
+    path = dir.joinpath('markov_saved.npz')
 
     model = MarkovChain()
     model.train_on_files(sample_file, 10, lambda epoch: None)
@@ -68,15 +66,15 @@ def test_model_saving_and_loading(tmpdir):
 
 
 def test_loaded_model_generate(tmpdir):
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir, exist_ok=True)
+    dir = Path(tmpdir)
+    dir.mkdir(exist_ok=True)
 
-    path = Path(tmpdir).joinpath('markov_saved.npz')
+    path = dir.joinpath('markov_saved.npz')
 
     model = MarkovChain()
     model.train_on_files(all_notes, 10, lambda epoch: None)
     model.save(path)
     model2 = MarkovChain()
     model2.load(path)
-    res = model2.predict(model2.tokens_list[0], 100, False, 0, None, tmpdir)
+    res = model2.predict(model2.tokens_list[0], 100, False, 0)
     assert res.shape == (100, 128)
