@@ -31,16 +31,13 @@ SAVE_STEP = 100
 THRESHOLD = 0.7  # threshold of probability while generating a midi file
 # GAN generates probabilities that note is on during specific time unit
 
-N_BATCH = 256  # number of batches the dataset is divided into
+N_BATCH = 32
 
-DISC_BATCH = 16
+DISC_BATCH = 2
 
-DISC_SAMPLES = 64
+DISC_SAMPLES = 8
 
 GLOBAL_SEED = 2137
-
-# physical_devices = tf.config.experimental.list_physical_devices('GPU')
-# tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
 class GAN(MusicModel):
@@ -244,7 +241,6 @@ class GAN(MusicModel):
                 y_fake = np.ones(y_fake.shape)
                 acc_y = np.round(self.discriminator.predict(x_fake))
                 acc = np.sum(acc_y) / np.sum(y_fake)
-                print(acc)
                 g_loss = self.discriminator.evaluate(x_fake, y_fake)
                 y_fake = np.zeros(y_fake.shape)
                 y_real = np.ones(y_real.shape)
