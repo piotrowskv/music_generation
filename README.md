@@ -45,7 +45,7 @@ Stack:
 - [SQLite](https://www.sqlite.org/index.html)
 - [redis](https://redis.io/)
 
-Deployed at [https://vps.shilangyu.dev](https://vps.shilangyu.dev/models)
+~~Deployed at [https://vps.shilangyu.dev](https://vps.shilangyu.dev/models)~~
 
 ### run locally
 
