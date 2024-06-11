@@ -14,7 +14,7 @@ Stack:
 - [Typescript](https://www.typescriptlang.org)
 - [Tailwind](https://tailwindcss.com)
 
-Deployed at [https://piotrowskv.github.io/music_generation](https://piotrowskv.github.io/music_generation)
+~~Deployed at [https://piotrowskv.github.io/music_generation](https://piotrowskv.github.io/music_generation)~~
 
 ### run locally
 
